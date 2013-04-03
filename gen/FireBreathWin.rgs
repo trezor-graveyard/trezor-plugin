@@ -1,0 +1,11 @@
+HKCR
+{
+    NoRemove AppID
+    {
+        '%APPID%' = s 'FireBreathWin'
+        'npBitcoinTrezorPlugin.dll'
+        {
+            val AppID = s '%APPID%'
+        }
+    }
+}

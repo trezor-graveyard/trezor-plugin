@@ -1,0 +1,10 @@
+{
+  "name": "Bitcoin Trezor Plugin",
+  "version": "${FBSTRING_PLUGIN_VERSION}",
+  "description": "Plugin for embedding Bitcoin Trezor into websites",
+  "manifest_version": 2,
+
+  "plugins": [
+    { "path": "npBitcoinTrezorPlugin.so", "public": true }
+  ]
+}

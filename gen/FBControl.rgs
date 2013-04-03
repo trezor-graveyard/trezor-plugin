@@ -1,0 +1,66 @@
+HKCR {
+    bitcointrezorcom.BitcoinTrezorPlugin.1 = s 'Plugin for embedding Bitcoin Trezor into websites' {
+        CLSID = s '{56a7926b-b5ff-5824-87d1-aaaf0c9870ef}'
+    }
+    bitcointrezorcom.BitcoinTrezorPlugin = s 'Plugin for embedding Bitcoin Trezor into websites' {
+        CLSID = s '{56a7926b-b5ff-5824-87d1-aaaf0c9870ef}'
+        CurVer = s 'bitcointrezorcom.BitcoinTrezorPlugin.1'
+    }
+    NoRemove CLSID {
+        ForceRemove {56a7926b-b5ff-5824-87d1-aaaf0c9870ef} = s 'Plugin for embedding Bitcoin Trezor into websites' {
+            ProgID = s 'bitcointrezorcom.BitcoinTrezorPlugin.1'
+            VersionIndependentProgID = s 'bitcointrezorcom.BitcoinTrezorPlugin'
+            ForceRemove 'Programmable'
+            InprocServer32 = s '%MODULE%' {
+                val ThreadingModel = s '%THREADING%'
+            }
+            val AppID = s '%APPID%'
+            ForceRemove 'Control'
+            'MiscStatus' = s '0' {
+                '1' = s '131473'
+            }
+            'TypeLib' = s '%LIBID%'
+            'Version' = s '1'
+        }
+    }
+    NoRemove MIME {
+        NoRemove Database {
+            NoRemove 'Content Type' {
+                'application/x-bitcointrezorplugin' = s 'Plugin for embedding Bitcoin Trezor into websites' {
+                    val Extension = s ''
+                    val CLSID = s '{56a7926b-b5ff-5824-87d1-aaaf0c9870ef}'
+                }
+            }
+        }
+    }            
+}
+HKCU {
+    NoRemove Software {
+        NoRemove Microsoft {
+            NoRemove Windows {
+                NoRemove CurrentVersion {
+                    NoRemove Ext {
+                        NoRemove PreApproved {
+                            ForceRemove '{56a7926b-b5ff-5824-87d1-aaaf0c9870ef}'
+                        }
+                        NoRemove Stats {
+                            ForceRemove '{56a7926b-b5ff-5824-87d1-aaaf0c9870ef}' {
+                                iexplore {
+                                    AllowedDomains {
+                                        '*'
+                                    }
+                                    val Count = d ''
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        NoRemove MozillaPlugins {
+            ForceRemove 'bitcointrezorcom.com/BitcoinTrezorPlugin' {
+                val Path = s '%MODULE%'
+            }
+        }
+    }
+}
