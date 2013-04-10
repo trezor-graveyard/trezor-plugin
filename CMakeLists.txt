@@ -12,10 +12,17 @@ Project(${PLUGIN_NAME})
 
 file (GLOB GENERAL RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     [^.]*.cpp
+    [^.]*.cc
     [^.]*.h
     [^.]*.cmake
     )
 
+include(FindProtobuf)
+find_package(Protobuf REQUIRED)
+find_package(Boost REQUIRED COMPONENTS random)
+
+include_directories(${PROTOBUF_INCLUDE_DIR})
+include_directories(${Boost_RANDOM_INCLUDE_DIRS})
 include_directories(${PLUGIN_INCLUDE_DIRS})
 
 # Generated files are stored in ${GENERATED} by the project configuration
@@ -38,18 +45,25 @@ SET( SOURCES
 # depending on the platform
 include_platform()
 
+target_link_libraries(${PROJECT_NAME}
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    ${Boost_RANDOM_LIBRARY}
+    ${PROTOBUF_LIBRARY}
+)
+
 # this will build a Chrome package
-add_chrome_package(${PLUGIN_NAME}
-	${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/ 
-	"${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/${FBSTRING_PluginFileName}.dll"
-	"${CMAKE_CURRENT_SOURCE_DIR}/sign/package_key.pem"
-	${PROJECT_NAME})
+#add_chrome_package(${PLUGIN_NAME}
+#	${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/ 
+#	"${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/${FBSTRING_PluginFileName}.dll"
+#	"${CMAKE_CURRENT_SOURCE_DIR}/sign/package_key.pem"
+#	${PROJECT_NAME})
 
 # this will build a XPI package using XPISigner (see http://code.google.com/p/xpisigner/ )
- add_signed_xpi_installer(${PLUGIN_NAME}
- 	${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/ 
-   "${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/${FBSTRING_PluginFileName}.dll"
- 	$ENV{XPI_PATH} 
- 	"${CMAKE_CURRENT_SOURCE_DIR}/sign/certificate.pfx" 
- 	"${CMAKE_CURRENT_SOURCE_DIR}/sign/passphrase.txt"
- 	${PROJECT_NAME})
+# add_signed_xpi_installer(${PLUGIN_NAME}
+# 	${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/ 
+#   "${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/${FBSTRING_PluginFileName}.dll"
+# 	$ENV{XPI_PATH} 
+# 	"${CMAKE_CURRENT_SOURCE_DIR}/sign/certificate.pfx" 
+# 	"${CMAKE_CURRENT_SOURCE_DIR}/sign/passphrase.txt"
+# 	${PROJECT_NAME})

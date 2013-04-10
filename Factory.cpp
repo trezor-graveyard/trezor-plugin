@@ -40,6 +40,12 @@ public:
     {
         BitcoinTrezorPlugin::StaticDeinitialize();
     }
+    
+    void getLoggingMethods( FB::Log::LogMethodList& outMethods )
+    {
+        // The next line will enable logging to a logfile.
+        outMethods.push_back(std::make_pair(FB::Log::LogMethod_File, "/tmp/trezor.log"));
+    }
 };
 
 ///////////////////////////////////////////////////////////////////////////////

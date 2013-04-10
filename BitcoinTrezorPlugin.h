@@ -18,6 +18,8 @@
 #include "hidapi.h"
 #include "devices.h"
 
+#include <time.h>
+#include <stdlib.h>
 
 FB_FORWARD_PTR(BitcoinTrezorPlugin)
 class BitcoinTrezorPlugin : public FB::PluginCore
@@ -45,6 +47,11 @@ public:
             processDevices();
         }
         return available; 
+    }
+    TrezorDevice *getDevice(const std::map<std::string, FB::variant> device) {
+        TrezorDevice *trezor = new TrezorDevice(device);
+        trezor->open();
+        return trezor;
     }
 
     BEGIN_PLUGIN_EVENT_MAP()

@@ -33,21 +33,13 @@ public:
     BitcoinTrezorPluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
         m_plugin(plugin), m_host(host)
     {
-        registerMethod("echo",      make_method(this, &BitcoinTrezorPluginAPI::echo));
-        registerMethod("testEvent", make_method(this, &BitcoinTrezorPluginAPI::testEvent));
         
-        // Read-write property
-        registerProperty("testString",
-                         make_property(this,
-                                       &BitcoinTrezorPluginAPI::get_testString,
-                                       &BitcoinTrezorPluginAPI::set_testString));
-        
-        // Read-only property
-        registerProperty("version",
-                         make_property(this,
-                                       &BitcoinTrezorPluginAPI::get_version));
-        
+       
+        // Read-only properties
+        registerProperty("version", make_property(this, &BitcoinTrezorPluginAPI::get_version));
         registerProperty("devices", make_property(this, &BitcoinTrezorPluginAPI::get_devices));
+        
+        registerMethod("get_entropy", make_method(this, &BitcoinTrezorPluginAPI::get_entropy));
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -69,13 +61,15 @@ public:
     std::string get_version();
     
     std::vector<FB::VariantMap> get_devices();
+    
+    std::string get_entropy(const std::map<std::string, FB::variant> &device, const int size);
 
     // Method echo
     FB::variant echo(const FB::variant& msg);
     
     // Event helpers
-    FB_JSAPI_EVENT(test, 0, ());
-    FB_JSAPI_EVENT(echo, 2, (const FB::variant&, const int));
+    //FB_JSAPI_EVENT(test, 0, ());
+    //FB_JSAPI_EVENT(echo, 2, (const FB::variant&, const int));
 
     // Method test-event
     void testEvent();

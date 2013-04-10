@@ -20,7 +20,7 @@
 FB::variant BitcoinTrezorPluginAPI::echo(const FB::variant& msg)
 {
     static int n(0);
-    fire_echo("So far, you clicked this many times: ", n++);
+    //fire_echo("So far, you clicked this many times: ", n++);
 
     // return "foobar";
     return msg;
@@ -71,7 +71,17 @@ std::vector<FB::VariantMap> BitcoinTrezorPluginAPI::get_devices() {
     return result;
 }
 
+std::string BitcoinTrezorPluginAPI::get_entropy(const std::map<std::string, FB::variant> &device, const int size) {
+    TrezorDevice *trezor = getPlugin()->getDevice(device);
+    
+    std::string result(trezor->get_entropy(size));
+    trezor->close();
+    delete trezor;
+    
+    return result;
+}
+
 void BitcoinTrezorPluginAPI::testEvent()
 {
-    fire_test();
+    //fire_test();
 }

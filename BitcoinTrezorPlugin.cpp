@@ -9,7 +9,6 @@
 
 #include "devices.h"
 
-
 #include "BitcoinTrezorPluginAPI.h"
 
 #include "BitcoinTrezorPlugin.h"
@@ -24,6 +23,7 @@
 void BitcoinTrezorPlugin::StaticInitialize()
 {
     hid_init();
+    srand(time(NULL));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,8 +48,6 @@ BitcoinTrezorPlugin::BitcoinTrezorPlugin() :
 {
     known.push_back(TrezorDevice(0x1cbe, 0xcaf3)); // Trezor
     known.push_back(TrezorDevice(0x10c4, 0xea80)); // Trezor Pi
-    known.push_back(TrezorDevice(0x08f7, 0x0002)); // EasyTemp
-    known.push_back(TrezorDevice(0x046d, 0xc018)); // Logitech, Inc. Optical Wheel Mouse
 }
 
 ///////////////////////////////////////////////////////////////////////////////
