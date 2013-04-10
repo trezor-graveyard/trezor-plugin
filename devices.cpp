@@ -194,6 +194,7 @@ google::protobuf::Message *TrezorDevice::call(const google::protobuf::Message& m
         }
     }
     
+    FBLOG_INFO("call()", "Returning result");
     return result;
 }
 
@@ -203,6 +204,7 @@ std::string TrezorDevice::get_entropy(const size_t size) {
     FBLOG_INFO("get_entropy()", "get_entropy");
     
     Entropy *result = dynamic_cast<Entropy *>(call(instance, MESSAGE_TYPE(GetEntropy)));
+    FBLOG_INFO("call()", "Getting entropy");
     std::string entropy(result->entropy());
     std::stringstream stream;
     
@@ -210,6 +212,7 @@ std::string TrezorDevice::get_entropy(const size_t size) {
         stream << std::hex << (short(entropy[i]) & 0xFF);
     }
     
+    FBLOG_INFO("call()", stream.str().c_str());
     delete result;
     return stream.str();
 }

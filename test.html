@@ -45,8 +45,9 @@ function pluginLoaded() {
     
     if (devices.length > 0) {
         var device = devices[0];
-        var entropy = trezor.get_entropy(device, 5);
-        log("get_entropy(5) => " + entropy);
+        trezor.getEntropy(device, 5, function(plugin, entropy) {
+            log("get_entropy(5) => " + entropy);
+        });
     }
 }
 

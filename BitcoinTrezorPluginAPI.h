@@ -39,7 +39,7 @@ public:
         registerProperty("version", make_property(this, &BitcoinTrezorPluginAPI::get_version));
         registerProperty("devices", make_property(this, &BitcoinTrezorPluginAPI::get_devices));
         
-        registerMethod("get_entropy", make_method(this, &BitcoinTrezorPluginAPI::get_entropy));
+        registerMethod("getEntropy", make_method(this, &BitcoinTrezorPluginAPI::getEntropy));
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -62,13 +62,14 @@ public:
     
     std::vector<FB::VariantMap> get_devices();
     
-    std::string get_entropy(const std::map<std::string, FB::variant> &device, const int size);
+    bool getEntropy(const std::map<std::string, FB::variant> &device, 
+        const int size, const FB::JSObjectPtr &callback);
 
     // Method echo
     FB::variant echo(const FB::variant& msg);
     
     // Event helpers
-    //FB_JSAPI_EVENT(test, 0, ());
+    FB_JSAPI_EVENT(buttonRequest, 0, ());
     //FB_JSAPI_EVENT(echo, 2, (const FB::variant&, const int));
 
     // Method test-event
@@ -79,6 +80,9 @@ private:
     FB::BrowserHostPtr m_host;
 
     std::string m_testString;
+    
+    void getEntropy_internal(const std::map<std::string, 
+        FB::variant> &device, const int size, const FB::JSObjectPtr &callback);
 };
 
 #endif // H_BitcoinTrezorPluginAPI

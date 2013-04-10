@@ -42,12 +42,7 @@ public:
     unsigned short vendor_id;
     unsigned short product_id;
     std::wstring serial_number;
-    
-    unsigned char buffer[READ_BUFFER_SIZE];
-    size_t buffer_length;
-    
-    hid_device *hid;
-    
+        
     inline bool isLikeMe(struct hid_device_info *info) {
         return info->vendor_id == vendor_id && info->product_id == product_id;
     }
@@ -77,6 +72,11 @@ protected:
     
     void write(const google::protobuf::Message &message, const char type);
     google::protobuf::Message *call(const google::protobuf::Message &message, const char type);
+    
+    unsigned char buffer[READ_BUFFER_SIZE];
+    size_t buffer_length;
+    
+    hid_device *hid;
     
 private:
     std::string session_id;

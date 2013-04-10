@@ -71,14 +71,26 @@ std::vector<FB::VariantMap> BitcoinTrezorPluginAPI::get_devices() {
     return result;
 }
 
-std::string BitcoinTrezorPluginAPI::get_entropy(const std::map<std::string, FB::variant> &device, const int size) {
+bool BitcoinTrezorPluginAPI::getEntropy(const std::map<std::string, FB::variant> &device, 
+    const int size, const FB::JSObjectPtr &callback) {
+    
+    boost::thread t(boost::bind(&BitcoinTrezorPluginAPI::getEntropy_internal,
+         this, device, size, callback));
+    return true; // the thread is started
+}
+
+void BitcoinTrezorPluginAPI::getEntropy_internal(const std::map<std::string, FB::variant> &device, 
+    const int size, const FB::JSObjectPtr &callback) {
+    
     TrezorDevice *trezor = getPlugin()->getDevice(device);
     
     std::string result(trezor->get_entropy(size));
     trezor->close();
     delete trezor;
     
-    return result;
+    FBLOG_INFO("getEntropy()", "Sending back");
+    FBLOG_INFO("getEntropy()", result.c_str());
+    callback->InvokeAsync("", FB::variant_list_of(shared_from_this())(result));
 }
 
 void BitcoinTrezorPluginAPI::testEvent()
