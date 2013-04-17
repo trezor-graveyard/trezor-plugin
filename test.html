@@ -38,6 +38,9 @@ function log(text) {
 
 function pluginLoaded() {
     var trezor = document.getElementById('trezor');
+    trezor.addEventListener("actionCanceled", function() { log("Cancel button pressed") }, false);
+    trezor.addEventListener("generalFailure", function(message) { log(message) }, false);
+    
     var devices = trezor.devices;
     
     log("Available devices:")
@@ -45,8 +48,12 @@ function pluginLoaded() {
     
     if (devices.length > 0) {
         var device = devices[0];
-        trezor.getEntropy(device, 5, function(plugin, entropy) {
+        //log("get_uuid() => " + trezor.getUUID(device));
+        /*trezor.getEntropy(device, 5, function(plugin, entropy) {
             log("get_entropy(5) => " + entropy);
+        });*/
+        trezor.getAddress(device, [1, 2], function(plugin, address) {
+            log("get_address([1, 2]) => " + address + ' ' + typeof(address));
         });
     }
 }

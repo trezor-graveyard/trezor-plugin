@@ -7,7 +7,12 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
+
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 #include <boost/weak_ptr.hpp>
+#include <boost/exception/all.hpp>
 
 #include "JSAPIAuto.h"
 #include "BrowserHost.h"
@@ -33,13 +38,14 @@ public:
     BitcoinTrezorPluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
         m_plugin(plugin), m_host(host)
     {
-        
-       
         // Read-only properties
         registerProperty("version", make_property(this, &BitcoinTrezorPluginAPI::get_version));
         registerProperty("devices", make_property(this, &BitcoinTrezorPluginAPI::get_devices));
         
         registerMethod("getEntropy", make_method(this, &BitcoinTrezorPluginAPI::getEntropy));
+        registerMethod("getAddress", make_method(this, &BitcoinTrezorPluginAPI::getAddress));
+        registerMethod("getMasterPublicKey", make_method(this, &BitcoinTrezorPluginAPI::getMasterPublicKey));
+        //registerMethod("getUUID", make_method(this, &BitcoinTrezorPluginAPI::getUUID));
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -53,10 +59,6 @@ public:
 
     BitcoinTrezorPluginPtr getPlugin();
 
-    // Read/Write property ${PROPERTY.ident}
-    std::string get_testString();
-    void set_testString(const std::string& val);
-
     // Read-only property ${PROPERTY.ident}
     std::string get_version();
     
@@ -64,16 +66,16 @@ public:
     
     bool getEntropy(const std::map<std::string, FB::variant> &device, 
         const int size, const FB::JSObjectPtr &callback);
-
-    // Method echo
-    FB::variant echo(const FB::variant& msg);
+    std::string getUUID(const std::map<std::string, FB::variant> &device);
+    bool getAddress(const std::map<std::string, FB::variant> &device, 
+        const std::vector<int> &address_n, const FB::JSObjectPtr &callback);
+    bool getMasterPublicKey(const std::map<std::string, FB::variant> &device, 
+        const FB::JSObjectPtr &callback);
     
     // Event helpers
-    FB_JSAPI_EVENT(buttonRequest, 0, ());
-    //FB_JSAPI_EVENT(echo, 2, (const FB::variant&, const int));
-
-    // Method test-event
-    void testEvent();
+    FB_JSAPI_EVENT(actionCanceled, 0, ());
+    FB_JSAPI_EVENT(readTimeout, 0, ());
+    FB_JSAPI_EVENT(generalFailure, 1, (std::string));
 
 private:
     BitcoinTrezorPluginWeakPtr m_plugin;
@@ -83,6 +85,10 @@ private:
     
     void getEntropy_internal(const std::map<std::string, 
         FB::variant> &device, const int size, const FB::JSObjectPtr &callback);
+    void getAddress_internal(const std::map<std::string, 
+        FB::variant> &device, const std::vector<int> &address_n, const FB::JSObjectPtr &callback);
+    void getMasterPublicKey_internal(const std::map<std::string, FB::variant> &device, 
+        const FB::JSObjectPtr &callback);
 };
 
 #endif // H_BitcoinTrezorPluginAPI

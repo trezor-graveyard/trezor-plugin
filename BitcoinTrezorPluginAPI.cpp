@@ -10,21 +10,7 @@
 #include "global/config.h"
 
 #include "BitcoinTrezorPluginAPI.h"
-
-///////////////////////////////////////////////////////////////////////////////
-/// @fn FB::variant BitcoinTrezorPluginAPI::echo(const FB::variant& msg)
-///
-/// @brief  Echos whatever is passed from Javascript.
-///         Go ahead and change it. See what happens!
-///////////////////////////////////////////////////////////////////////////////
-FB::variant BitcoinTrezorPluginAPI::echo(const FB::variant& msg)
-{
-    static int n(0);
-    //fire_echo("So far, you clicked this many times: ", n++);
-
-    // return "foobar";
-    return msg;
-}
+#include "exceptions.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn BitcoinTrezorPluginPtr BitcoinTrezorPluginAPI::getPlugin()
@@ -41,17 +27,6 @@ BitcoinTrezorPluginPtr BitcoinTrezorPluginAPI::getPlugin()
         throw FB::script_error("The plugin is invalid");
     }
     return plugin;
-}
-
-// Read/Write property testString
-std::string BitcoinTrezorPluginAPI::get_testString()
-{
-    return m_testString;
-}
-
-void BitcoinTrezorPluginAPI::set_testString(const std::string& val)
-{
-    m_testString = val;
 }
 
 // Read-only property version
@@ -76,24 +51,91 @@ bool BitcoinTrezorPluginAPI::getEntropy(const std::map<std::string, FB::variant>
     
     boost::thread t(boost::bind(&BitcoinTrezorPluginAPI::getEntropy_internal,
          this, device, size, callback));
-    return true; // the thread is started
+    
+    return true;
+}
+
+std::string BitcoinTrezorPluginAPI::getUUID(const std::map<std::string, FB::variant> &device) {
+    TrezorDevice *trezor = getPlugin()->getDevice(device);
+    std::string uuid(trezor->getUUID());
+    delete trezor;
+    return uuid;
+}
+
+bool BitcoinTrezorPluginAPI::getAddress(const std::map<std::string, FB::variant> &device, 
+    const std::vector<int> &address_n, const FB::JSObjectPtr &callback) {
+    
+    boost::thread t(boost::bind(&BitcoinTrezorPluginAPI::getAddress_internal,
+         this, device, address_n, callback));
+    
+    return true;
+}
+
+bool BitcoinTrezorPluginAPI::getMasterPublicKey(const std::map<std::string, FB::variant> &device, 
+    const FB::JSObjectPtr &callback) {
+    
+    boost::thread t(boost::bind(&BitcoinTrezorPluginAPI::getMasterPublicKey_internal,
+         this, device, callback));
+    
+    return true;
 }
 
 void BitcoinTrezorPluginAPI::getEntropy_internal(const std::map<std::string, FB::variant> &device, 
     const int size, const FB::JSObjectPtr &callback) {
-    
     TrezorDevice *trezor = getPlugin()->getDevice(device);
+    std::string result;
     
-    std::string result(trezor->get_entropy(size));
-    trezor->close();
+    try {
+        result = trezor->get_entropy(size);
+    } catch (ActionCanceled &e) {
+        fire_actionCanceled();
+    } catch (ReadTimeout &e) {
+        fire_readTimeout();
+    } catch (FB::script_error &e) {
+        fire_generalFailure(e.m_error);
+    }
+    
     delete trezor;
-    
-    FBLOG_INFO("getEntropy()", "Sending back");
-    FBLOG_INFO("getEntropy()", result.c_str());
     callback->InvokeAsync("", FB::variant_list_of(shared_from_this())(result));
 }
 
-void BitcoinTrezorPluginAPI::testEvent()
-{
-    //fire_test();
+void BitcoinTrezorPluginAPI::getAddress_internal(const std::map<std::string, FB::variant> &device, 
+    const std::vector<int> &address_n, const FB::JSObjectPtr &callback) {
+    TrezorDevice *trezor = getPlugin()->getDevice(device);
+    std::string result;
+    
+    try {
+        result = trezor->get_address(address_n);
+    } catch (ActionCanceled &e) {
+        fire_actionCanceled();
+    } catch (ReadTimeout &e) {
+        fire_readTimeout();
+    } catch (FB::script_error &e) {
+        fire_generalFailure(e.m_error);
+    }
+    
+    delete trezor;
+    callback->InvokeAsync("", FB::variant_list_of(shared_from_this())(result));
 }
+
+void BitcoinTrezorPluginAPI::getMasterPublicKey_internal(
+    const std::map<std::string, FB::variant> &device, 
+    const FB::JSObjectPtr &callback) {
+    
+    TrezorDevice *trezor = getPlugin()->getDevice(device);
+    std::string result;
+    
+    try {
+        result = trezor->get_master_public_key();
+    } catch (ActionCanceled &e) {
+        fire_actionCanceled();
+    } catch (ReadTimeout &e) {
+        fire_readTimeout();
+    } catch (FB::script_error &e) {
+        fire_generalFailure(e.m_error);
+    }
+    
+    delete trezor;
+    callback->InvokeAsync("", FB::variant_list_of(shared_from_this())(result));
+}
+

@@ -50,10 +50,14 @@
 #define TYPE_UUID 5
 #define TYPE_GetEntropy 9
 #define TYPE_Entropy 10
+#define TYPE_GetMasterPublicKey 11
+#define TYPE_MasterPublicKey 12
 #define TYPE_Features 17
 #define TYPE_ButtonRequest 26
 #define TYPE_ButtonAck 27
 #define TYPE_ButtonCancel 28
+#define TYPE_GetAddress 29
+#define TYPE_Address 30
 
 #define MESSAGE_TYPE(X) TYPE_ ## X
 
