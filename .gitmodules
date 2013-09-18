@@ -1,0 +1,3 @@
+[submodule "trezor-emu"]
+	path = trezor-emu
+	url = https://github.com/trezor/trezor-emu.git
