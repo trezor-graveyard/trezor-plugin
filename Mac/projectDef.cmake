@@ -33,9 +33,14 @@ set(LOCALIZED "Mac/bundle_template/Localized.r")
 
 add_mac_plugin(${PROJECT_NAME} ${PLIST} ${STRINGS} ${LOCALIZED} SOURCES)
 
+FIND_LIBRARY(IOKIT_LIBRARY IOKit)
+FIND_LIBRARY(COREFOUNDATION_LIBRARY CoreFoundation)
+
 # add library dependencies here; leave ${PLUGIN_INTERNAL_DEPS} there unless you know what you're doing!
 target_link_libraries(${PROJECT_NAME}
     ${PLUGIN_INTERNAL_DEPS}
+    ${IOKIT_LIBRARY}
+    ${COREFOUNDATION_LIBRARY}
     )
 
 #To create a DMG, include the following file
