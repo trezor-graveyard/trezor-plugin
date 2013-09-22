@@ -1,298 +1,304 @@
-#include <boost/random/random_device.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
-
 #include "devices.h"
 #include "messages.h"
-#include "bitkey.pb.h"
 #include "exceptions.h"
-#include "JSAPI.h"
-#include "boost/foreach.hpp"
 
+#include "logging.h"
+
+#include <sstream>
 #include <time.h>
 #include <netinet/in.h>
-#include <algorithm>
-#include <sstream>
 
-std::string TrezorDevice::generateSessionId(const short length) {
-    std::string chars(
-        "abcdefghijklmnopqrstuvwxyz"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "1234567890"
-        "!@#$%^&*()"
-        "`~-_=+[{]{\\|;:'\",<.>/? ");
-    boost::random::random_device rng;
-    boost::random::uniform_int_distribution<> index_dist(0, chars.size() - 1);
-    std::stringstream result;
-    
-    for(int i = 0; i < length; ++i) {
-        result << chars[index_dist(rng)];
-    }
-    
-    return result.str();
+std::string DeviceChannel::read_entropy(const size_t size)
+{
+    GetEntropy instance;
+    instance.set_size(size);
+
+    boost::shared_ptr<Entropy> result =
+        boost::dynamic_pointer_cast<Entropy>(call(instance, MESSAGE_TYPE(GetEntropy)));
+
+    return result->entropy();
 }
 
-void TrezorDevice::open() {
-    FBLOG_INFO("open()", "Opening device.");
+std::string DeviceChannel::read_address(const std::vector<int> &address_n, const int index)
+{
+    GetAddress instance;
+    for (std::vector<int>::const_iterator it = address_n.begin(); it != address_n.end(); it++)
+        instance.add_address_n(*it);
+
+    boost::shared_ptr<Address> result =
+        boost::dynamic_pointer_cast<Address>(call(instance, MESSAGE_TYPE(GetAddress)));
+
+    return result->address();
+}
+
+std::string DeviceChannel::read_master_public_key()
+{
+    GetMasterPublicKey instance;
+
+    boost::shared_ptr<MasterPublicKey> result =
+        boost::dynamic_pointer_cast<MasterPublicKey>(call(instance,
+                                                          MESSAGE_TYPE(GetMasterPublicKey)));
+
+    return result->key();
+}
+
+std::pair<std::vector<std::string>, std::string>
+DeviceChannel::sign_tx(const std::vector<TxInput> &inputs,
+                       const std::vector<TxOutput> &outputs)
+{
+    std::vector<std::string> signatures;
+    std::stringstream serialized_tx;
+
+    // initial transaction sign call
+    SignTx sign;
+    sign.set_inputs_count(inputs.size());
+    sign.set_outputs_count(outputs.size());
+
+    boost::shared_ptr<TxRequest> request =
+        boost::dynamic_pointer_cast<TxRequest>(call(sign, MESSAGE_TYPE(SignTx)));
+
+    for (;;) { // loop while the device needs some inputs or outputs
+
+        if (request->has_serialized_tx())
+            serialized_tx << request->serialized_tx();
+
+        if (request->has_signature() && request->signed_index() >= 0)
+            signatures[request->signed_index()] = request->signature();
+
+        if (request->request_index() < 0)
+            break;
+
+        switch (request->request_type()) {
+        case TXINPUT:
+            request = boost::dynamic_pointer_cast<TxRequest>
+                (call(inputs[request->request_index()], MESSAGE_TYPE(TxInput)));
+            break;
+        case TXOUTPUT:
+            request = boost::dynamic_pointer_cast<TxRequest>
+                (call(outputs[request->request_index()], MESSAGE_TYPE(TxOutput)));
+            break;
+        }
+    }
+
+    return std::make_pair(signatures, serialized_tx.str());
+}
+
+void DeviceChannel::open(const DeviceDescriptor &desc)
+{
     const unsigned char uart[] = {0x41, 0x01};
     const unsigned char txrx[] = {0x43, 0x03};
-    
-    hid = hid_open(vendor_id, product_id, serial_number.c_str());
-    FBLOG_INFO("open()", "Sending features.");
-    hid_send_feature_report(hid, uart, 2); // enable UART
-    hid_send_feature_report(hid, txrx, 2); // purge TX/RX FIFOs
-    
-    init();
+
+    FBLOG_INFO("open()", "Opening device");
+    _hid_device = hid_open(desc.vendor_id,
+                           desc.product_id,
+                           desc.serial_number.c_str());
+
+    // TODO: handle _hid_device == NULL
+
+    FBLOG_INFO("open()", "Sending features");
+    hid_send_feature_report(_hid_device, uart, 2); // enable UART
+    hid_send_feature_report(_hid_device, txrx, 2); // purge TX/RX FIFOs
+
+    FBLOG_INFO("open()", "Initializing");
+    call(Initialize(), MESSAGE_TYPE(Initialize));
 }
 
-void TrezorDevice::init() {
-    FBLOG_INFO("open()", "Session generating");
-    session_id = generateSessionId(16);
-    FBLOG_INFO("open()", session_id.c_str());
-    
-    Initialize initialize;
-    initialize.set_session_id(session_id.c_str());
-    
-    Features *_features = dynamic_cast<Features *>(call(initialize, MESSAGE_TYPE(Initialize)));
-    delete _features;
-    
-    uuid = get_uuid();
-    FBLOG_INFO("open()", "Init complete");
+void DeviceChannel::close()
+{
+    FBLOG_INFO("close()", "Closing device");
+    hid_close(_hid_device);
 }
 
-void TrezorDevice::close() {
-    if (hid) {
-        hid_close(hid);
+void DeviceChannel::write_bytes(const unsigned char *bytes, const size_t length)
+{
+    for (size_t i = 0; i < length; i += 63) {
+        unsigned char chunk[1 + 63] = {0}; // extra byte for report number
+        memcpy(&chunk[1], &bytes[i], std::min(sizeof(chunk) - 1, length - i));
+        chunk[0] = sizeof(chunk) - 1;
+
+        FBLOG_INFO("write_bytes()", "Writing chunk");
+        const int res = hid_write(_hid_device, chunk, sizeof(chunk));
         
-        for (size_t i = 0; i < buffer_length; i++) {
-            buffer[i] = 0;
-        }
-        buffer_length = 0;
+        // TODO: handle error on res < 0
     }
 }
 
-void TrezorDevice::rawRead(unsigned long length, unsigned char *result, bool useTimeout) {
-    time_t start; 
-    time(&start);
-    
-    while (buffer_length < length) {
-        unsigned char part[65] = {0};
-        int length = hid_read_timeout(hid, part, 64, 1);
-        part[length] = 0;
-        
-        if (length && part[0] <= 63) {
-            FBLOG_INFO("rawRead()", "Reading chunk");
-            FBLOG_INFO("rawRead()", int(part[0]));
-            for (size_t i = 1; i <= part[0]; i++) {
-                FBLOG_INFO("rawRead()", int(part[i]));
-                buffer[buffer_length++] = part[i];
-            }
-        } else if (!length) {
-            time_t current;
-            time(&current);
-            
-            if ((current - start) > timeout) {
-                FBLOG_WARN("headerRead()", "Timed out");
-                throw ReadTimeout();
-            }
+void DeviceChannel::read_bytes(unsigned char *bytes, const size_t length)
+{
+    const time_t timeout_time = time(0) + _read_timeout;
+
+    while (_buffer_length < length) {
+        unsigned char chunk[1 + 63]; // extra byte for report number
+        const time_t ct = time(0);
+        const time_t rt = timeout_time>ct ? timeout_time-ct : 0; // remaining seconds
+        const int res = hid_read_timeout(_hid_device, chunk, sizeof(chunk), rt * 1000);
+
+        if (res < 0) { // read return -1 on error
+            FBLOG_FATAL("read_bytes()", "Read error");
+            FBLOG_FATAL("read_bytes()", hid_error(_hid_device));
+            throw ReadError();
+        }
+        else if (res < sizeof(chunk)) { // anything less than a full chunk is a timeout
+            FBLOG_WARN("read_bytes()", "Timed out");
+            throw ReadTimeout();
+        }
+        else {
+            FBLOG_INFO("read_bytes()", "Reading chunk");
+            memcpy(&_buffer[_buffer_length], &chunk[1], sizeof(chunk) - 1);
+            _buffer_length += sizeof(chunk) - 1;
         }
     }
-    
+
     size_t i;
-    for (i = 0; i < length; i++) {
-        result[i] = buffer[i];
-    }
-    for (; i < buffer_length; i++) {
-        buffer[i - length] = buffer[i];
-    }
-    buffer_length -= length;
-    FBLOG_INFO("rawRead()", "Buffer length");
-    FBLOG_INFO("rawRead()", buffer_length);
+    for (i = 0; i < length; i++) // copy to the result
+        bytes[i] = _buffer[i];
+    for (; i < _buffer_length; i++) // shift the buffer
+        _buffer[i - length] = _buffer[i];
+    _buffer_length -= length;
+
+    FBLOG_INFO("read_bytes()", "Buffer length");
+    FBLOG_INFO("read_bytes()", _buffer_length);
 }
 
-unsigned short TrezorDevice::headerRead(unsigned long &length, bool useTimeout) {
-    unsigned char header[7] = {0};
-    rawRead(1, header, useTimeout);
+void DeviceChannel::read_header(unsigned short &type, unsigned long &length)
+{
+    unsigned char header[6];
+
+    read_bytes(header, 1);
     while (header[0] != '#') {
-        FBLOG_WARN("headerRead()", "Warning: Aligning to magic characters");
-        rawRead(1, header, useTimeout);
+        FBLOG_WARN("read_header()", "Warning: Aligning to magic characters");
+        read_bytes(header, 1);
     }
 
-    rawRead(1, header, useTimeout);
+    read_bytes(header, 1);
     if (header[0] != '#') {
-        FBLOG_FATAL("headerRead()", "Second magic character is broken");
-        return 255; 
+        FBLOG_FATAL("read_header()", "Second magic character is broken");
+        throw ReadError();
     }
 
-    rawRead(6, header, useTimeout);
-    unsigned short type = ntohs(header[0] | (header[1] << 8));
+    FBLOG_INFO("read_header()", "Reading type and length");
+    read_bytes(header, 6);
+    type = ntohs(header[0] | (header[1] << 8));
     length = ntohl(header[2] | (header[3] << 8) | (header[4] << 16) | (header[5] << 24));
-    
-    FBLOG_INFO("headerRead()", "Returning type and length");
-    return type;
 }
 
-google::protobuf::Message *TrezorDevice::read(bool useTimeout) {
-    unsigned long length = 0;
-    unsigned short type = headerRead(length, useTimeout);
-    
+void DeviceChannel::write(const PB::Message &message, const char type)
+{
+    const size_t msgsize = message.ByteSize();
+    const size_t bufsize = 2 + 2 + 4 + msgsize; // ## + type + length + message
+
+    unsigned char buf[bufsize];
+    buf[0] = '#';
+    buf[1] = '#';
+
+    const unsigned short type_ = htons(type);
+    buf[3] = type_ >> 8;
+    buf[2] = type_ & 0xFF;
+
+    const unsigned long length_ = htonl(msgsize);
+    buf[7] = length_ >> 24;
+    buf[6] = (length_ >> 16) & 0xFF;
+    buf[5] = (length_ >> 8) & 0xFF;
+    buf[4] = length_ & 0xFF;
+
+    message.SerializeToArray(&buf[8], msgsize);
+    write_bytes(buf, bufsize);
+}
+
+boost::shared_ptr<PB::Message> DeviceChannel::read()
+{
+    unsigned short type;
+    unsigned long length;
+    read_header(type, length);
+
     FBLOG_INFO("read()", "Type and Length");
     FBLOG_INFO("read()", type);
     FBLOG_INFO("read()", length);
-    
-    unsigned char umessage[READ_BUFFER_SIZE];
-    for (size_t i = 0; i <= length; i++) {
-        umessage[i] = 0;
+
+    unsigned char msgbuf[length];
+    read_bytes(msgbuf, length);
+
+#define RETURN_INSTANCE_IF_IS(Z)                                        \
+    if (type == MESSAGE_TYPE(Z)) {                                      \
+        boost::shared_ptr<PB::Message> message(new Z);                  \
+        message->ParseFromArray(msgbuf, length);                        \
+        return message;                                                 \
     }
-    
-    rawRead(length, umessage, useTimeout);
-    
-    #define RETURN_INSTANCE_IF_IS(Z) if (type == MESSAGE_TYPE(Z)) { \
-        FBLOG_INFO("read()", type); \
-        Z *message = new Z; \
-        message->ParseFromArray(umessage, length); \
-        return message; \
-    }
-    
+
     RETURN_INSTANCE_IF_IS(Initialize);
+    RETURN_INSTANCE_IF_IS(Ping);
     RETURN_INSTANCE_IF_IS(Success);
     RETURN_INSTANCE_IF_IS(Failure);
-    RETURN_INSTANCE_IF_IS(GetUUID);
-    RETURN_INSTANCE_IF_IS(UUID);
     RETURN_INSTANCE_IF_IS(GetEntropy);
     RETURN_INSTANCE_IF_IS(Entropy);
     RETURN_INSTANCE_IF_IS(GetMasterPublicKey);
     RETURN_INSTANCE_IF_IS(MasterPublicKey);
+    RETURN_INSTANCE_IF_IS(LoadDevice);
+    RETURN_INSTANCE_IF_IS(ResetDevice);
+    RETURN_INSTANCE_IF_IS(SignTx);
+    RETURN_INSTANCE_IF_IS(SimpleSignTx);
     RETURN_INSTANCE_IF_IS(Features);
+    RETURN_INSTANCE_IF_IS(PinMatrixRequest);
+    RETURN_INSTANCE_IF_IS(PinMatrixAck);
+    RETURN_INSTANCE_IF_IS(PinMatrixCancel);
+    RETURN_INSTANCE_IF_IS(TxRequest);
+    RETURN_INSTANCE_IF_IS(TxInput);
+    RETURN_INSTANCE_IF_IS(TxOutput);
+    RETURN_INSTANCE_IF_IS(ApplySettings);
     RETURN_INSTANCE_IF_IS(ButtonRequest);
     RETURN_INSTANCE_IF_IS(ButtonAck);
     RETURN_INSTANCE_IF_IS(ButtonCancel);
     RETURN_INSTANCE_IF_IS(GetAddress);
     RETURN_INSTANCE_IF_IS(Address);
-    
-    throw FB::script_error("Unknown type");
-    
-    #undef RETURN_INSTANCE_IF_IS
+    RETURN_INSTANCE_IF_IS(SettingsType);
+    RETURN_INSTANCE_IF_IS(XprvType);
+    RETURN_INSTANCE_IF_IS(CoinType);
+
+    FBLOG_FATAL("read()", "Unknown type");
+    throw ReadError();
+
+#undef RETURN_INSTANCE_IF_IS
 }
 
-void TrezorDevice::write(const google::protobuf::Message& message, const char type) {
-    char buffer[256] = {0};
-    buffer[0] = '#';
-    buffer[1] = '#';
-    
-    unsigned short _type = htons(type);
-    buffer[3] = _type >> 8;
-    buffer[2] = _type & 0xFF;
-    
-    unsigned long _length = htonl(message.ByteSize());
-    buffer[7] = _length >> 24;
-    buffer[6] = (_length >> 16) & 0xFF;
-    buffer[5] = (_length >> 8) & 0xFF;
-    buffer[4] = _length & 0xFF;
-    
-    std::string smessage;
-    message.SerializeToString(&smessage);
-    
-    for (size_t i = 0; i < smessage.length(); i++)
-        buffer[8 + i] = smessage[i];
-    size_t total = smessage.length() + 8;
-    buffer[total] = 0x0;
-    
-    for (size_t i = 0; i < total; i += 63) {
-        FBLOG_INFO("write()", "Writing chunk");
-        char part[65] = {0};
-        part[0] = MIN(63, total - i * 63);
-        for (size_t j = i; j < total && j <= 63; j++)
-            part[j - i + 1] = buffer[j];
-        
-        part[part[0] + 1] = 0;
-        
-        hid_write(hid, (unsigned char *)part, part[0] + 1);
-    }
-}
-
-google::protobuf::Message *TrezorDevice::call(const google::protobuf::Message& message, const char type, bool useTimeout) {
+// TODO: optional timeout
+boost::shared_ptr<PB::Message> DeviceChannel::call(const PB::Message &message,
+                                                   const char type)
+{
     FBLOG_INFO("call()", "Writing to device");
     write(message, type);
+
     FBLOG_INFO("call()", "Reading from device");
-    google::protobuf::Message *result = read(useTimeout);
-    
+    boost::shared_ptr<PB::Message> result = read();
+
     if (result->GetTypeName() == "ButtonRequest") {
-        return call(ButtonAck(), MESSAGE_TYPE(ButtonAck), false);
-    } else if (result->GetTypeName() == "Failure") {
-        Failure *f = reinterpret_cast<Failure *>(result);
-        uint32_t code = f->code();
-        std::string message = f->message();
-        delete f;
-        
-        switch (code) {
-            case 4:
-                throw ActionCanceled();
-                break;
-        }
-        
-        FBLOG_ERROR("call()", "Failure");
-        FBLOG_ERROR("call()", code);
-        FBLOG_ERROR("call()", message);
-        throw FB::script_error(message);
+        return call(ButtonAck(), MESSAGE_TYPE(ButtonAck));
     }
-    
+    else if (result->GetTypeName() == "PinMatrixRequest") {
+        // TODO: pass it through like any other result, let JS handle this
+        PinMatrixAck instance;
+        instance.set_pin("pin");
+        return call(instance, MESSAGE_TYPE(PinMatrixAck));
+    }
+    else if (result->GetTypeName() == "Failure") {
+        boost::shared_ptr<Failure> failure =
+            boost::dynamic_pointer_cast<Failure>(result);
+
+        FBLOG_WARN("call()", "Failure");
+        FBLOG_WARN("call()", failure->code());
+        FBLOG_WARN("call()", failure->message());
+
+        switch (failure->code()) {
+        case 4:
+            throw ActionCanceled();
+            break;
+        case 6:
+            throw PinInvalid();
+            break;
+        default:
+            throw FB::script_error(failure->message());
+        }
+    }
+
     FBLOG_INFO("call()", "Returning result");
     return result;
-}
-
-std::string TrezorDevice::get_entropy(const size_t size) {
-    GetEntropy instance;
-    instance.set_size(size);
-    
-    Entropy *result = dynamic_cast<Entropy *>(call(instance, MESSAGE_TYPE(GetEntropy)));
-    std::string entropy(result->entropy());
-    std::stringstream stream;
-    
-    for (size_t i = 0; i < size; i++) {
-        stream << std::hex << (short(entropy[i]) & 0xFF);
-    }
-    
-    delete result;
-    return stream.str();
-}
-
-std::string TrezorDevice::get_uuid() {
-    UUID *result = dynamic_cast<UUID *>(call(GetUUID(), MESSAGE_TYPE(GetUUID)));
-    std::string uuid(result->uuid());
-    delete result;
-    
-    return uuid;
-}
-
-std::string TrezorDevice::get_address(const std::vector<int> address_n, const int index) {
-    GetAddress instance;
-    FBLOG_INFO("call()", "get_address");
-    BOOST_FOREACH(const int n, address_n) {
-        instance.add_address_n(n);
-    }
-    FBLOG_INFO("call()", "/get_address");
-    
-    Address *result = dynamic_cast<Address *>(call(instance, MESSAGE_TYPE(GetAddress)));
-    std::string address(result->address());
-    std::stringstream stream;
-    
-    for (size_t i = 0; i < address.length(); i++) {
-        stream << std::hex << (short(address[i]) & 0xFF);
-    }
-    
-    delete result;
-    return stream.str();
-}
-
-std::string TrezorDevice::get_master_public_key() {
-    MasterPublicKey *result = dynamic_cast<MasterPublicKey *>(call(GetMasterPublicKey(), MESSAGE_TYPE(GetMasterPublicKey)));
-    std::string key(result->key());
-    std::stringstream stream;
-    
-    for (size_t i = 0; i < key.length(); i++) {
-        stream << std::hex << (short(key[i]) & 0xFF);
-    }
-    
-    delete result;
-    return key;
 }

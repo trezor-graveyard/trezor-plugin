@@ -23,7 +23,6 @@
 void BitcoinTrezorPlugin::StaticInitialize()
 {
     hid_init();
-    srand(time(NULL));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,10 +43,10 @@ void BitcoinTrezorPlugin::StaticDeinitialize()
 ///         the JSAPI object until the onPluginReady method is called
 ///////////////////////////////////////////////////////////////////////////////
 BitcoinTrezorPlugin::BitcoinTrezorPlugin() :
-    available(), known()
+    _known_devices()
 {
-    known.push_back(TrezorDevice(0x1cbe, 0xcaf3)); // Trezor
-    known.push_back(TrezorDevice(0x10c4, 0xea80)); // Trezor Pi
+    _known_devices.push_back(DeviceDescriptor(0x1cbe, 0xcaf3)); // Trezor
+    _known_devices.push_back(DeviceDescriptor(0x10c4, 0xea80)); // Trezor Pi
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,21 +73,28 @@ void BitcoinTrezorPlugin::shutdown()
     // references to this object will be valid
 }
 
-void BitcoinTrezorPlugin::processDevices() {
-    available.clear();
-    
+std::vector<DeviceDescriptor> BitcoinTrezorPlugin::list_available_devices()
+{
+    std::vector<DeviceDescriptor> result;
     struct hid_device_info *devices = hid_enumerate(0x0, 0x0);
     struct hid_device_info *current = devices;
-    
+
     while (current) {
-        for (TrezorDevices::iterator it = known.begin(); it != known.end(); ++it) {
-            if (it->isLikeMe(current)) {
-                available.push_back(TrezorDevice(current));
+        DeviceDescriptor curr_desc(*current);
+        for (std::vector<DeviceDescriptor>::iterator it = _known_devices.begin();
+             it != _known_devices.end();
+             it++)
+        {
+            if (it->is_of_same_product(curr_desc)) {
+                result.push_back(curr_desc);
+                break;
             }
         }
         current = current->next;
     }
     hid_free_enumeration(devices);
+
+    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,33 +113,3 @@ FB::JSAPIPtr BitcoinTrezorPlugin::createJSAPI()
     // m_host is the BrowserHost
     return boost::make_shared<BitcoinTrezorPluginAPI>(FB::ptr_cast<BitcoinTrezorPlugin>(shared_from_this()), m_host);
 }
-
-bool BitcoinTrezorPlugin::onMouseDown(FB::MouseDownEvent *evt, FB::PluginWindow *)
-{
-    //printf("Mouse down at: %d, %d\n", evt->m_x, evt->m_y);
-    return false;
-}
-
-bool BitcoinTrezorPlugin::onMouseUp(FB::MouseUpEvent *evt, FB::PluginWindow *)
-{
-    //printf("Mouse up at: %d, %d\n", evt->m_x, evt->m_y);
-    return false;
-}
-
-bool BitcoinTrezorPlugin::onMouseMove(FB::MouseMoveEvent *evt, FB::PluginWindow *)
-{
-    //printf("Mouse move at: %d, %d\n", evt->m_x, evt->m_y);
-    return false;
-}
-bool BitcoinTrezorPlugin::onWindowAttached(FB::AttachedEvent *evt, FB::PluginWindow *)
-{
-    // The window is attached; act appropriately
-    return false;
-}
-
-bool BitcoinTrezorPlugin::onWindowDetached(FB::DetachedEvent *evt, FB::PluginWindow *)
-{
-    // The window is about to be detached; act appropriately
-    return false;
-}
-
