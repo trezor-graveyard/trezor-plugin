@@ -3,6 +3,7 @@
 #include "trezor.pb.h"
 
 #include <boost/assign/list_of.hpp>
+#include <boost/algorithm/hex.hpp>
 
 #include "logging.h"
 
@@ -43,17 +44,21 @@ const std::map<unsigned short, const PB::Descriptor *> message_type_to_descripto
     (102, DebugLinkState::descriptor())
     (103, DebugLinkStop::descriptor());
 
-std::string hex_decode(const std::string &str)
+static std::string hex_encode(const std::string &str)
 {
-    return str; // TODO
+    std::ostringstream stream;
+    boost::algorithm::hex(str, std::ostream_iterator<char>(stream));
+    return stream.str();
 }
 
-std::string hex_encode(const std::string &str)
+static std::string hex_decode(const std::string &str)
 {
-    return str; // TODO
+    std::ostringstream stream;
+    boost::algorithm::unhex(str, std::ostream_iterator<char>(stream));
+    return stream.str();
 }
 
-const PB::Descriptor *descriptor_from_type(const unsigned short type)
+static const PB::Descriptor *descriptor_from_type(const unsigned short type)
 {
     const std::map<unsigned short, const PB::Descriptor *>::const_iterator it =
         message_type_to_descriptor.find(type);
@@ -64,9 +69,9 @@ const PB::Descriptor *descriptor_from_type(const unsigned short type)
     return it->second;
 }
 
-FB::variant serialize_single_field(const PB::Message &message,
-                                   const PB::Reflection &ref,
-                                   const PB::FieldDescriptor &fd)
+static FB::variant serialize_single_field(const PB::Message &message,
+                                          const PB::Reflection &ref,
+                                          const PB::FieldDescriptor &fd)
 {
     switch (fd.cpp_type()) {
 
@@ -110,9 +115,9 @@ FB::variant serialize_single_field(const PB::Message &message,
     }
 }
 
-FB::variant serialize_repeated_field(const PB::Message &message,
-                                     const PB::Reflection &ref,
-                                     const PB::FieldDescriptor &fd)
+static FB::variant serialize_repeated_field(const PB::Message &message,
+                                            const PB::Reflection &ref,
+                                            const PB::FieldDescriptor &fd)
 {
     FB::VariantList result;
     int size = ref.FieldSize(message, &fd);
@@ -179,10 +184,10 @@ FB::variant serialize_repeated_field(const PB::Message &message,
     return result;
 }
 
-void parse_single_field(PB::Message &message,
-                        const PB::Reflection &ref,
-                        const PB::FieldDescriptor &fd,
-                        const FB::variant &val)
+static void parse_single_field(PB::Message &message,
+                               const PB::Reflection &ref,
+                               const PB::FieldDescriptor &fd,
+                               const FB::variant &val)
 {
     switch (fd.cpp_type()) {
 
@@ -231,10 +236,10 @@ void parse_single_field(PB::Message &message,
     }
 }
 
-void parse_repeated_field(PB::Message &message,
-                          const PB::Reflection &ref,
-                          const PB::FieldDescriptor &fd,
-                          const FB::VariantList &val)
+static void parse_repeated_field(PB::Message &message,
+                                 const PB::Reflection &ref,
+                                 const PB::FieldDescriptor &fd,
+                                 const FB::VariantList &val)
 {
     switch (fd.cpp_type()) {
 
