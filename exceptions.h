@@ -29,4 +29,10 @@ struct ReadError : FB::script_error {
     ~ReadError() throw() {}
 };
 
+struct MessageTypeError : FB::script_error {
+    MessageTypeError()
+        : FB::script_error("Message type unknown") {}
+    ~MessageTypeError() throw() {}
+};
+
 #endif	/* EXCEPTIONS_H */

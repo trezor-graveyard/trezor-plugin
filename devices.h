@@ -8,16 +8,11 @@
 #ifndef DEVICES_H
 #define DEVICES_H
 
-#include <vector>
 #include <string>
+#include <vector>
 
-#include <google/protobuf/message.h>
-
-#include "APITypes.h"
 #include "hidapi.h"
-#include "trezor.pb.h"
-
-namespace PB = google::protobuf;
+#include "messages.h"
 
 //
 // HID device information structure.
@@ -71,13 +66,11 @@ public:
     virtual ~DeviceChannel() { close(); } // closes on destruction
 
 public:
-    // device domain methods
-    std::string read_master_public_key();
-    std::string read_entropy(const size_t size);
-    std::string read_address(const std::vector<int> &address_n, const int index);
-    std::pair<std::vector<std::string>, std::string>
-        sign_tx(const std::vector<TxInput> &inputs,
-                const std::vector<TxOutput> &outputs);
+    // protobuf rpc
+    void write(const PB::Message &message, const unsigned short type);
+    std::pair<boost::shared_ptr<PB::Message>, unsigned short> read();
+    std::pair<boost::shared_ptr<PB::Message>, unsigned short> call(const PB::Message &message,
+                                                                   const unsigned short type);
 
 private:
     // opening/closing channel
@@ -88,11 +81,6 @@ private:
     void write_bytes(const unsigned char *bytes, const size_t length);
     void read_bytes(unsigned char *bytes, const size_t length);
     void read_header(unsigned short &type, unsigned long &length);
-
-    // protobuf messages rpc
-    void write(const PB::Message &message, const char type);
-    boost::shared_ptr<PB::Message> read();
-    boost::shared_ptr<PB::Message> call(const PB::Message &message, const char type);
 };
 
 #endif  /* DEVICES_H */

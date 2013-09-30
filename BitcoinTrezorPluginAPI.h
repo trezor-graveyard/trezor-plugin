@@ -37,32 +37,19 @@ public:
         registerAttribute("serialNumber", _device.serial_number, true);
 
         // methods
-        registerMethod("getMasterPublicKey", make_method(this, &BitcoinTrezorDeviceAPI::call_getMasterPublicKey));
-        registerMethod("getEntropy", make_method(this, &BitcoinTrezorDeviceAPI::call_getEntropy));
-        registerMethod("getAddress", make_method(this, &BitcoinTrezorDeviceAPI::call_getAddress));
-        registerMethod("signTransaction", make_method(this, &BitcoinTrezorDeviceAPI::call_signTransaction));
+        registerMethod("call", make_method(this, &BitcoinTrezorDeviceAPI::call));
     }
     virtual ~BitcoinTrezorDeviceAPI() {};
 
 public:
-    bool call_getMasterPublicKey(const FB::JSObjectPtr &callback);
-    bool call_getEntropy(const int size,
-                         const FB::JSObjectPtr &callback);
-    bool call_getAddress(const std::vector<int> &address_n,
-                         const FB::JSObjectPtr &callback);
-    bool call_signTransaction(const FB::VariantMap &inputs,
-                              const FB::VariantMap &outputs,
-                              const FB::JSObjectPtr &callback);
+    void call(const unsigned short type,
+              const FB::VariantMap &message,
+              const FB::JSObjectPtr &callback);
 
 private:
-    void call_getMasterPublicKey_internal(const FB::JSObjectPtr &callback);
-    void call_getEntropy_internal(const int size,
-				  const FB::JSObjectPtr &callback);
-    void call_getAddress_internal(const std::vector<int> &address_n,
-				  const FB::JSObjectPtr &callback);
-    void call_signTransaction_internal(const FB::VariantMap &inputs,
-                                       const FB::VariantMap &outputs,
-                                       const FB::JSObjectPtr &callback);
+    void call_internal(const unsigned short type,
+                       const FB::VariantMap &message,
+                       const FB::JSObjectPtr &callback);
 
     // event helpers
     FB_JSAPI_EVENT(cancel, 0, ());

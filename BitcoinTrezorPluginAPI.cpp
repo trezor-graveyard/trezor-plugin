@@ -56,49 +56,29 @@ std::vector<FB::JSAPIPtr> BitcoinTrezorPluginAPI::get_devices()
     return result;
 }
 
-bool BitcoinTrezorDeviceAPI::call_getEntropy(const int size,
-					     const FB::JSObjectPtr &callback)
+void BitcoinTrezorDeviceAPI::call(const unsigned short type,
+                                  const FB::VariantMap &message,
+                                  const FB::JSObjectPtr &callback)
 {
-    boost::thread t(boost::bind(&BitcoinTrezorDeviceAPI::call_getEntropy_internal,
-                                this, size, callback));
-    return true;
+    boost::thread t(boost::bind(&BitcoinTrezorDeviceAPI::call_internal,
+                                this, type, message, callback));
 }
 
-bool BitcoinTrezorDeviceAPI::call_getAddress(const std::vector<int> &address_n,
-					     const FB::JSObjectPtr &callback)
-{
-    boost::thread t(boost::bind(&BitcoinTrezorDeviceAPI::call_getAddress_internal,
-                                this, address_n, callback));
-    return true;
-}
-
-bool BitcoinTrezorDeviceAPI::call_getMasterPublicKey(const FB::JSObjectPtr &callback)
-{
-    boost::thread t(boost::bind(&BitcoinTrezorDeviceAPI::call_getMasterPublicKey_internal,
-                                this, callback));
-    return true;
-}
-
-bool BitcoinTrezorDeviceAPI::call_signTransaction(const FB::VariantMap &inputs,
-                                                  const FB::VariantMap &outputs,
-                                                  const FB::JSObjectPtr &callback)
-{
-    boost::thread t(boost::bind(&BitcoinTrezorDeviceAPI::call_signTransaction_internal,
-                                this, inputs, outputs, callback));
-    return true;
-}
-
-
-void BitcoinTrezorDeviceAPI::call_getEntropy_internal(const int size,
-						      const FB::JSObjectPtr &callback)
+void BitcoinTrezorDeviceAPI::call_internal(const unsigned short type,
+                                           const FB::VariantMap &message,
+                                           const FB::JSObjectPtr &callback)
 {
     boost::mutex::scoped_lock lock(_mutex);
-    std::string result;
+    FB::VariantMap result_message;
+    unsigned short result_type;
 
     try {
         DeviceChannel device(_device);
-        result = device.read_entropy(size);
-        result = bytes_of_string_to_hex(result);
+        boost::shared_ptr<PB::Message> message_ = message_of_type_and_map(type, message);
+        std::pair<boost::shared_ptr<PB::Message>, unsigned short > result =
+            device.call(*message_, type);
+        result_message = message_serialize_as_map(*result.first);
+        result_type = result.second;
     } catch (const ActionCanceled &e) {
         fire_cancel();
     } catch (const ReadTimeout &e) {
@@ -107,71 +87,5 @@ void BitcoinTrezorDeviceAPI::call_getEntropy_internal(const int size,
         fire_failure(e.what());
     }
 
-    callback->InvokeAsync("", FB::variant_list_of(result));
-}
-
-void BitcoinTrezorDeviceAPI::call_getAddress_internal(const std::vector<int> &address_n,
-						      const FB::JSObjectPtr &callback)
-{
-    boost::mutex::scoped_lock lock(_mutex);
-    std::string result;
-
-    try {
-        DeviceChannel device(_device);
-        result = device.read_address(address_n, 0);
-        result = bytes_of_string_to_hex(result);
-    } catch (const ActionCanceled &e) {
-        fire_cancel();
-    } catch (const ReadTimeout &e) {
-        fire_timeout();
-    } catch (const std::exception &e) {
-        fire_failure(e.what());
-    }
-
-    callback->InvokeAsync("", FB::variant_list_of(result));
-}
-
-void BitcoinTrezorDeviceAPI::call_getMasterPublicKey_internal(const FB::JSObjectPtr &callback)
-{
-    boost::mutex::scoped_lock lock(_mutex);
-    std::string result;
-
-    try {
-        DeviceChannel device(_device);
-        result = device.read_master_public_key();
-        result = bytes_of_string_to_hex(result);
-    } catch (const ActionCanceled &e) {
-        fire_cancel();
-    } catch (const ReadTimeout &e) {
-        fire_timeout();
-    } catch (const std::exception &e) {
-        fire_failure(e.what());
-    }
-
-    callback->InvokeAsync("", FB::variant_list_of(result));
-}
-
-void BitcoinTrezorDeviceAPI::call_signTransaction_internal(const FB::VariantMap &inputs,
-                                                           const FB::VariantMap &outputs,
-                                                           const FB::JSObjectPtr &callback)
-{
-    boost::mutex::scoped_lock lock(_mutex);
-    std::pair<std::vector<std::string>, std::string> result;
-
-    try {
-        std::vector<TxInput> msg_inputs;
-        std::vector<TxOutput> msg_outputs;
-        // TODO: fill msg_inputs/msg_outputs
-
-        DeviceChannel device(_device);
-        result = device.sign_tx(msg_inputs, msg_outputs);
-    } catch (const ActionCanceled &e) {
-        fire_cancel();
-    } catch (const ReadTimeout &e) {
-        fire_timeout();
-    } catch (const std::exception &e) {
-        fire_failure(e.what());
-    }
-
-    callback->InvokeAsync("", FB::variant_list_of(result.first)(result.second));
+    callback->InvokeAsync("", FB::variant_list_of(result_type)(result_message));
 }

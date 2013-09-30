@@ -1,69 +1,34 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Bitcoin Trezor Plugin Test Page</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <script type="text/javascript">
-            
-function dump(arr, level) {
-    var dumped_text = "";
-    if (!level) level = 0;
-
-    var level_padding = "";
-    for (var j=0; j < level + 1; j++) 
-        level_padding += "    ";
-
-    if (typeof(arr) === 'object') {  
-        for (var item in arr) {
-            var value = arr[item];
-
-            if (typeof(value) === 'object') { 
-                dumped_text += level_padding + "'" + item + "' ...\n";
-                dumped_text += dump(value, level + 1);
-            } else {
-                dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
-            }
-        }
-    } else { 
-        dumped_text = "===>" + arr + "<===(" + typeof(arr) + ")";
-    }
-    
-    return dumped_text;
-}
-
-function log(text) {
-    var log = document.getElementById('log');
-    log.innerHTML += text + "\n";
-}
-
-function pluginLoaded() {
-    var trezor = document.getElementById('trezor');
-    trezor.addEventListener("actionCanceled", function() { log("Cancel button pressed") }, false);
-    trezor.addEventListener("generalFailure", function(message) { log(message) }, false);
-    
-    var devices = trezor.devices;
-    
-    log("Available devices:")
-    log(dump(devices));
-    
-    if (devices.length > 0) {
-        var device = devices[0];
-        //log("get_uuid() => " + trezor.getUUID(device));
-        /*trezor.getEntropy(device, 5, function(plugin, entropy) {
-            log("get_entropy(5) => " + entropy);
-        });*/
-        trezor.getAddress(device, [1, 2], function(plugin, address) {
-            log("get_address([1, 2]) => " + address + ' ' + typeof(address));
-        });
-    }
-}
-
-        </script>
-    </head>
-    <body>
-        <object id="trezor" type="application/x-bitcointrezorplugin" width="1" height="1">
-            <param name="onload" value="pluginLoaded" />
-        </object>
-        <pre id="log" width="100%"></pre>
-    </body>
+  <head>
+    <title>Bitcoin Trezor Plugin Test Page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <object id="trezor" type="application/x-bitcointrezorplugin" width="1" height="1"></object>
+    <script src="trezor.js"></script>
+    <script>
+     window.onload = function() {
+         var plugin = document.getElementById('trezor'),
+         trez = new trezor.Trezor(plugin);
+         
+         if (!plugin.devices.length) return;
+         
+         var device = plugin.devices[0];
+         
+         console.log(device.vendorId);
+         console.log(device.productId);
+         console.log(device.serialNumber);
+         
+         var channel = trez.open(device, {
+             pin: function(cb) {
+                 cb(prompt('PIN:'));
+             },
+             failure: function(msg) {
+                 alert('Failure: ' + msg);
+             },
+         });
+      };
+    </script>
+  </body>
 </html>
