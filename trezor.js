@@ -51,6 +51,31 @@ var trezor = (function (exports) {
         });
     };
 
+    Channel.prototype.signTx = function (inputs, outputs, cb) {
+        var self = this,
+            signatures = [],
+            serializedTx = '';
+
+        this.call('SignTx', { inputs_count: inputs.length,
+                              outputs_count: outputs.length }, process);
+
+        function process (t, m) {
+
+            if (m.serialized_tx)
+                serializedTx += m.serialized_tx;
+            if (m.signature && m.signed_index >= 0)
+                signatures[m.signed_index] = m.signature;
+
+            if (m.request_index < 0)
+                return cb(null, signatures, serializedTx);
+
+            if (m.request_type == 'TXINPUT')
+                return self.call('TxInput', inputs[m.request_index], process);
+            else
+                return self.call('TxOutput', outputs[m.request_index], process);
+        }
+    };
+
     Channel.prototype.call = function (type, msg, cb) {
         var self = this;
         this.device.call(type, msg, function (t, m) {
