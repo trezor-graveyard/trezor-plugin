@@ -5,30 +5,50 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   </head>
   <body>
-    <object id="trezor" type="application/x-bitcointrezorplugin" width="1" height="1"></object>
+    <button onclick="testPlugin()" style="padding: 3em">Test plugin</button>
+
     <script src="trezor.js"></script>
     <script>
-     window.onload = function() {
-         var plugin = document.getElementById('trezor'),
-         trez = new trezor.Trezor(plugin);
-         
-         if (!plugin.devices.length) return;
-         
-         var device = plugin.devices[0];
-         
-         console.log(device.vendorId);
-         console.log(device.productId);
-         console.log(device.serialNumber);
-         
-         var channel = trez.open(device, {
-             pin: function(cb) {
-                 cb(prompt('PIN:'));
-             },
-             failure: function(msg) {
-                 alert('Failure: ' + msg);
-             },
+     // Load the plugin early to create a plugin process, so we can
+     // attach a debugger
+     var trezor_ = new trezor.Trezor();
+
+     function testPlugin() {
+         var version = trezor_.version(),
+             devices = trezor_.devices();
+
+         console.log('Version:', version);
+         console.log('Devices:', devices);
+
+         if (!devices.length) return;
+
+         var device = devices[0];
+         console.log('Vendor ID:', device.vendorId);
+         console.log('Product ID:', device.productId);
+         console.log('Serial Number:', device.serialNumber);
+
+         var session = trezor_.open(device, {
+             error: handleError,
+             pin: handlePin
          });
-      };
+
+         session.initialize(handleInit, handleFailure);
+
+         function handleFailure(error) { console.log('Failure:', error); }
+         function handleError(error) { console.log('Error:', error); }
+         function handlePin(callback) { callback(prompt('Enter PIN:')); }
+
+         function handleInit(features) {
+             session.getMasterPublicKey(handleKey, handleFailure);
+         }
+
+         function handleKey(key) {
+             session.getEntropy(64, handleEntropy, handleFailure);
+         }
+
+         function handleEntropy(entropy) {
+         }
+      }
     </script>
   </body>
 </html>

@@ -17,6 +17,7 @@
 #include "JSAPIAuto.h"
 #include "BrowserHost.h"
 #include "BitcoinTrezorPlugin.h"
+#include "utils.h"
 
 #ifndef H_BitcoinTrezorPluginAPI
 #define H_BitcoinTrezorPluginAPI
@@ -32,8 +33,8 @@ public:
         : _device(device)
     {
         // read-only attributes
-        registerAttribute("vendorId", _device.vendor_id, true);
-        registerAttribute("productId", _device.product_id, true);
+        registerAttribute("vendorId", hex_encode(_device.vendor_id), true);
+        registerAttribute("productId", hex_encode(_device.product_id), true);
         registerAttribute("serialNumber", _device.serial_number, true);
 
         // methods
@@ -42,19 +43,14 @@ public:
     virtual ~BitcoinTrezorDeviceAPI() {};
 
 public:
-    void call(const unsigned short type,
-              const FB::VariantMap &message,
+    void call(const std::string &type_name,
+              const FB::VariantMap &message_map,
               const FB::JSObjectPtr &callback);
 
 private:
-    void call_internal(const unsigned short type,
-                       const FB::VariantMap &message,
+    void call_internal(const std::string &type_name,
+                       const FB::VariantMap &message_map,
                        const FB::JSObjectPtr &callback);
-
-    // event helpers
-    FB_JSAPI_EVENT(cancel, 0, ());
-    FB_JSAPI_EVENT(timeout, 0, ());
-    FB_JSAPI_EVENT(failure, 1, (const std::string &));
 };
 
 class BitcoinTrezorPluginAPI : public FB::JSAPIAuto

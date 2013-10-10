@@ -1,77 +1,94 @@
 #include "exceptions.h"
 #include "messages.h"
-#include "trezor.pb.h"
+#include "utils.h"
 
-#include <boost/assign/list_of.hpp>
-#include <boost/algorithm/hex.hpp>
+#include "trezor.pb.h"
 
 #include "logging.h"
 
-// From trezor-emu/trezor/mapping.py,
-// commit 3fef5041362fbbe56963964a909c95b0e7e45e39
-const std::map<unsigned short, const PB::Descriptor *> message_type_to_descriptor =
-    boost::assign::map_list_of
-    (0, Initialize::descriptor())
-    (1, Ping::descriptor())
-    (2, Success::descriptor())
-    (3, Failure::descriptor())
-    (9, GetEntropy::descriptor())
-    (10, Entropy::descriptor())
-    (11, GetMasterPublicKey::descriptor())
-    (12, MasterPublicKey::descriptor())
-    (13, LoadDevice::descriptor())
-    (14, ResetDevice::descriptor())
-    (15, SignTx::descriptor())
-    (16, SimpleSignTx::descriptor())
-    (17, Features::descriptor())
-    (18, PinMatrixRequest::descriptor())
-    (19, PinMatrixAck::descriptor())
-    (20, PinMatrixCancel::descriptor())
-    (21, TxRequest::descriptor())
-    (23, TxInput::descriptor())
-    (24, TxOutput::descriptor())
-    (25, ApplySettings::descriptor())
-    (26, ButtonRequest::descriptor())
-    (27, ButtonAck::descriptor())
-    (28, ButtonCancel::descriptor())
-    (29, GetAddress::descriptor())
-    (30, Address::descriptor())
-    (31, SettingsType::descriptor())
-    (32, XprvType::descriptor())
-    (33, CoinType::descriptor())
-    (100, DebugLinkDecision::descriptor())
-    (101, DebugLinkGetState::descriptor())
-    (102, DebugLinkState::descriptor())
-    (103, DebugLinkStop::descriptor());
+static const std::string MESSAGE_TYPE_ENUM_NAME = "MessageType";
+static const std::string MESSAGE_TYPE_PREFIX = MESSAGE_TYPE_ENUM_NAME + "_";
 
-static std::string hex_encode(const std::string &str)
+static PB::MessageFactory *
+pb_message_factory()
 {
-    std::ostringstream stream;
-    boost::algorithm::hex(str, std::ostream_iterator<char>(stream));
-    return stream.str();
+    // TODO: construct dynamic message factory
+    return PB::MessageFactory::generated_factory();
 }
 
-static std::string hex_decode(const std::string &str)
+static const PB::DescriptorPool *
+pb_descriptor_pool()
 {
-    std::ostringstream stream;
-    boost::algorithm::unhex(str, std::ostream_iterator<char>(stream));
-    return stream.str();
+    // TODO: implement dynamic FileDescriptorProto loading
+    return PB::DescriptorPool::generated_pool();
 }
 
-static const PB::Descriptor *descriptor_from_type(const unsigned short type)
+static const PB::Descriptor *
+message_descriptor(const std::string &name)
 {
-    const std::map<unsigned short, const PB::Descriptor *>::const_iterator it =
-        message_type_to_descriptor.find(type);
+    const PB::DescriptorPool *dp = pb_descriptor_pool();
 
-    if (it == message_type_to_descriptor.end())
-        throw MessageTypeError();
-    
-    return it->second;
+    const PB::Descriptor *md = dp->FindMessageTypeByName(name);
+    if (!md) throw MessageTypeError();
+
+    return md;
 }
 
-static FB::variant serialize_single_field(const PB::Message &message,
-                                          const PB::Reflection &ref,
-                                          const PB::FieldDescriptor &fd)
+std::string
+message_name(uint16_t type)
+{
+    const PB::DescriptorPool *dp = pb_descriptor_pool();
+
+    const PB::EnumDescriptor *ed = dp->FindEnumTypeByName(MESSAGE_TYPE_ENUM_NAME);
+    if (!ed) throw MessageTypeError();
+
+    const PB::EnumValueDescriptor *evd = ed->FindValueByNumber(type);
+    if (!evd) throw MessageTypeError();
+
+    const std::string ename = evd->name();
+    return ename.substr(MESSAGE_TYPE_PREFIX.length());
+}
+
+uint16_t
+message_type(const std::string &name)
+{
+    const PB::DescriptorPool *dp = pb_descriptor_pool();
+
+    const PB::EnumDescriptor *ed = dp->FindEnumTypeByName(MESSAGE_TYPE_ENUM_NAME);
+    if (!ed) throw MessageTypeError();
+
+    const std::string ename = MESSAGE_TYPE_PREFIX + name;
+    const PB::EnumValueDescriptor *evd = ed->FindValueByName(ename);
+    if (!evd) throw MessageTypeError();
+
+    return evd->number();
+}
+
+boost::shared_ptr<PB::Message>
+create_message(const std::string &name)
+{
+    PB::MessageFactory *factory = pb_message_factory();
+
+    const PB::Descriptor *descriptor = message_descriptor(name);
+    const PB::Message *prototype = factory->GetPrototype(descriptor);
+
+    return boost::shared_ptr<PB::Message>(prototype->New());
+}
+
+//
+// Firebreath API functions
+//
+
+static bool
+is_field_binary(const PB::FieldDescriptor &fd)
+{
+    return fd.options().GetExtension(binary);
+}
+
+static FB::variant
+serialize_single_field(const PB::Message &message,
+                       const PB::Reflection &ref,
+                       const PB::FieldDescriptor &fd)
 {
     switch (fd.cpp_type()) {
 
@@ -98,28 +115,27 @@ static FB::variant serialize_single_field(const PB::Message &message,
 
     case PB::FieldDescriptor::CPPTYPE_STRING: {
         std::string str = ref.GetString(message, &fd);
-        if (fd.type() == PB::FieldDescriptor::TYPE_BYTES)
-            return hex_encode(str);
-        else
-            return str;
+        return is_field_binary(fd) ? hex_encode(str) : str;
     }
 
     case PB::FieldDescriptor::CPPTYPE_ENUM:
         return ref.GetEnum(message, &fd)->name();
 
     case PB::FieldDescriptor::CPPTYPE_MESSAGE:
-        return message_serialize_as_map(ref.GetMessage(message, &fd));
+        return message_to_map(ref.GetMessage(message, &fd));
 
     default:
         throw std::invalid_argument("Protobuf field of unknown type");
     }
 }
 
-static FB::variant serialize_repeated_field(const PB::Message &message,
-                                            const PB::Reflection &ref,
-                                            const PB::FieldDescriptor &fd)
+static FB::variant
+serialize_repeated_field(const PB::Message &message,
+                         const PB::Reflection &ref,
+                         const PB::FieldDescriptor &fd)
 {
     FB::VariantList result;
+
     int size = ref.FieldSize(message, &fd);
 
     switch (fd.cpp_type()) {
@@ -132,16 +148,6 @@ static FB::variant serialize_repeated_field(const PB::Message &message,
     case PB::FieldDescriptor::CPPTYPE_FLOAT:
         for (int i = 0; i < size; i++)
             result.push_back(ref.GetRepeatedFloat(message, &fd, i));
-        break;
-
-    case PB::FieldDescriptor::CPPTYPE_INT64:
-        for (int i = 0; i < size; i++)
-            result.push_back(ref.GetRepeatedInt64(message, &fd, i));
-        break;
-
-    case PB::FieldDescriptor::CPPTYPE_UINT64:
-        for (int i = 0; i < size; i++)
-            result.push_back(ref.GetRepeatedUInt64(message, &fd, i));
         break;
 
     case PB::FieldDescriptor::CPPTYPE_INT32:
@@ -162,64 +168,65 @@ static FB::variant serialize_repeated_field(const PB::Message &message,
     case PB::FieldDescriptor::CPPTYPE_STRING:
         for (int i = 0; i < size; i++) {
             std::string str = ref.GetString(message, &fd);
-            if (fd.type() == PB::FieldDescriptor::TYPE_BYTES)
-                result.push_back(hex_encode(str));
-            else
-                result.push_back(str);
+            result.push_back(is_field_binary(fd) ? hex_encode(str) : str);
         }
         break;
 
     case PB::FieldDescriptor::CPPTYPE_ENUM:
         for (int i = 0; i < size; i++)
             result.push_back(ref.GetRepeatedEnum(message, &fd, i)->name());
+        break;
 
     case PB::FieldDescriptor::CPPTYPE_MESSAGE:
         for (int i = 0; i < size; i++)
-            result.push_back(message_serialize_as_map(ref.GetRepeatedMessage(message, &fd, i)));
+            result.push_back(message_to_map(ref.GetRepeatedMessage(message, &fd, i)));
+        break;
 
     default:
-        throw std::invalid_argument("Protobuf field of unknown type");
+        throw std::invalid_argument("Protobuf field of unknown/invalid type");
     }
 
     return result;
 }
 
-static void parse_single_field(PB::Message &message,
-                               const PB::Reflection &ref,
-                               const PB::FieldDescriptor &fd,
-                               const FB::variant &val)
+static void
+parse_single_field(PB::Message &message,
+                   const PB::Reflection &ref,
+                   const PB::FieldDescriptor &fd,
+                   const FB::variant &val)
 {
     switch (fd.cpp_type()) {
 
     case PB::FieldDescriptor::CPPTYPE_DOUBLE:
-        ref.SetDouble(&message, &fd, val.cast<double>()); break;
+        ref.SetDouble(&message, &fd, val.convert_cast<double>());
+        break;
 
     case PB::FieldDescriptor::CPPTYPE_FLOAT:
-        ref.SetFloat(&message, &fd, val.cast<float>()); break;
-
-    case PB::FieldDescriptor::CPPTYPE_INT64:
-    case PB::FieldDescriptor::CPPTYPE_UINT64:
-        throw std::invalid_argument("Cannot parse 64-bit protobuf fields");
+        ref.SetFloat(&message, &fd, val.convert_cast<float>());
+        break;
 
     case PB::FieldDescriptor::CPPTYPE_INT32:
-        ref.SetInt32(&message, &fd, val.cast<int>()); break;
+        ref.SetInt32(&message, &fd, val.convert_cast<int>());
+        break;
 
     case PB::FieldDescriptor::CPPTYPE_UINT32:
-        ref.SetUInt32(&message, &fd, val.cast<unsigned int>()); break;
+        ref.SetUInt32(&message, &fd, val.convert_cast<unsigned int>());
+        break;
 
     case PB::FieldDescriptor::CPPTYPE_BOOL:
-        ref.SetBool(&message, &fd, val.cast<bool>()); break;
-
-    case PB::FieldDescriptor::CPPTYPE_STRING:
-        if (fd.type() == PB::FieldDescriptor::TYPE_BYTES)
-            ref.SetString(&message, &fd, hex_decode(val.cast<std::string>()));
-        else
-            ref.SetString(&message, &fd, val.cast<std::string>());
+        ref.SetBool(&message, &fd, val.convert_cast<bool>());
         break;
+
+    case PB::FieldDescriptor::CPPTYPE_STRING: {
+        const std::string str = val.convert_cast<std::string>();
+        ref.SetString(&message, &fd, is_field_binary(fd) ? hex_decode(str) : str);
+        break;
+    }
 
     case PB::FieldDescriptor::CPPTYPE_ENUM: {
         const PB::EnumDescriptor *ed = fd.enum_type();
-        const PB::EnumValueDescriptor *evd = ed->FindValueByName(val.cast<std::string>());
+        const PB::EnumValueDescriptor *evd =
+            ed->FindValueByName(val.convert_cast<std::string>());
         if (!evd) throw std::invalid_argument("Unknown enum value");
         ref.SetEnum(&message, &fd, evd);
         break;
@@ -227,64 +234,60 @@ static void parse_single_field(PB::Message &message,
 
     case PB::FieldDescriptor::CPPTYPE_MESSAGE: {
         PB::Message *fm = ref.MutableMessage(&message, &fd);
-        message_parse_from_map(*fm, val.cast<FB::VariantMap>());
+        message_from_map(*fm, val.cast<FB::VariantMap>());
         break;
     }
 
     default:
-        throw std::invalid_argument("Protobuf field of unknown type");
+        throw std::invalid_argument("Protobuf field of unknown/invalid type");
     }
 }
 
-static void parse_repeated_field(PB::Message &message,
-                                 const PB::Reflection &ref,
-                                 const PB::FieldDescriptor &fd,
-                                 const FB::VariantList &val)
+static void
+parse_repeated_field(PB::Message &message,
+                     const PB::Reflection &ref,
+                     const PB::FieldDescriptor &fd,
+                     const FB::VariantList &val)
 {
     switch (fd.cpp_type()) {
 
     case PB::FieldDescriptor::CPPTYPE_DOUBLE:
         for (int i = 0; i < val.size(); i++)
-            ref.AddDouble(&message, &fd, val[i].cast<double>());
+            ref.AddDouble(&message, &fd, val[i].convert_cast<double>());
         break;
 
     case PB::FieldDescriptor::CPPTYPE_FLOAT:
         for (int i = 0; i < val.size(); i++)
-            ref.AddFloat(&message, &fd, val[i].cast<float>());
+            ref.AddFloat(&message, &fd, val[i].convert_cast<float>());
         break;
-
-    case PB::FieldDescriptor::CPPTYPE_INT64:
-    case PB::FieldDescriptor::CPPTYPE_UINT64:
-        throw std::invalid_argument("Cannot parse 64-bit protobuf fields");
 
     case PB::FieldDescriptor::CPPTYPE_INT32:
         for (int i = 0; i < val.size(); i++)
-            ref.AddInt32(&message, &fd, val[i].cast<int>());
+            ref.AddInt32(&message, &fd, val[i].convert_cast<int>());
         break;
 
     case PB::FieldDescriptor::CPPTYPE_UINT32:
         for (int i = 0; i < val.size(); i++)
-            ref.AddUInt32(&message, &fd, val[i].cast<unsigned int>());
+            ref.AddUInt32(&message, &fd, val[i].convert_cast<unsigned int>());
         break;
 
     case PB::FieldDescriptor::CPPTYPE_BOOL:
         for (int i = 0; i < val.size(); i++)
-            ref.AddBool(&message, &fd, val[i].cast<bool>());
+            ref.AddBool(&message, &fd, val[i].convert_cast<bool>());
         break;
 
     case PB::FieldDescriptor::CPPTYPE_STRING:
         for (int i = 0; i < val.size(); i++) {
-            if (fd.type() == PB::FieldDescriptor::TYPE_BYTES)
-                ref.AddString(&message, &fd, hex_decode(val[i].cast<std::string>()));
-            else
-                ref.AddString(&message, &fd, val[i].cast<std::string>());
+            const std::string str = val[i].convert_cast<std::string>();
+            ref.AddString(&message, &fd, is_field_binary(fd) ? hex_decode(str) : str);
         }
         break;
 
     case PB::FieldDescriptor::CPPTYPE_ENUM: {
         const PB::EnumDescriptor *ed = fd.enum_type();
         for (int i = 0; i < val.size(); i++) {
-            const PB::EnumValueDescriptor *evd = ed->FindValueByName(val[i].cast<std::string>());
+            const PB::EnumValueDescriptor *evd =
+                ed->FindValueByName(val[i].convert_cast<std::string>());
             if (!evd) throw std::invalid_argument("Unknown enum value");
             ref.AddEnum(&message, &fd, evd);
         }
@@ -294,33 +297,17 @@ static void parse_repeated_field(PB::Message &message,
     case PB::FieldDescriptor::CPPTYPE_MESSAGE:
         for (int i = 0; i < val.size(); i++) {
             PB::Message *fm = ref.MutableRepeatedMessage(&message, &fd, i);
-            message_parse_from_map(*fm, val[i].cast<FB::VariantMap>());
+            message_from_map(*fm, val[i].convert_cast<FB::VariantMap>());
         }
         break;
 
     default:
-        throw std::invalid_argument("Protobuf field of unknown type");
+        throw std::invalid_argument("Protobuf field of unknown/invalid type");
     }
 }
 
-boost::shared_ptr<PB::Message> message_of_type(const unsigned short type)
-{
-    PB::MessageFactory *factory = PB::MessageFactory::generated_factory();
-    const PB::Descriptor *descriptor = descriptor_from_type(type);
-    const PB::Message *prototype = factory->GetPrototype(descriptor);
-
-    return boost::shared_ptr<PB::Message> (prototype->New());
-}
-
-boost::shared_ptr<PB::Message> message_of_type_and_map(const unsigned short type,
-                                                       const FB::VariantMap &map)
-{
-    boost::shared_ptr<PB::Message> message = message_of_type(type);
-    message_parse_from_map(*message, map);
-    return message;
-}
-
-FB::VariantMap message_serialize_as_map(const PB::Message &message)
+FB::VariantMap
+message_to_map(const PB::Message &message)
 {
     FB::VariantMap result;
     
@@ -340,7 +327,8 @@ FB::VariantMap message_serialize_as_map(const PB::Message &message)
     return result;
 }
 
-void message_parse_from_map(PB::Message &message, const FB::VariantMap &map)
+void
+message_from_map(PB::Message &message, const FB::VariantMap &map)
 {
     const PB::Descriptor *md = message.GetDescriptor();
     const PB::Reflection *ref = message.GetReflection();

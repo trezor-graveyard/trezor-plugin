@@ -25,6 +25,7 @@
 #include <google/protobuf/extension_set.h>
 #include <google/protobuf/generated_enum_reflection.h>
 #include <google/protobuf/unknown_field_set.h>
+#include "google/protobuf/descriptor.pb.h"
 // @@protoc_insertion_point(includes)
 
 // Internal implementation detail -- do not call these.
@@ -33,16 +34,14 @@ void protobuf_AssignDesc_trezor_2eproto();
 void protobuf_ShutdownFile_trezor_2eproto();
 
 class XprvType;
+class XpubType;
 class CoinType;
 class SettingsType;
 class Initialize;
 class Features;
 class ApplySettings;
+class ChangePin;
 class Ping;
-class DebugLinkDecision;
-class DebugLinkGetState;
-class DebugLinkState;
-class DebugLinkStop;
 class Success;
 class Failure;
 class ButtonRequest;
@@ -57,14 +56,75 @@ class GetMasterPublicKey;
 class MasterPublicKey;
 class GetAddress;
 class Address;
+class WipeDevice;
 class LoadDevice;
 class ResetDevice;
+class EntropyRequest;
+class EntropyAck;
 class SignTx;
 class SimpleSignTx;
 class TxRequest;
 class TxInput;
 class TxOutput;
+class DebugLinkDecision;
+class DebugLinkGetState;
+class DebugLinkState;
+class DebugLinkStop;
 
+enum MessageType {
+  MessageType_Initialize = 0,
+  MessageType_Ping = 1,
+  MessageType_Success = 2,
+  MessageType_Failure = 3,
+  MessageType_ChangePin = 4,
+  MessageType_WipeDevice = 5,
+  MessageType_GetEntropy = 9,
+  MessageType_Entropy = 10,
+  MessageType_GetMasterPublicKey = 11,
+  MessageType_MasterPublicKey = 12,
+  MessageType_LoadDevice = 13,
+  MessageType_ResetDevice = 14,
+  MessageType_SignTx = 15,
+  MessageType_SimpleSignTx = 16,
+  MessageType_Features = 17,
+  MessageType_PinMatrixRequest = 18,
+  MessageType_PinMatrixAck = 19,
+  MessageType_PinMatrixCancel = 20,
+  MessageType_TxRequest = 21,
+  MessageType_TxInput = 23,
+  MessageType_TxOutput = 24,
+  MessageType_ApplySettings = 25,
+  MessageType_ButtonRequest = 26,
+  MessageType_ButtonAck = 27,
+  MessageType_ButtonCancel = 28,
+  MessageType_GetAddress = 29,
+  MessageType_Address = 30,
+  MessageType_SettingsType = 31,
+  MessageType_XprvType = 32,
+  MessageType_CoinType = 33,
+  MessageType_XpubType = 34,
+  MessageType_EntropyRequest = 35,
+  MessageType_EntropyAck = 36,
+  MessageType_DebugLinkDecision = 100,
+  MessageType_DebugLinkGetState = 101,
+  MessageType_DebugLinkState = 102,
+  MessageType_DebugLinkStop = 103
+};
+bool MessageType_IsValid(int value);
+const MessageType MessageType_MIN = MessageType_Initialize;
+const MessageType MessageType_MAX = MessageType_DebugLinkStop;
+const int MessageType_ARRAYSIZE = MessageType_MAX + 1;
+
+const ::google::protobuf::EnumDescriptor* MessageType_descriptor();
+inline const ::std::string& MessageType_Name(MessageType value) {
+  return ::google::protobuf::internal::NameOfEnum(
+    MessageType_descriptor(), value);
+}
+inline bool MessageType_Parse(
+    const ::std::string& name, MessageType* value) {
+  return ::google::protobuf::internal::ParseNamedEnum<MessageType>(
+    MessageType_descriptor(), name, value);
+}
 enum ScriptType {
   PAYTOADDRESS = 0,
   PAYTOSCRIPTHASH = 1
@@ -159,17 +219,12 @@ class XprvType : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required bytes version = 1;
+  // required uint32 version = 1;
   inline bool has_version() const;
   inline void clear_version();
   static const int kVersionFieldNumber = 1;
-  inline const ::std::string& version() const;
-  inline void set_version(const ::std::string& value);
-  inline void set_version(const char* value);
-  inline void set_version(const void* value, size_t size);
-  inline ::std::string* mutable_version();
-  inline ::std::string* release_version();
-  inline void set_allocated_version(::std::string* version);
+  inline ::google::protobuf::uint32 version() const;
+  inline void set_version(::google::protobuf::uint32 value);
 
   // required uint32 depth = 2;
   inline bool has_depth() const;
@@ -233,12 +288,12 @@ class XprvType : public ::google::protobuf::Message {
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::std::string* version_;
+  ::google::protobuf::uint32 version_;
   ::google::protobuf::uint32 depth_;
   ::google::protobuf::uint32 fingerprint_;
+  ::google::protobuf::uint32 child_num_;
   ::std::string* chain_code_;
   ::std::string* private_key_;
-  ::google::protobuf::uint32 child_num_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
@@ -249,6 +304,148 @@ class XprvType : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static XprvType* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class XpubType : public ::google::protobuf::Message {
+ public:
+  XpubType();
+  virtual ~XpubType();
+
+  XpubType(const XpubType& from);
+
+  inline XpubType& operator=(const XpubType& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const XpubType& default_instance();
+
+  void Swap(XpubType* other);
+
+  // implements Message ----------------------------------------------
+
+  XpubType* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const XpubType& from);
+  void MergeFrom(const XpubType& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required uint32 version = 1;
+  inline bool has_version() const;
+  inline void clear_version();
+  static const int kVersionFieldNumber = 1;
+  inline ::google::protobuf::uint32 version() const;
+  inline void set_version(::google::protobuf::uint32 value);
+
+  // required uint32 depth = 2;
+  inline bool has_depth() const;
+  inline void clear_depth();
+  static const int kDepthFieldNumber = 2;
+  inline ::google::protobuf::uint32 depth() const;
+  inline void set_depth(::google::protobuf::uint32 value);
+
+  // required uint32 fingerprint = 3;
+  inline bool has_fingerprint() const;
+  inline void clear_fingerprint();
+  static const int kFingerprintFieldNumber = 3;
+  inline ::google::protobuf::uint32 fingerprint() const;
+  inline void set_fingerprint(::google::protobuf::uint32 value);
+
+  // required uint32 child_num = 4;
+  inline bool has_child_num() const;
+  inline void clear_child_num();
+  static const int kChildNumFieldNumber = 4;
+  inline ::google::protobuf::uint32 child_num() const;
+  inline void set_child_num(::google::protobuf::uint32 value);
+
+  // required bytes chain_code = 5;
+  inline bool has_chain_code() const;
+  inline void clear_chain_code();
+  static const int kChainCodeFieldNumber = 5;
+  inline const ::std::string& chain_code() const;
+  inline void set_chain_code(const ::std::string& value);
+  inline void set_chain_code(const char* value);
+  inline void set_chain_code(const void* value, size_t size);
+  inline ::std::string* mutable_chain_code();
+  inline ::std::string* release_chain_code();
+  inline void set_allocated_chain_code(::std::string* chain_code);
+
+  // required bytes public_key = 6;
+  inline bool has_public_key() const;
+  inline void clear_public_key();
+  static const int kPublicKeyFieldNumber = 6;
+  inline const ::std::string& public_key() const;
+  inline void set_public_key(const ::std::string& value);
+  inline void set_public_key(const char* value);
+  inline void set_public_key(const void* value, size_t size);
+  inline ::std::string* mutable_public_key();
+  inline ::std::string* release_public_key();
+  inline void set_allocated_public_key(::std::string* public_key);
+
+  // @@protoc_insertion_point(class_scope:XpubType)
+ private:
+  inline void set_has_version();
+  inline void clear_has_version();
+  inline void set_has_depth();
+  inline void clear_has_depth();
+  inline void set_has_fingerprint();
+  inline void clear_has_fingerprint();
+  inline void set_has_child_num();
+  inline void clear_has_child_num();
+  inline void set_has_chain_code();
+  inline void clear_has_chain_code();
+  inline void set_has_public_key();
+  inline void clear_has_public_key();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::google::protobuf::uint32 version_;
+  ::google::protobuf::uint32 depth_;
+  ::google::protobuf::uint32 fingerprint_;
+  ::google::protobuf::uint32 child_num_;
+  ::std::string* chain_code_;
+  ::std::string* public_key_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(6 + 31) / 32];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static XpubType* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -306,10 +503,10 @@ class CoinType : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional bytes coin_name = 2;
+  // optional bytes coin_name = 1;
   inline bool has_coin_name() const;
   inline void clear_coin_name();
-  static const int kCoinNameFieldNumber = 2;
+  static const int kCoinNameFieldNumber = 1;
   inline const ::std::string& coin_name() const;
   inline void set_coin_name(const ::std::string& value);
   inline void set_coin_name(const char* value);
@@ -318,10 +515,10 @@ class CoinType : public ::google::protobuf::Message {
   inline ::std::string* release_coin_name();
   inline void set_allocated_coin_name(::std::string* coin_name);
 
-  // optional bytes coin_shortcut = 3;
+  // optional bytes coin_shortcut = 2;
   inline bool has_coin_shortcut() const;
   inline void clear_coin_shortcut();
-  static const int kCoinShortcutFieldNumber = 3;
+  static const int kCoinShortcutFieldNumber = 2;
   inline const ::std::string& coin_shortcut() const;
   inline void set_coin_shortcut(const ::std::string& value);
   inline void set_coin_shortcut(const char* value);
@@ -330,17 +527,17 @@ class CoinType : public ::google::protobuf::Message {
   inline ::std::string* release_coin_shortcut();
   inline void set_allocated_coin_shortcut(::std::string* coin_shortcut);
 
-  // optional uint32 address_type = 4;
+  // optional uint32 address_type = 3;
   inline bool has_address_type() const;
   inline void clear_address_type();
-  static const int kAddressTypeFieldNumber = 4;
+  static const int kAddressTypeFieldNumber = 3;
   inline ::google::protobuf::uint32 address_type() const;
   inline void set_address_type(::google::protobuf::uint32 value);
 
-  // optional uint64 maxfee_kb = 5;
+  // optional uint64 maxfee_kb = 4;
   inline bool has_maxfee_kb() const;
   inline void clear_maxfee_kb();
-  static const int kMaxfeeKbFieldNumber = 5;
+  static const int kMaxfeeKbFieldNumber = 4;
   inline ::google::protobuf::uint64 maxfee_kb() const;
   inline void set_maxfee_kb(::google::protobuf::uint64 value);
 
@@ -649,17 +846,36 @@ class Features : public ::google::protobuf::Message {
   inline ::SettingsType* release_settings();
   inline void set_allocated_settings(::SettingsType* settings);
 
-  // optional bytes serial_number = 5;
-  inline bool has_serial_number() const;
-  inline void clear_serial_number();
-  static const int kSerialNumberFieldNumber = 5;
-  inline const ::std::string& serial_number() const;
-  inline void set_serial_number(const ::std::string& value);
-  inline void set_serial_number(const char* value);
-  inline void set_serial_number(const void* value, size_t size);
-  inline ::std::string* mutable_serial_number();
-  inline ::std::string* release_serial_number();
-  inline void set_allocated_serial_number(::std::string* serial_number);
+  // optional bytes device_id = 5;
+  inline bool has_device_id() const;
+  inline void clear_device_id();
+  static const int kDeviceIdFieldNumber = 5;
+  inline const ::std::string& device_id() const;
+  inline void set_device_id(const ::std::string& value);
+  inline void set_device_id(const char* value);
+  inline void set_device_id(const void* value, size_t size);
+  inline ::std::string* mutable_device_id();
+  inline ::std::string* release_device_id();
+  inline void set_allocated_device_id(::std::string* device_id);
+
+  // optional bytes mpk_hash = 6;
+  inline bool has_mpk_hash() const;
+  inline void clear_mpk_hash();
+  static const int kMpkHashFieldNumber = 6;
+  inline const ::std::string& mpk_hash() const;
+  inline void set_mpk_hash(const ::std::string& value);
+  inline void set_mpk_hash(const char* value);
+  inline void set_mpk_hash(const void* value, size_t size);
+  inline ::std::string* mutable_mpk_hash();
+  inline ::std::string* release_mpk_hash();
+  inline void set_allocated_mpk_hash(::std::string* mpk_hash);
+
+  // optional bool pin_protection = 7;
+  inline bool has_pin_protection() const;
+  inline void clear_pin_protection();
+  static const int kPinProtectionFieldNumber = 7;
+  inline bool pin_protection() const;
+  inline void set_pin_protection(bool value);
 
   // @@protoc_insertion_point(class_scope:Features)
  private:
@@ -671,8 +887,12 @@ class Features : public ::google::protobuf::Message {
   inline void clear_has_minor_version();
   inline void set_has_settings();
   inline void clear_has_settings();
-  inline void set_has_serial_number();
-  inline void clear_has_serial_number();
+  inline void set_has_device_id();
+  inline void clear_has_device_id();
+  inline void set_has_mpk_hash();
+  inline void clear_has_mpk_hash();
+  inline void set_has_pin_protection();
+  inline void clear_has_pin_protection();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -680,10 +900,12 @@ class Features : public ::google::protobuf::Message {
   ::google::protobuf::uint32 major_version_;
   ::google::protobuf::uint32 minor_version_;
   ::SettingsType* settings_;
-  ::std::string* serial_number_;
+  ::std::string* device_id_;
+  ::std::string* mpk_hash_;
+  bool pin_protection_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(7 + 31) / 32];
 
   friend void  protobuf_AddDesc_trezor_2eproto();
   friend void protobuf_AssignDesc_trezor_2eproto();
@@ -811,6 +1033,88 @@ class ApplySettings : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class ChangePin : public ::google::protobuf::Message {
+ public:
+  ChangePin();
+  virtual ~ChangePin();
+
+  ChangePin(const ChangePin& from);
+
+  inline ChangePin& operator=(const ChangePin& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const ChangePin& default_instance();
+
+  void Swap(ChangePin* other);
+
+  // implements Message ----------------------------------------------
+
+  ChangePin* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const ChangePin& from);
+  void MergeFrom(const ChangePin& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional bool remove = 1;
+  inline bool has_remove() const;
+  inline void clear_remove();
+  static const int kRemoveFieldNumber = 1;
+  inline bool remove() const;
+  inline void set_remove(bool value);
+
+  // @@protoc_insertion_point(class_scope:ChangePin)
+ private:
+  inline void set_has_remove();
+  inline void clear_has_remove();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  bool remove_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static ChangePin* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class Ping : public ::google::protobuf::Message {
  public:
   Ping();
@@ -895,404 +1199,6 @@ class Ping : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static Ping* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class DebugLinkDecision : public ::google::protobuf::Message {
- public:
-  DebugLinkDecision();
-  virtual ~DebugLinkDecision();
-
-  DebugLinkDecision(const DebugLinkDecision& from);
-
-  inline DebugLinkDecision& operator=(const DebugLinkDecision& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const DebugLinkDecision& default_instance();
-
-  void Swap(DebugLinkDecision* other);
-
-  // implements Message ----------------------------------------------
-
-  DebugLinkDecision* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const DebugLinkDecision& from);
-  void MergeFrom(const DebugLinkDecision& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // required bool yes_no = 1;
-  inline bool has_yes_no() const;
-  inline void clear_yes_no();
-  static const int kYesNoFieldNumber = 1;
-  inline bool yes_no() const;
-  inline void set_yes_no(bool value);
-
-  // @@protoc_insertion_point(class_scope:DebugLinkDecision)
- private:
-  inline void set_has_yes_no();
-  inline void clear_has_yes_no();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  bool yes_no_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
-
-  friend void  protobuf_AddDesc_trezor_2eproto();
-  friend void protobuf_AssignDesc_trezor_2eproto();
-  friend void protobuf_ShutdownFile_trezor_2eproto();
-
-  void InitAsDefaultInstance();
-  static DebugLinkDecision* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class DebugLinkGetState : public ::google::protobuf::Message {
- public:
-  DebugLinkGetState();
-  virtual ~DebugLinkGetState();
-
-  DebugLinkGetState(const DebugLinkGetState& from);
-
-  inline DebugLinkGetState& operator=(const DebugLinkGetState& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const DebugLinkGetState& default_instance();
-
-  void Swap(DebugLinkGetState* other);
-
-  // implements Message ----------------------------------------------
-
-  DebugLinkGetState* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const DebugLinkGetState& from);
-  void MergeFrom(const DebugLinkGetState& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional bool layout = 1;
-  inline bool has_layout() const;
-  inline void clear_layout();
-  static const int kLayoutFieldNumber = 1;
-  inline bool layout() const;
-  inline void set_layout(bool value);
-
-  // optional bool pin = 2;
-  inline bool has_pin() const;
-  inline void clear_pin();
-  static const int kPinFieldNumber = 2;
-  inline bool pin() const;
-  inline void set_pin(bool value);
-
-  // optional bool matrix = 3;
-  inline bool has_matrix() const;
-  inline void clear_matrix();
-  static const int kMatrixFieldNumber = 3;
-  inline bool matrix() const;
-  inline void set_matrix(bool value);
-
-  // optional bool seed = 4;
-  inline bool has_seed() const;
-  inline void clear_seed();
-  static const int kSeedFieldNumber = 4;
-  inline bool seed() const;
-  inline void set_seed(bool value);
-
-  // @@protoc_insertion_point(class_scope:DebugLinkGetState)
- private:
-  inline void set_has_layout();
-  inline void clear_has_layout();
-  inline void set_has_pin();
-  inline void clear_has_pin();
-  inline void set_has_matrix();
-  inline void clear_has_matrix();
-  inline void set_has_seed();
-  inline void clear_has_seed();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  bool layout_;
-  bool pin_;
-  bool matrix_;
-  bool seed_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
-
-  friend void  protobuf_AddDesc_trezor_2eproto();
-  friend void protobuf_AssignDesc_trezor_2eproto();
-  friend void protobuf_ShutdownFile_trezor_2eproto();
-
-  void InitAsDefaultInstance();
-  static DebugLinkGetState* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class DebugLinkState : public ::google::protobuf::Message {
- public:
-  DebugLinkState();
-  virtual ~DebugLinkState();
-
-  DebugLinkState(const DebugLinkState& from);
-
-  inline DebugLinkState& operator=(const DebugLinkState& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const DebugLinkState& default_instance();
-
-  void Swap(DebugLinkState* other);
-
-  // implements Message ----------------------------------------------
-
-  DebugLinkState* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const DebugLinkState& from);
-  void MergeFrom(const DebugLinkState& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // optional bytes layout = 1;
-  inline bool has_layout() const;
-  inline void clear_layout();
-  static const int kLayoutFieldNumber = 1;
-  inline const ::std::string& layout() const;
-  inline void set_layout(const ::std::string& value);
-  inline void set_layout(const char* value);
-  inline void set_layout(const void* value, size_t size);
-  inline ::std::string* mutable_layout();
-  inline ::std::string* release_layout();
-  inline void set_allocated_layout(::std::string* layout);
-
-  // optional bytes pin = 2;
-  inline bool has_pin() const;
-  inline void clear_pin();
-  static const int kPinFieldNumber = 2;
-  inline const ::std::string& pin() const;
-  inline void set_pin(const ::std::string& value);
-  inline void set_pin(const char* value);
-  inline void set_pin(const void* value, size_t size);
-  inline ::std::string* mutable_pin();
-  inline ::std::string* release_pin();
-  inline void set_allocated_pin(::std::string* pin);
-
-  // optional bytes matrix = 3;
-  inline bool has_matrix() const;
-  inline void clear_matrix();
-  static const int kMatrixFieldNumber = 3;
-  inline const ::std::string& matrix() const;
-  inline void set_matrix(const ::std::string& value);
-  inline void set_matrix(const char* value);
-  inline void set_matrix(const void* value, size_t size);
-  inline ::std::string* mutable_matrix();
-  inline ::std::string* release_matrix();
-  inline void set_allocated_matrix(::std::string* matrix);
-
-  // optional bytes seed = 4;
-  inline bool has_seed() const;
-  inline void clear_seed();
-  static const int kSeedFieldNumber = 4;
-  inline const ::std::string& seed() const;
-  inline void set_seed(const ::std::string& value);
-  inline void set_seed(const char* value);
-  inline void set_seed(const void* value, size_t size);
-  inline ::std::string* mutable_seed();
-  inline ::std::string* release_seed();
-  inline void set_allocated_seed(::std::string* seed);
-
-  // @@protoc_insertion_point(class_scope:DebugLinkState)
- private:
-  inline void set_has_layout();
-  inline void clear_has_layout();
-  inline void set_has_pin();
-  inline void clear_has_pin();
-  inline void set_has_matrix();
-  inline void clear_has_matrix();
-  inline void set_has_seed();
-  inline void clear_has_seed();
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-  ::std::string* layout_;
-  ::std::string* pin_;
-  ::std::string* matrix_;
-  ::std::string* seed_;
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
-
-  friend void  protobuf_AddDesc_trezor_2eproto();
-  friend void protobuf_AssignDesc_trezor_2eproto();
-  friend void protobuf_ShutdownFile_trezor_2eproto();
-
-  void InitAsDefaultInstance();
-  static DebugLinkState* default_instance_;
-};
-// -------------------------------------------------------------------
-
-class DebugLinkStop : public ::google::protobuf::Message {
- public:
-  DebugLinkStop();
-  virtual ~DebugLinkStop();
-
-  DebugLinkStop(const DebugLinkStop& from);
-
-  inline DebugLinkStop& operator=(const DebugLinkStop& from) {
-    CopyFrom(from);
-    return *this;
-  }
-
-  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
-    return _unknown_fields_;
-  }
-
-  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
-    return &_unknown_fields_;
-  }
-
-  static const ::google::protobuf::Descriptor* descriptor();
-  static const DebugLinkStop& default_instance();
-
-  void Swap(DebugLinkStop* other);
-
-  // implements Message ----------------------------------------------
-
-  DebugLinkStop* New() const;
-  void CopyFrom(const ::google::protobuf::Message& from);
-  void MergeFrom(const ::google::protobuf::Message& from);
-  void CopyFrom(const DebugLinkStop& from);
-  void MergeFrom(const DebugLinkStop& from);
-  void Clear();
-  bool IsInitialized() const;
-
-  int ByteSize() const;
-  bool MergePartialFromCodedStream(
-      ::google::protobuf::io::CodedInputStream* input);
-  void SerializeWithCachedSizes(
-      ::google::protobuf::io::CodedOutputStream* output) const;
-  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
-  int GetCachedSize() const { return _cached_size_; }
-  private:
-  void SharedCtor();
-  void SharedDtor();
-  void SetCachedSize(int size) const;
-  public:
-
-  ::google::protobuf::Metadata GetMetadata() const;
-
-  // nested types ----------------------------------------------------
-
-  // accessors -------------------------------------------------------
-
-  // @@protoc_insertion_point(class_scope:DebugLinkStop)
- private:
-
-  ::google::protobuf::UnknownFieldSet _unknown_fields_;
-
-
-  mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[1];
-
-  friend void  protobuf_AddDesc_trezor_2eproto();
-  friend void protobuf_AssignDesc_trezor_2eproto();
-  friend void protobuf_ShutdownFile_trezor_2eproto();
-
-  void InitAsDefaultInstance();
-  static DebugLinkStop* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -2237,26 +2143,23 @@ class MasterPublicKey : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required bytes key = 1;
-  inline bool has_key() const;
-  inline void clear_key();
-  static const int kKeyFieldNumber = 1;
-  inline const ::std::string& key() const;
-  inline void set_key(const ::std::string& value);
-  inline void set_key(const char* value);
-  inline void set_key(const void* value, size_t size);
-  inline ::std::string* mutable_key();
-  inline ::std::string* release_key();
-  inline void set_allocated_key(::std::string* key);
+  // required .XpubType mpk = 1;
+  inline bool has_mpk() const;
+  inline void clear_mpk();
+  static const int kMpkFieldNumber = 1;
+  inline const ::XpubType& mpk() const;
+  inline ::XpubType* mutable_mpk();
+  inline ::XpubType* release_mpk();
+  inline void set_allocated_mpk(::XpubType* mpk);
 
   // @@protoc_insertion_point(class_scope:MasterPublicKey)
  private:
-  inline void set_has_key();
-  inline void clear_has_key();
+  inline void set_has_mpk();
+  inline void clear_has_mpk();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::std::string* key_;
+  ::XpubType* mpk_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
@@ -2442,6 +2345,78 @@ class Address : public ::google::protobuf::Message {
 };
 // -------------------------------------------------------------------
 
+class WipeDevice : public ::google::protobuf::Message {
+ public:
+  WipeDevice();
+  virtual ~WipeDevice();
+
+  WipeDevice(const WipeDevice& from);
+
+  inline WipeDevice& operator=(const WipeDevice& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const WipeDevice& default_instance();
+
+  void Swap(WipeDevice* other);
+
+  // implements Message ----------------------------------------------
+
+  WipeDevice* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const WipeDevice& from);
+  void MergeFrom(const WipeDevice& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:WipeDevice)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[1];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static WipeDevice* default_instance_;
+};
+// -------------------------------------------------------------------
+
 class LoadDevice : public ::google::protobuf::Message {
  public:
   LoadDevice();
@@ -2610,26 +2585,21 @@ class ResetDevice : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // optional bytes random = 7;
-  inline bool has_random() const;
-  inline void clear_random();
-  static const int kRandomFieldNumber = 7;
-  inline const ::std::string& random() const;
-  inline void set_random(const ::std::string& value);
-  inline void set_random(const char* value);
-  inline void set_random(const void* value, size_t size);
-  inline ::std::string* mutable_random();
-  inline ::std::string* release_random();
-  inline void set_allocated_random(::std::string* random);
+  // optional bool display_random = 1;
+  inline bool has_display_random() const;
+  inline void clear_display_random();
+  static const int kDisplayRandomFieldNumber = 1;
+  inline bool display_random() const;
+  inline void set_display_random(bool value);
 
   // @@protoc_insertion_point(class_scope:ResetDevice)
  private:
-  inline void set_has_random();
-  inline void clear_has_random();
+  inline void set_has_display_random();
+  inline void clear_has_display_random();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::std::string* random_;
+  bool display_random_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
@@ -2640,6 +2610,165 @@ class ResetDevice : public ::google::protobuf::Message {
 
   void InitAsDefaultInstance();
   static ResetDevice* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class EntropyRequest : public ::google::protobuf::Message {
+ public:
+  EntropyRequest();
+  virtual ~EntropyRequest();
+
+  EntropyRequest(const EntropyRequest& from);
+
+  inline EntropyRequest& operator=(const EntropyRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const EntropyRequest& default_instance();
+
+  void Swap(EntropyRequest* other);
+
+  // implements Message ----------------------------------------------
+
+  EntropyRequest* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const EntropyRequest& from);
+  void MergeFrom(const EntropyRequest& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:EntropyRequest)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[1];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static EntropyRequest* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class EntropyAck : public ::google::protobuf::Message {
+ public:
+  EntropyAck();
+  virtual ~EntropyAck();
+
+  EntropyAck(const EntropyAck& from);
+
+  inline EntropyAck& operator=(const EntropyAck& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const EntropyAck& default_instance();
+
+  void Swap(EntropyAck* other);
+
+  // implements Message ----------------------------------------------
+
+  EntropyAck* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const EntropyAck& from);
+  void MergeFrom(const EntropyAck& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional bytes entropy = 1;
+  inline bool has_entropy() const;
+  inline void clear_entropy();
+  static const int kEntropyFieldNumber = 1;
+  inline const ::std::string& entropy() const;
+  inline void set_entropy(const ::std::string& value);
+  inline void set_entropy(const char* value);
+  inline void set_entropy(const void* value, size_t size);
+  inline ::std::string* mutable_entropy();
+  inline ::std::string* release_entropy();
+  inline void set_allocated_entropy(::std::string* entropy);
+
+  // @@protoc_insertion_point(class_scope:EntropyAck)
+ private:
+  inline void set_has_entropy();
+  inline void clear_has_entropy();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* entropy_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static EntropyAck* default_instance_;
 };
 // -------------------------------------------------------------------
 
@@ -3255,14 +3384,416 @@ class TxOutput : public ::google::protobuf::Message {
   void InitAsDefaultInstance();
   static TxOutput* default_instance_;
 };
+// -------------------------------------------------------------------
+
+class DebugLinkDecision : public ::google::protobuf::Message {
+ public:
+  DebugLinkDecision();
+  virtual ~DebugLinkDecision();
+
+  DebugLinkDecision(const DebugLinkDecision& from);
+
+  inline DebugLinkDecision& operator=(const DebugLinkDecision& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const DebugLinkDecision& default_instance();
+
+  void Swap(DebugLinkDecision* other);
+
+  // implements Message ----------------------------------------------
+
+  DebugLinkDecision* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const DebugLinkDecision& from);
+  void MergeFrom(const DebugLinkDecision& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // required bool yes_no = 1;
+  inline bool has_yes_no() const;
+  inline void clear_yes_no();
+  static const int kYesNoFieldNumber = 1;
+  inline bool yes_no() const;
+  inline void set_yes_no(bool value);
+
+  // @@protoc_insertion_point(class_scope:DebugLinkDecision)
+ private:
+  inline void set_has_yes_no();
+  inline void clear_has_yes_no();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  bool yes_no_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(1 + 31) / 32];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static DebugLinkDecision* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class DebugLinkGetState : public ::google::protobuf::Message {
+ public:
+  DebugLinkGetState();
+  virtual ~DebugLinkGetState();
+
+  DebugLinkGetState(const DebugLinkGetState& from);
+
+  inline DebugLinkGetState& operator=(const DebugLinkGetState& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const DebugLinkGetState& default_instance();
+
+  void Swap(DebugLinkGetState* other);
+
+  // implements Message ----------------------------------------------
+
+  DebugLinkGetState* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const DebugLinkGetState& from);
+  void MergeFrom(const DebugLinkGetState& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional bool layout = 1;
+  inline bool has_layout() const;
+  inline void clear_layout();
+  static const int kLayoutFieldNumber = 1;
+  inline bool layout() const;
+  inline void set_layout(bool value);
+
+  // optional bool pin = 2;
+  inline bool has_pin() const;
+  inline void clear_pin();
+  static const int kPinFieldNumber = 2;
+  inline bool pin() const;
+  inline void set_pin(bool value);
+
+  // optional bool matrix = 3;
+  inline bool has_matrix() const;
+  inline void clear_matrix();
+  static const int kMatrixFieldNumber = 3;
+  inline bool matrix() const;
+  inline void set_matrix(bool value);
+
+  // optional bool seed = 4;
+  inline bool has_seed() const;
+  inline void clear_seed();
+  static const int kSeedFieldNumber = 4;
+  inline bool seed() const;
+  inline void set_seed(bool value);
+
+  // @@protoc_insertion_point(class_scope:DebugLinkGetState)
+ private:
+  inline void set_has_layout();
+  inline void clear_has_layout();
+  inline void set_has_pin();
+  inline void clear_has_pin();
+  inline void set_has_matrix();
+  inline void clear_has_matrix();
+  inline void set_has_seed();
+  inline void clear_has_seed();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  bool layout_;
+  bool pin_;
+  bool matrix_;
+  bool seed_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static DebugLinkGetState* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class DebugLinkState : public ::google::protobuf::Message {
+ public:
+  DebugLinkState();
+  virtual ~DebugLinkState();
+
+  DebugLinkState(const DebugLinkState& from);
+
+  inline DebugLinkState& operator=(const DebugLinkState& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const DebugLinkState& default_instance();
+
+  void Swap(DebugLinkState* other);
+
+  // implements Message ----------------------------------------------
+
+  DebugLinkState* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const DebugLinkState& from);
+  void MergeFrom(const DebugLinkState& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // optional bytes layout = 1;
+  inline bool has_layout() const;
+  inline void clear_layout();
+  static const int kLayoutFieldNumber = 1;
+  inline const ::std::string& layout() const;
+  inline void set_layout(const ::std::string& value);
+  inline void set_layout(const char* value);
+  inline void set_layout(const void* value, size_t size);
+  inline ::std::string* mutable_layout();
+  inline ::std::string* release_layout();
+  inline void set_allocated_layout(::std::string* layout);
+
+  // optional bytes pin = 2;
+  inline bool has_pin() const;
+  inline void clear_pin();
+  static const int kPinFieldNumber = 2;
+  inline const ::std::string& pin() const;
+  inline void set_pin(const ::std::string& value);
+  inline void set_pin(const char* value);
+  inline void set_pin(const void* value, size_t size);
+  inline ::std::string* mutable_pin();
+  inline ::std::string* release_pin();
+  inline void set_allocated_pin(::std::string* pin);
+
+  // optional bytes matrix = 3;
+  inline bool has_matrix() const;
+  inline void clear_matrix();
+  static const int kMatrixFieldNumber = 3;
+  inline const ::std::string& matrix() const;
+  inline void set_matrix(const ::std::string& value);
+  inline void set_matrix(const char* value);
+  inline void set_matrix(const void* value, size_t size);
+  inline ::std::string* mutable_matrix();
+  inline ::std::string* release_matrix();
+  inline void set_allocated_matrix(::std::string* matrix);
+
+  // optional bytes seed = 4;
+  inline bool has_seed() const;
+  inline void clear_seed();
+  static const int kSeedFieldNumber = 4;
+  inline const ::std::string& seed() const;
+  inline void set_seed(const ::std::string& value);
+  inline void set_seed(const char* value);
+  inline void set_seed(const void* value, size_t size);
+  inline ::std::string* mutable_seed();
+  inline ::std::string* release_seed();
+  inline void set_allocated_seed(::std::string* seed);
+
+  // @@protoc_insertion_point(class_scope:DebugLinkState)
+ private:
+  inline void set_has_layout();
+  inline void clear_has_layout();
+  inline void set_has_pin();
+  inline void clear_has_pin();
+  inline void set_has_matrix();
+  inline void clear_has_matrix();
+  inline void set_has_seed();
+  inline void clear_has_seed();
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+  ::std::string* layout_;
+  ::std::string* pin_;
+  ::std::string* matrix_;
+  ::std::string* seed_;
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static DebugLinkState* default_instance_;
+};
+// -------------------------------------------------------------------
+
+class DebugLinkStop : public ::google::protobuf::Message {
+ public:
+  DebugLinkStop();
+  virtual ~DebugLinkStop();
+
+  DebugLinkStop(const DebugLinkStop& from);
+
+  inline DebugLinkStop& operator=(const DebugLinkStop& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  inline const ::google::protobuf::UnknownFieldSet& unknown_fields() const {
+    return _unknown_fields_;
+  }
+
+  inline ::google::protobuf::UnknownFieldSet* mutable_unknown_fields() {
+    return &_unknown_fields_;
+  }
+
+  static const ::google::protobuf::Descriptor* descriptor();
+  static const DebugLinkStop& default_instance();
+
+  void Swap(DebugLinkStop* other);
+
+  // implements Message ----------------------------------------------
+
+  DebugLinkStop* New() const;
+  void CopyFrom(const ::google::protobuf::Message& from);
+  void MergeFrom(const ::google::protobuf::Message& from);
+  void CopyFrom(const DebugLinkStop& from);
+  void MergeFrom(const DebugLinkStop& from);
+  void Clear();
+  bool IsInitialized() const;
+
+  int ByteSize() const;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input);
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const;
+  ::google::protobuf::uint8* SerializeWithCachedSizesToArray(::google::protobuf::uint8* output) const;
+  int GetCachedSize() const { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  public:
+
+  ::google::protobuf::Metadata GetMetadata() const;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:DebugLinkStop)
+ private:
+
+  ::google::protobuf::UnknownFieldSet _unknown_fields_;
+
+
+  mutable int _cached_size_;
+  ::google::protobuf::uint32 _has_bits_[1];
+
+  friend void  protobuf_AddDesc_trezor_2eproto();
+  friend void protobuf_AssignDesc_trezor_2eproto();
+  friend void protobuf_ShutdownFile_trezor_2eproto();
+
+  void InitAsDefaultInstance();
+  static DebugLinkStop* default_instance_;
+};
 // ===================================================================
 
+static const int kBinaryFieldNumber = 50001;
+extern ::google::protobuf::internal::ExtensionIdentifier< ::google::protobuf::FieldOptions,
+    ::google::protobuf::internal::PrimitiveTypeTraits< bool >, 8, false >
+  binary;
 
 // ===================================================================
 
 // XprvType
 
-// required bytes version = 1;
+// required uint32 version = 1;
 inline bool XprvType::has_version() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -3273,63 +3804,15 @@ inline void XprvType::clear_has_version() {
   _has_bits_[0] &= ~0x00000001u;
 }
 inline void XprvType::clear_version() {
-  if (version_ != &::google::protobuf::internal::kEmptyString) {
-    version_->clear();
-  }
+  version_ = 0u;
   clear_has_version();
 }
-inline const ::std::string& XprvType::version() const {
-  return *version_;
-}
-inline void XprvType::set_version(const ::std::string& value) {
-  set_has_version();
-  if (version_ == &::google::protobuf::internal::kEmptyString) {
-    version_ = new ::std::string;
-  }
-  version_->assign(value);
-}
-inline void XprvType::set_version(const char* value) {
-  set_has_version();
-  if (version_ == &::google::protobuf::internal::kEmptyString) {
-    version_ = new ::std::string;
-  }
-  version_->assign(value);
-}
-inline void XprvType::set_version(const void* value, size_t size) {
-  set_has_version();
-  if (version_ == &::google::protobuf::internal::kEmptyString) {
-    version_ = new ::std::string;
-  }
-  version_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* XprvType::mutable_version() {
-  set_has_version();
-  if (version_ == &::google::protobuf::internal::kEmptyString) {
-    version_ = new ::std::string;
-  }
+inline ::google::protobuf::uint32 XprvType::version() const {
   return version_;
 }
-inline ::std::string* XprvType::release_version() {
-  clear_has_version();
-  if (version_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = version_;
-    version_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void XprvType::set_allocated_version(::std::string* version) {
-  if (version_ != &::google::protobuf::internal::kEmptyString) {
-    delete version_;
-  }
-  if (version) {
-    set_has_version();
-    version_ = version;
-  } else {
-    clear_has_version();
-    version_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
+inline void XprvType::set_version(::google::protobuf::uint32 value) {
+  set_has_version();
+  version_ = value;
 }
 
 // required uint32 depth = 2;
@@ -3540,9 +4023,241 @@ inline void XprvType::set_allocated_private_key(::std::string* private_key) {
 
 // -------------------------------------------------------------------
 
+// XpubType
+
+// required uint32 version = 1;
+inline bool XpubType::has_version() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void XpubType::set_has_version() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void XpubType::clear_has_version() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void XpubType::clear_version() {
+  version_ = 0u;
+  clear_has_version();
+}
+inline ::google::protobuf::uint32 XpubType::version() const {
+  return version_;
+}
+inline void XpubType::set_version(::google::protobuf::uint32 value) {
+  set_has_version();
+  version_ = value;
+}
+
+// required uint32 depth = 2;
+inline bool XpubType::has_depth() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void XpubType::set_has_depth() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void XpubType::clear_has_depth() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void XpubType::clear_depth() {
+  depth_ = 0u;
+  clear_has_depth();
+}
+inline ::google::protobuf::uint32 XpubType::depth() const {
+  return depth_;
+}
+inline void XpubType::set_depth(::google::protobuf::uint32 value) {
+  set_has_depth();
+  depth_ = value;
+}
+
+// required uint32 fingerprint = 3;
+inline bool XpubType::has_fingerprint() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void XpubType::set_has_fingerprint() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void XpubType::clear_has_fingerprint() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void XpubType::clear_fingerprint() {
+  fingerprint_ = 0u;
+  clear_has_fingerprint();
+}
+inline ::google::protobuf::uint32 XpubType::fingerprint() const {
+  return fingerprint_;
+}
+inline void XpubType::set_fingerprint(::google::protobuf::uint32 value) {
+  set_has_fingerprint();
+  fingerprint_ = value;
+}
+
+// required uint32 child_num = 4;
+inline bool XpubType::has_child_num() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void XpubType::set_has_child_num() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void XpubType::clear_has_child_num() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void XpubType::clear_child_num() {
+  child_num_ = 0u;
+  clear_has_child_num();
+}
+inline ::google::protobuf::uint32 XpubType::child_num() const {
+  return child_num_;
+}
+inline void XpubType::set_child_num(::google::protobuf::uint32 value) {
+  set_has_child_num();
+  child_num_ = value;
+}
+
+// required bytes chain_code = 5;
+inline bool XpubType::has_chain_code() const {
+  return (_has_bits_[0] & 0x00000010u) != 0;
+}
+inline void XpubType::set_has_chain_code() {
+  _has_bits_[0] |= 0x00000010u;
+}
+inline void XpubType::clear_has_chain_code() {
+  _has_bits_[0] &= ~0x00000010u;
+}
+inline void XpubType::clear_chain_code() {
+  if (chain_code_ != &::google::protobuf::internal::kEmptyString) {
+    chain_code_->clear();
+  }
+  clear_has_chain_code();
+}
+inline const ::std::string& XpubType::chain_code() const {
+  return *chain_code_;
+}
+inline void XpubType::set_chain_code(const ::std::string& value) {
+  set_has_chain_code();
+  if (chain_code_ == &::google::protobuf::internal::kEmptyString) {
+    chain_code_ = new ::std::string;
+  }
+  chain_code_->assign(value);
+}
+inline void XpubType::set_chain_code(const char* value) {
+  set_has_chain_code();
+  if (chain_code_ == &::google::protobuf::internal::kEmptyString) {
+    chain_code_ = new ::std::string;
+  }
+  chain_code_->assign(value);
+}
+inline void XpubType::set_chain_code(const void* value, size_t size) {
+  set_has_chain_code();
+  if (chain_code_ == &::google::protobuf::internal::kEmptyString) {
+    chain_code_ = new ::std::string;
+  }
+  chain_code_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* XpubType::mutable_chain_code() {
+  set_has_chain_code();
+  if (chain_code_ == &::google::protobuf::internal::kEmptyString) {
+    chain_code_ = new ::std::string;
+  }
+  return chain_code_;
+}
+inline ::std::string* XpubType::release_chain_code() {
+  clear_has_chain_code();
+  if (chain_code_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = chain_code_;
+    chain_code_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void XpubType::set_allocated_chain_code(::std::string* chain_code) {
+  if (chain_code_ != &::google::protobuf::internal::kEmptyString) {
+    delete chain_code_;
+  }
+  if (chain_code) {
+    set_has_chain_code();
+    chain_code_ = chain_code;
+  } else {
+    clear_has_chain_code();
+    chain_code_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// required bytes public_key = 6;
+inline bool XpubType::has_public_key() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void XpubType::set_has_public_key() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void XpubType::clear_has_public_key() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void XpubType::clear_public_key() {
+  if (public_key_ != &::google::protobuf::internal::kEmptyString) {
+    public_key_->clear();
+  }
+  clear_has_public_key();
+}
+inline const ::std::string& XpubType::public_key() const {
+  return *public_key_;
+}
+inline void XpubType::set_public_key(const ::std::string& value) {
+  set_has_public_key();
+  if (public_key_ == &::google::protobuf::internal::kEmptyString) {
+    public_key_ = new ::std::string;
+  }
+  public_key_->assign(value);
+}
+inline void XpubType::set_public_key(const char* value) {
+  set_has_public_key();
+  if (public_key_ == &::google::protobuf::internal::kEmptyString) {
+    public_key_ = new ::std::string;
+  }
+  public_key_->assign(value);
+}
+inline void XpubType::set_public_key(const void* value, size_t size) {
+  set_has_public_key();
+  if (public_key_ == &::google::protobuf::internal::kEmptyString) {
+    public_key_ = new ::std::string;
+  }
+  public_key_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* XpubType::mutable_public_key() {
+  set_has_public_key();
+  if (public_key_ == &::google::protobuf::internal::kEmptyString) {
+    public_key_ = new ::std::string;
+  }
+  return public_key_;
+}
+inline ::std::string* XpubType::release_public_key() {
+  clear_has_public_key();
+  if (public_key_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = public_key_;
+    public_key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void XpubType::set_allocated_public_key(::std::string* public_key) {
+  if (public_key_ != &::google::protobuf::internal::kEmptyString) {
+    delete public_key_;
+  }
+  if (public_key) {
+    set_has_public_key();
+    public_key_ = public_key;
+  } else {
+    clear_has_public_key();
+    public_key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
 // CoinType
 
-// optional bytes coin_name = 2;
+// optional bytes coin_name = 1;
 inline bool CoinType::has_coin_name() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
@@ -3612,7 +4327,7 @@ inline void CoinType::set_allocated_coin_name(::std::string* coin_name) {
   }
 }
 
-// optional bytes coin_shortcut = 3;
+// optional bytes coin_shortcut = 2;
 inline bool CoinType::has_coin_shortcut() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
@@ -3682,7 +4397,7 @@ inline void CoinType::set_allocated_coin_shortcut(::std::string* coin_shortcut) 
   }
 }
 
-// optional uint32 address_type = 4;
+// optional uint32 address_type = 3;
 inline bool CoinType::has_address_type() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -3704,7 +4419,7 @@ inline void CoinType::set_address_type(::google::protobuf::uint32 value) {
   address_type_ = value;
 }
 
-// optional uint64 maxfee_kb = 5;
+// optional uint64 maxfee_kb = 4;
 inline bool CoinType::has_maxfee_kb() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -4068,74 +4783,166 @@ inline void Features::set_allocated_settings(::SettingsType* settings) {
   }
 }
 
-// optional bytes serial_number = 5;
-inline bool Features::has_serial_number() const {
+// optional bytes device_id = 5;
+inline bool Features::has_device_id() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
-inline void Features::set_has_serial_number() {
+inline void Features::set_has_device_id() {
   _has_bits_[0] |= 0x00000010u;
 }
-inline void Features::clear_has_serial_number() {
+inline void Features::clear_has_device_id() {
   _has_bits_[0] &= ~0x00000010u;
 }
-inline void Features::clear_serial_number() {
-  if (serial_number_ != &::google::protobuf::internal::kEmptyString) {
-    serial_number_->clear();
+inline void Features::clear_device_id() {
+  if (device_id_ != &::google::protobuf::internal::kEmptyString) {
+    device_id_->clear();
   }
-  clear_has_serial_number();
+  clear_has_device_id();
 }
-inline const ::std::string& Features::serial_number() const {
-  return *serial_number_;
+inline const ::std::string& Features::device_id() const {
+  return *device_id_;
 }
-inline void Features::set_serial_number(const ::std::string& value) {
-  set_has_serial_number();
-  if (serial_number_ == &::google::protobuf::internal::kEmptyString) {
-    serial_number_ = new ::std::string;
+inline void Features::set_device_id(const ::std::string& value) {
+  set_has_device_id();
+  if (device_id_ == &::google::protobuf::internal::kEmptyString) {
+    device_id_ = new ::std::string;
   }
-  serial_number_->assign(value);
+  device_id_->assign(value);
 }
-inline void Features::set_serial_number(const char* value) {
-  set_has_serial_number();
-  if (serial_number_ == &::google::protobuf::internal::kEmptyString) {
-    serial_number_ = new ::std::string;
+inline void Features::set_device_id(const char* value) {
+  set_has_device_id();
+  if (device_id_ == &::google::protobuf::internal::kEmptyString) {
+    device_id_ = new ::std::string;
   }
-  serial_number_->assign(value);
+  device_id_->assign(value);
 }
-inline void Features::set_serial_number(const void* value, size_t size) {
-  set_has_serial_number();
-  if (serial_number_ == &::google::protobuf::internal::kEmptyString) {
-    serial_number_ = new ::std::string;
+inline void Features::set_device_id(const void* value, size_t size) {
+  set_has_device_id();
+  if (device_id_ == &::google::protobuf::internal::kEmptyString) {
+    device_id_ = new ::std::string;
   }
-  serial_number_->assign(reinterpret_cast<const char*>(value), size);
+  device_id_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* Features::mutable_serial_number() {
-  set_has_serial_number();
-  if (serial_number_ == &::google::protobuf::internal::kEmptyString) {
-    serial_number_ = new ::std::string;
+inline ::std::string* Features::mutable_device_id() {
+  set_has_device_id();
+  if (device_id_ == &::google::protobuf::internal::kEmptyString) {
+    device_id_ = new ::std::string;
   }
-  return serial_number_;
+  return device_id_;
 }
-inline ::std::string* Features::release_serial_number() {
-  clear_has_serial_number();
-  if (serial_number_ == &::google::protobuf::internal::kEmptyString) {
+inline ::std::string* Features::release_device_id() {
+  clear_has_device_id();
+  if (device_id_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
   } else {
-    ::std::string* temp = serial_number_;
-    serial_number_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    ::std::string* temp = device_id_;
+    device_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
     return temp;
   }
 }
-inline void Features::set_allocated_serial_number(::std::string* serial_number) {
-  if (serial_number_ != &::google::protobuf::internal::kEmptyString) {
-    delete serial_number_;
+inline void Features::set_allocated_device_id(::std::string* device_id) {
+  if (device_id_ != &::google::protobuf::internal::kEmptyString) {
+    delete device_id_;
   }
-  if (serial_number) {
-    set_has_serial_number();
-    serial_number_ = serial_number;
+  if (device_id) {
+    set_has_device_id();
+    device_id_ = device_id;
   } else {
-    clear_has_serial_number();
-    serial_number_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    clear_has_device_id();
+    device_id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
+}
+
+// optional bytes mpk_hash = 6;
+inline bool Features::has_mpk_hash() const {
+  return (_has_bits_[0] & 0x00000020u) != 0;
+}
+inline void Features::set_has_mpk_hash() {
+  _has_bits_[0] |= 0x00000020u;
+}
+inline void Features::clear_has_mpk_hash() {
+  _has_bits_[0] &= ~0x00000020u;
+}
+inline void Features::clear_mpk_hash() {
+  if (mpk_hash_ != &::google::protobuf::internal::kEmptyString) {
+    mpk_hash_->clear();
+  }
+  clear_has_mpk_hash();
+}
+inline const ::std::string& Features::mpk_hash() const {
+  return *mpk_hash_;
+}
+inline void Features::set_mpk_hash(const ::std::string& value) {
+  set_has_mpk_hash();
+  if (mpk_hash_ == &::google::protobuf::internal::kEmptyString) {
+    mpk_hash_ = new ::std::string;
+  }
+  mpk_hash_->assign(value);
+}
+inline void Features::set_mpk_hash(const char* value) {
+  set_has_mpk_hash();
+  if (mpk_hash_ == &::google::protobuf::internal::kEmptyString) {
+    mpk_hash_ = new ::std::string;
+  }
+  mpk_hash_->assign(value);
+}
+inline void Features::set_mpk_hash(const void* value, size_t size) {
+  set_has_mpk_hash();
+  if (mpk_hash_ == &::google::protobuf::internal::kEmptyString) {
+    mpk_hash_ = new ::std::string;
+  }
+  mpk_hash_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Features::mutable_mpk_hash() {
+  set_has_mpk_hash();
+  if (mpk_hash_ == &::google::protobuf::internal::kEmptyString) {
+    mpk_hash_ = new ::std::string;
+  }
+  return mpk_hash_;
+}
+inline ::std::string* Features::release_mpk_hash() {
+  clear_has_mpk_hash();
+  if (mpk_hash_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = mpk_hash_;
+    mpk_hash_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void Features::set_allocated_mpk_hash(::std::string* mpk_hash) {
+  if (mpk_hash_ != &::google::protobuf::internal::kEmptyString) {
+    delete mpk_hash_;
+  }
+  if (mpk_hash) {
+    set_has_mpk_hash();
+    mpk_hash_ = mpk_hash;
+  } else {
+    clear_has_mpk_hash();
+    mpk_hash_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bool pin_protection = 7;
+inline bool Features::has_pin_protection() const {
+  return (_has_bits_[0] & 0x00000040u) != 0;
+}
+inline void Features::set_has_pin_protection() {
+  _has_bits_[0] |= 0x00000040u;
+}
+inline void Features::clear_has_pin_protection() {
+  _has_bits_[0] &= ~0x00000040u;
+}
+inline void Features::clear_pin_protection() {
+  pin_protection_ = false;
+  clear_has_pin_protection();
+}
+inline bool Features::pin_protection() const {
+  return pin_protection_;
+}
+inline void Features::set_pin_protection(bool value) {
+  set_has_pin_protection();
+  pin_protection_ = value;
 }
 
 // -------------------------------------------------------------------
@@ -4354,6 +5161,32 @@ inline void ApplySettings::set_allocated_label(::std::string* label) {
 
 // -------------------------------------------------------------------
 
+// ChangePin
+
+// optional bool remove = 1;
+inline bool ChangePin::has_remove() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void ChangePin::set_has_remove() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void ChangePin::clear_has_remove() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void ChangePin::clear_remove() {
+  remove_ = false;
+  clear_has_remove();
+}
+inline bool ChangePin::remove() const {
+  return remove_;
+}
+inline void ChangePin::set_remove(bool value) {
+  set_has_remove();
+  remove_ = value;
+}
+
+// -------------------------------------------------------------------
+
 // Ping
 
 // optional bytes message = 1;
@@ -4425,412 +5258,6 @@ inline void Ping::set_allocated_message(::std::string* message) {
     message_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
-
-// -------------------------------------------------------------------
-
-// DebugLinkDecision
-
-// required bool yes_no = 1;
-inline bool DebugLinkDecision::has_yes_no() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void DebugLinkDecision::set_has_yes_no() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void DebugLinkDecision::clear_has_yes_no() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void DebugLinkDecision::clear_yes_no() {
-  yes_no_ = false;
-  clear_has_yes_no();
-}
-inline bool DebugLinkDecision::yes_no() const {
-  return yes_no_;
-}
-inline void DebugLinkDecision::set_yes_no(bool value) {
-  set_has_yes_no();
-  yes_no_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// DebugLinkGetState
-
-// optional bool layout = 1;
-inline bool DebugLinkGetState::has_layout() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void DebugLinkGetState::set_has_layout() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void DebugLinkGetState::clear_has_layout() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void DebugLinkGetState::clear_layout() {
-  layout_ = false;
-  clear_has_layout();
-}
-inline bool DebugLinkGetState::layout() const {
-  return layout_;
-}
-inline void DebugLinkGetState::set_layout(bool value) {
-  set_has_layout();
-  layout_ = value;
-}
-
-// optional bool pin = 2;
-inline bool DebugLinkGetState::has_pin() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void DebugLinkGetState::set_has_pin() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void DebugLinkGetState::clear_has_pin() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void DebugLinkGetState::clear_pin() {
-  pin_ = false;
-  clear_has_pin();
-}
-inline bool DebugLinkGetState::pin() const {
-  return pin_;
-}
-inline void DebugLinkGetState::set_pin(bool value) {
-  set_has_pin();
-  pin_ = value;
-}
-
-// optional bool matrix = 3;
-inline bool DebugLinkGetState::has_matrix() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void DebugLinkGetState::set_has_matrix() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void DebugLinkGetState::clear_has_matrix() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void DebugLinkGetState::clear_matrix() {
-  matrix_ = false;
-  clear_has_matrix();
-}
-inline bool DebugLinkGetState::matrix() const {
-  return matrix_;
-}
-inline void DebugLinkGetState::set_matrix(bool value) {
-  set_has_matrix();
-  matrix_ = value;
-}
-
-// optional bool seed = 4;
-inline bool DebugLinkGetState::has_seed() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void DebugLinkGetState::set_has_seed() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void DebugLinkGetState::clear_has_seed() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void DebugLinkGetState::clear_seed() {
-  seed_ = false;
-  clear_has_seed();
-}
-inline bool DebugLinkGetState::seed() const {
-  return seed_;
-}
-inline void DebugLinkGetState::set_seed(bool value) {
-  set_has_seed();
-  seed_ = value;
-}
-
-// -------------------------------------------------------------------
-
-// DebugLinkState
-
-// optional bytes layout = 1;
-inline bool DebugLinkState::has_layout() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
-}
-inline void DebugLinkState::set_has_layout() {
-  _has_bits_[0] |= 0x00000001u;
-}
-inline void DebugLinkState::clear_has_layout() {
-  _has_bits_[0] &= ~0x00000001u;
-}
-inline void DebugLinkState::clear_layout() {
-  if (layout_ != &::google::protobuf::internal::kEmptyString) {
-    layout_->clear();
-  }
-  clear_has_layout();
-}
-inline const ::std::string& DebugLinkState::layout() const {
-  return *layout_;
-}
-inline void DebugLinkState::set_layout(const ::std::string& value) {
-  set_has_layout();
-  if (layout_ == &::google::protobuf::internal::kEmptyString) {
-    layout_ = new ::std::string;
-  }
-  layout_->assign(value);
-}
-inline void DebugLinkState::set_layout(const char* value) {
-  set_has_layout();
-  if (layout_ == &::google::protobuf::internal::kEmptyString) {
-    layout_ = new ::std::string;
-  }
-  layout_->assign(value);
-}
-inline void DebugLinkState::set_layout(const void* value, size_t size) {
-  set_has_layout();
-  if (layout_ == &::google::protobuf::internal::kEmptyString) {
-    layout_ = new ::std::string;
-  }
-  layout_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* DebugLinkState::mutable_layout() {
-  set_has_layout();
-  if (layout_ == &::google::protobuf::internal::kEmptyString) {
-    layout_ = new ::std::string;
-  }
-  return layout_;
-}
-inline ::std::string* DebugLinkState::release_layout() {
-  clear_has_layout();
-  if (layout_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = layout_;
-    layout_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void DebugLinkState::set_allocated_layout(::std::string* layout) {
-  if (layout_ != &::google::protobuf::internal::kEmptyString) {
-    delete layout_;
-  }
-  if (layout) {
-    set_has_layout();
-    layout_ = layout;
-  } else {
-    clear_has_layout();
-    layout_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// optional bytes pin = 2;
-inline bool DebugLinkState::has_pin() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
-}
-inline void DebugLinkState::set_has_pin() {
-  _has_bits_[0] |= 0x00000002u;
-}
-inline void DebugLinkState::clear_has_pin() {
-  _has_bits_[0] &= ~0x00000002u;
-}
-inline void DebugLinkState::clear_pin() {
-  if (pin_ != &::google::protobuf::internal::kEmptyString) {
-    pin_->clear();
-  }
-  clear_has_pin();
-}
-inline const ::std::string& DebugLinkState::pin() const {
-  return *pin_;
-}
-inline void DebugLinkState::set_pin(const ::std::string& value) {
-  set_has_pin();
-  if (pin_ == &::google::protobuf::internal::kEmptyString) {
-    pin_ = new ::std::string;
-  }
-  pin_->assign(value);
-}
-inline void DebugLinkState::set_pin(const char* value) {
-  set_has_pin();
-  if (pin_ == &::google::protobuf::internal::kEmptyString) {
-    pin_ = new ::std::string;
-  }
-  pin_->assign(value);
-}
-inline void DebugLinkState::set_pin(const void* value, size_t size) {
-  set_has_pin();
-  if (pin_ == &::google::protobuf::internal::kEmptyString) {
-    pin_ = new ::std::string;
-  }
-  pin_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* DebugLinkState::mutable_pin() {
-  set_has_pin();
-  if (pin_ == &::google::protobuf::internal::kEmptyString) {
-    pin_ = new ::std::string;
-  }
-  return pin_;
-}
-inline ::std::string* DebugLinkState::release_pin() {
-  clear_has_pin();
-  if (pin_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = pin_;
-    pin_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void DebugLinkState::set_allocated_pin(::std::string* pin) {
-  if (pin_ != &::google::protobuf::internal::kEmptyString) {
-    delete pin_;
-  }
-  if (pin) {
-    set_has_pin();
-    pin_ = pin;
-  } else {
-    clear_has_pin();
-    pin_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// optional bytes matrix = 3;
-inline bool DebugLinkState::has_matrix() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
-}
-inline void DebugLinkState::set_has_matrix() {
-  _has_bits_[0] |= 0x00000004u;
-}
-inline void DebugLinkState::clear_has_matrix() {
-  _has_bits_[0] &= ~0x00000004u;
-}
-inline void DebugLinkState::clear_matrix() {
-  if (matrix_ != &::google::protobuf::internal::kEmptyString) {
-    matrix_->clear();
-  }
-  clear_has_matrix();
-}
-inline const ::std::string& DebugLinkState::matrix() const {
-  return *matrix_;
-}
-inline void DebugLinkState::set_matrix(const ::std::string& value) {
-  set_has_matrix();
-  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
-    matrix_ = new ::std::string;
-  }
-  matrix_->assign(value);
-}
-inline void DebugLinkState::set_matrix(const char* value) {
-  set_has_matrix();
-  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
-    matrix_ = new ::std::string;
-  }
-  matrix_->assign(value);
-}
-inline void DebugLinkState::set_matrix(const void* value, size_t size) {
-  set_has_matrix();
-  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
-    matrix_ = new ::std::string;
-  }
-  matrix_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* DebugLinkState::mutable_matrix() {
-  set_has_matrix();
-  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
-    matrix_ = new ::std::string;
-  }
-  return matrix_;
-}
-inline ::std::string* DebugLinkState::release_matrix() {
-  clear_has_matrix();
-  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = matrix_;
-    matrix_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void DebugLinkState::set_allocated_matrix(::std::string* matrix) {
-  if (matrix_ != &::google::protobuf::internal::kEmptyString) {
-    delete matrix_;
-  }
-  if (matrix) {
-    set_has_matrix();
-    matrix_ = matrix;
-  } else {
-    clear_has_matrix();
-    matrix_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// optional bytes seed = 4;
-inline bool DebugLinkState::has_seed() const {
-  return (_has_bits_[0] & 0x00000008u) != 0;
-}
-inline void DebugLinkState::set_has_seed() {
-  _has_bits_[0] |= 0x00000008u;
-}
-inline void DebugLinkState::clear_has_seed() {
-  _has_bits_[0] &= ~0x00000008u;
-}
-inline void DebugLinkState::clear_seed() {
-  if (seed_ != &::google::protobuf::internal::kEmptyString) {
-    seed_->clear();
-  }
-  clear_has_seed();
-}
-inline const ::std::string& DebugLinkState::seed() const {
-  return *seed_;
-}
-inline void DebugLinkState::set_seed(const ::std::string& value) {
-  set_has_seed();
-  if (seed_ == &::google::protobuf::internal::kEmptyString) {
-    seed_ = new ::std::string;
-  }
-  seed_->assign(value);
-}
-inline void DebugLinkState::set_seed(const char* value) {
-  set_has_seed();
-  if (seed_ == &::google::protobuf::internal::kEmptyString) {
-    seed_ = new ::std::string;
-  }
-  seed_->assign(value);
-}
-inline void DebugLinkState::set_seed(const void* value, size_t size) {
-  set_has_seed();
-  if (seed_ == &::google::protobuf::internal::kEmptyString) {
-    seed_ = new ::std::string;
-  }
-  seed_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* DebugLinkState::mutable_seed() {
-  set_has_seed();
-  if (seed_ == &::google::protobuf::internal::kEmptyString) {
-    seed_ = new ::std::string;
-  }
-  return seed_;
-}
-inline ::std::string* DebugLinkState::release_seed() {
-  clear_has_seed();
-  if (seed_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = seed_;
-    seed_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void DebugLinkState::set_allocated_seed(::std::string* seed) {
-  if (seed_ != &::google::protobuf::internal::kEmptyString) {
-    delete seed_;
-  }
-  if (seed) {
-    set_has_seed();
-    seed_ = seed;
-  } else {
-    clear_has_seed();
-    seed_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  }
-}
-
-// -------------------------------------------------------------------
-
-// DebugLinkStop
 
 // -------------------------------------------------------------------
 
@@ -5274,73 +5701,41 @@ inline void Entropy::set_allocated_entropy(::std::string* entropy) {
 
 // MasterPublicKey
 
-// required bytes key = 1;
-inline bool MasterPublicKey::has_key() const {
+// required .XpubType mpk = 1;
+inline bool MasterPublicKey::has_mpk() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void MasterPublicKey::set_has_key() {
+inline void MasterPublicKey::set_has_mpk() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void MasterPublicKey::clear_has_key() {
+inline void MasterPublicKey::clear_has_mpk() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void MasterPublicKey::clear_key() {
-  if (key_ != &::google::protobuf::internal::kEmptyString) {
-    key_->clear();
-  }
-  clear_has_key();
+inline void MasterPublicKey::clear_mpk() {
+  if (mpk_ != NULL) mpk_->::XpubType::Clear();
+  clear_has_mpk();
 }
-inline const ::std::string& MasterPublicKey::key() const {
-  return *key_;
+inline const ::XpubType& MasterPublicKey::mpk() const {
+  return mpk_ != NULL ? *mpk_ : *default_instance_->mpk_;
 }
-inline void MasterPublicKey::set_key(const ::std::string& value) {
-  set_has_key();
-  if (key_ == &::google::protobuf::internal::kEmptyString) {
-    key_ = new ::std::string;
-  }
-  key_->assign(value);
+inline ::XpubType* MasterPublicKey::mutable_mpk() {
+  set_has_mpk();
+  if (mpk_ == NULL) mpk_ = new ::XpubType;
+  return mpk_;
 }
-inline void MasterPublicKey::set_key(const char* value) {
-  set_has_key();
-  if (key_ == &::google::protobuf::internal::kEmptyString) {
-    key_ = new ::std::string;
-  }
-  key_->assign(value);
+inline ::XpubType* MasterPublicKey::release_mpk() {
+  clear_has_mpk();
+  ::XpubType* temp = mpk_;
+  mpk_ = NULL;
+  return temp;
 }
-inline void MasterPublicKey::set_key(const void* value, size_t size) {
-  set_has_key();
-  if (key_ == &::google::protobuf::internal::kEmptyString) {
-    key_ = new ::std::string;
-  }
-  key_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* MasterPublicKey::mutable_key() {
-  set_has_key();
-  if (key_ == &::google::protobuf::internal::kEmptyString) {
-    key_ = new ::std::string;
-  }
-  return key_;
-}
-inline ::std::string* MasterPublicKey::release_key() {
-  clear_has_key();
-  if (key_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
+inline void MasterPublicKey::set_allocated_mpk(::XpubType* mpk) {
+  delete mpk_;
+  mpk_ = mpk;
+  if (mpk) {
+    set_has_mpk();
   } else {
-    ::std::string* temp = key_;
-    key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-inline void MasterPublicKey::set_allocated_key(::std::string* key) {
-  if (key_ != &::google::protobuf::internal::kEmptyString) {
-    delete key_;
-  }
-  if (key) {
-    set_has_key();
-    key_ = key;
-  } else {
-    clear_has_key();
-    key_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    clear_has_mpk();
   }
 }
 
@@ -5446,6 +5841,10 @@ inline void Address::set_allocated_address(::std::string* address) {
     address_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
+
+// -------------------------------------------------------------------
+
+// WipeDevice
 
 // -------------------------------------------------------------------
 
@@ -5633,73 +6032,103 @@ inline void LoadDevice::set_allocated_pin(::std::string* pin) {
 
 // ResetDevice
 
-// optional bytes random = 7;
-inline bool ResetDevice::has_random() const {
+// optional bool display_random = 1;
+inline bool ResetDevice::has_display_random() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
-inline void ResetDevice::set_has_random() {
+inline void ResetDevice::set_has_display_random() {
   _has_bits_[0] |= 0x00000001u;
 }
-inline void ResetDevice::clear_has_random() {
+inline void ResetDevice::clear_has_display_random() {
   _has_bits_[0] &= ~0x00000001u;
 }
-inline void ResetDevice::clear_random() {
-  if (random_ != &::google::protobuf::internal::kEmptyString) {
-    random_->clear();
+inline void ResetDevice::clear_display_random() {
+  display_random_ = false;
+  clear_has_display_random();
+}
+inline bool ResetDevice::display_random() const {
+  return display_random_;
+}
+inline void ResetDevice::set_display_random(bool value) {
+  set_has_display_random();
+  display_random_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// EntropyRequest
+
+// -------------------------------------------------------------------
+
+// EntropyAck
+
+// optional bytes entropy = 1;
+inline bool EntropyAck::has_entropy() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void EntropyAck::set_has_entropy() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void EntropyAck::clear_has_entropy() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void EntropyAck::clear_entropy() {
+  if (entropy_ != &::google::protobuf::internal::kEmptyString) {
+    entropy_->clear();
   }
-  clear_has_random();
+  clear_has_entropy();
 }
-inline const ::std::string& ResetDevice::random() const {
-  return *random_;
+inline const ::std::string& EntropyAck::entropy() const {
+  return *entropy_;
 }
-inline void ResetDevice::set_random(const ::std::string& value) {
-  set_has_random();
-  if (random_ == &::google::protobuf::internal::kEmptyString) {
-    random_ = new ::std::string;
+inline void EntropyAck::set_entropy(const ::std::string& value) {
+  set_has_entropy();
+  if (entropy_ == &::google::protobuf::internal::kEmptyString) {
+    entropy_ = new ::std::string;
   }
-  random_->assign(value);
+  entropy_->assign(value);
 }
-inline void ResetDevice::set_random(const char* value) {
-  set_has_random();
-  if (random_ == &::google::protobuf::internal::kEmptyString) {
-    random_ = new ::std::string;
+inline void EntropyAck::set_entropy(const char* value) {
+  set_has_entropy();
+  if (entropy_ == &::google::protobuf::internal::kEmptyString) {
+    entropy_ = new ::std::string;
   }
-  random_->assign(value);
+  entropy_->assign(value);
 }
-inline void ResetDevice::set_random(const void* value, size_t size) {
-  set_has_random();
-  if (random_ == &::google::protobuf::internal::kEmptyString) {
-    random_ = new ::std::string;
+inline void EntropyAck::set_entropy(const void* value, size_t size) {
+  set_has_entropy();
+  if (entropy_ == &::google::protobuf::internal::kEmptyString) {
+    entropy_ = new ::std::string;
   }
-  random_->assign(reinterpret_cast<const char*>(value), size);
+  entropy_->assign(reinterpret_cast<const char*>(value), size);
 }
-inline ::std::string* ResetDevice::mutable_random() {
-  set_has_random();
-  if (random_ == &::google::protobuf::internal::kEmptyString) {
-    random_ = new ::std::string;
+inline ::std::string* EntropyAck::mutable_entropy() {
+  set_has_entropy();
+  if (entropy_ == &::google::protobuf::internal::kEmptyString) {
+    entropy_ = new ::std::string;
   }
-  return random_;
+  return entropy_;
 }
-inline ::std::string* ResetDevice::release_random() {
-  clear_has_random();
-  if (random_ == &::google::protobuf::internal::kEmptyString) {
+inline ::std::string* EntropyAck::release_entropy() {
+  clear_has_entropy();
+  if (entropy_ == &::google::protobuf::internal::kEmptyString) {
     return NULL;
   } else {
-    ::std::string* temp = random_;
-    random_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    ::std::string* temp = entropy_;
+    entropy_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
     return temp;
   }
 }
-inline void ResetDevice::set_allocated_random(::std::string* random) {
-  if (random_ != &::google::protobuf::internal::kEmptyString) {
-    delete random_;
+inline void EntropyAck::set_allocated_entropy(::std::string* entropy) {
+  if (entropy_ != &::google::protobuf::internal::kEmptyString) {
+    delete entropy_;
   }
-  if (random) {
-    set_has_random();
-    random_ = random;
+  if (entropy) {
+    set_has_entropy();
+    entropy_ = entropy;
   } else {
-    clear_has_random();
-    random_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    clear_has_entropy();
+    entropy_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 
@@ -6461,6 +6890,412 @@ TxOutput::mutable_script_args() {
   return &script_args_;
 }
 
+// -------------------------------------------------------------------
+
+// DebugLinkDecision
+
+// required bool yes_no = 1;
+inline bool DebugLinkDecision::has_yes_no() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void DebugLinkDecision::set_has_yes_no() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void DebugLinkDecision::clear_has_yes_no() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void DebugLinkDecision::clear_yes_no() {
+  yes_no_ = false;
+  clear_has_yes_no();
+}
+inline bool DebugLinkDecision::yes_no() const {
+  return yes_no_;
+}
+inline void DebugLinkDecision::set_yes_no(bool value) {
+  set_has_yes_no();
+  yes_no_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// DebugLinkGetState
+
+// optional bool layout = 1;
+inline bool DebugLinkGetState::has_layout() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void DebugLinkGetState::set_has_layout() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void DebugLinkGetState::clear_has_layout() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void DebugLinkGetState::clear_layout() {
+  layout_ = false;
+  clear_has_layout();
+}
+inline bool DebugLinkGetState::layout() const {
+  return layout_;
+}
+inline void DebugLinkGetState::set_layout(bool value) {
+  set_has_layout();
+  layout_ = value;
+}
+
+// optional bool pin = 2;
+inline bool DebugLinkGetState::has_pin() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void DebugLinkGetState::set_has_pin() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void DebugLinkGetState::clear_has_pin() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void DebugLinkGetState::clear_pin() {
+  pin_ = false;
+  clear_has_pin();
+}
+inline bool DebugLinkGetState::pin() const {
+  return pin_;
+}
+inline void DebugLinkGetState::set_pin(bool value) {
+  set_has_pin();
+  pin_ = value;
+}
+
+// optional bool matrix = 3;
+inline bool DebugLinkGetState::has_matrix() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void DebugLinkGetState::set_has_matrix() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void DebugLinkGetState::clear_has_matrix() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void DebugLinkGetState::clear_matrix() {
+  matrix_ = false;
+  clear_has_matrix();
+}
+inline bool DebugLinkGetState::matrix() const {
+  return matrix_;
+}
+inline void DebugLinkGetState::set_matrix(bool value) {
+  set_has_matrix();
+  matrix_ = value;
+}
+
+// optional bool seed = 4;
+inline bool DebugLinkGetState::has_seed() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void DebugLinkGetState::set_has_seed() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void DebugLinkGetState::clear_has_seed() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void DebugLinkGetState::clear_seed() {
+  seed_ = false;
+  clear_has_seed();
+}
+inline bool DebugLinkGetState::seed() const {
+  return seed_;
+}
+inline void DebugLinkGetState::set_seed(bool value) {
+  set_has_seed();
+  seed_ = value;
+}
+
+// -------------------------------------------------------------------
+
+// DebugLinkState
+
+// optional bytes layout = 1;
+inline bool DebugLinkState::has_layout() const {
+  return (_has_bits_[0] & 0x00000001u) != 0;
+}
+inline void DebugLinkState::set_has_layout() {
+  _has_bits_[0] |= 0x00000001u;
+}
+inline void DebugLinkState::clear_has_layout() {
+  _has_bits_[0] &= ~0x00000001u;
+}
+inline void DebugLinkState::clear_layout() {
+  if (layout_ != &::google::protobuf::internal::kEmptyString) {
+    layout_->clear();
+  }
+  clear_has_layout();
+}
+inline const ::std::string& DebugLinkState::layout() const {
+  return *layout_;
+}
+inline void DebugLinkState::set_layout(const ::std::string& value) {
+  set_has_layout();
+  if (layout_ == &::google::protobuf::internal::kEmptyString) {
+    layout_ = new ::std::string;
+  }
+  layout_->assign(value);
+}
+inline void DebugLinkState::set_layout(const char* value) {
+  set_has_layout();
+  if (layout_ == &::google::protobuf::internal::kEmptyString) {
+    layout_ = new ::std::string;
+  }
+  layout_->assign(value);
+}
+inline void DebugLinkState::set_layout(const void* value, size_t size) {
+  set_has_layout();
+  if (layout_ == &::google::protobuf::internal::kEmptyString) {
+    layout_ = new ::std::string;
+  }
+  layout_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* DebugLinkState::mutable_layout() {
+  set_has_layout();
+  if (layout_ == &::google::protobuf::internal::kEmptyString) {
+    layout_ = new ::std::string;
+  }
+  return layout_;
+}
+inline ::std::string* DebugLinkState::release_layout() {
+  clear_has_layout();
+  if (layout_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = layout_;
+    layout_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void DebugLinkState::set_allocated_layout(::std::string* layout) {
+  if (layout_ != &::google::protobuf::internal::kEmptyString) {
+    delete layout_;
+  }
+  if (layout) {
+    set_has_layout();
+    layout_ = layout;
+  } else {
+    clear_has_layout();
+    layout_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bytes pin = 2;
+inline bool DebugLinkState::has_pin() const {
+  return (_has_bits_[0] & 0x00000002u) != 0;
+}
+inline void DebugLinkState::set_has_pin() {
+  _has_bits_[0] |= 0x00000002u;
+}
+inline void DebugLinkState::clear_has_pin() {
+  _has_bits_[0] &= ~0x00000002u;
+}
+inline void DebugLinkState::clear_pin() {
+  if (pin_ != &::google::protobuf::internal::kEmptyString) {
+    pin_->clear();
+  }
+  clear_has_pin();
+}
+inline const ::std::string& DebugLinkState::pin() const {
+  return *pin_;
+}
+inline void DebugLinkState::set_pin(const ::std::string& value) {
+  set_has_pin();
+  if (pin_ == &::google::protobuf::internal::kEmptyString) {
+    pin_ = new ::std::string;
+  }
+  pin_->assign(value);
+}
+inline void DebugLinkState::set_pin(const char* value) {
+  set_has_pin();
+  if (pin_ == &::google::protobuf::internal::kEmptyString) {
+    pin_ = new ::std::string;
+  }
+  pin_->assign(value);
+}
+inline void DebugLinkState::set_pin(const void* value, size_t size) {
+  set_has_pin();
+  if (pin_ == &::google::protobuf::internal::kEmptyString) {
+    pin_ = new ::std::string;
+  }
+  pin_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* DebugLinkState::mutable_pin() {
+  set_has_pin();
+  if (pin_ == &::google::protobuf::internal::kEmptyString) {
+    pin_ = new ::std::string;
+  }
+  return pin_;
+}
+inline ::std::string* DebugLinkState::release_pin() {
+  clear_has_pin();
+  if (pin_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = pin_;
+    pin_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void DebugLinkState::set_allocated_pin(::std::string* pin) {
+  if (pin_ != &::google::protobuf::internal::kEmptyString) {
+    delete pin_;
+  }
+  if (pin) {
+    set_has_pin();
+    pin_ = pin;
+  } else {
+    clear_has_pin();
+    pin_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bytes matrix = 3;
+inline bool DebugLinkState::has_matrix() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void DebugLinkState::set_has_matrix() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void DebugLinkState::clear_has_matrix() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void DebugLinkState::clear_matrix() {
+  if (matrix_ != &::google::protobuf::internal::kEmptyString) {
+    matrix_->clear();
+  }
+  clear_has_matrix();
+}
+inline const ::std::string& DebugLinkState::matrix() const {
+  return *matrix_;
+}
+inline void DebugLinkState::set_matrix(const ::std::string& value) {
+  set_has_matrix();
+  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
+    matrix_ = new ::std::string;
+  }
+  matrix_->assign(value);
+}
+inline void DebugLinkState::set_matrix(const char* value) {
+  set_has_matrix();
+  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
+    matrix_ = new ::std::string;
+  }
+  matrix_->assign(value);
+}
+inline void DebugLinkState::set_matrix(const void* value, size_t size) {
+  set_has_matrix();
+  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
+    matrix_ = new ::std::string;
+  }
+  matrix_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* DebugLinkState::mutable_matrix() {
+  set_has_matrix();
+  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
+    matrix_ = new ::std::string;
+  }
+  return matrix_;
+}
+inline ::std::string* DebugLinkState::release_matrix() {
+  clear_has_matrix();
+  if (matrix_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = matrix_;
+    matrix_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void DebugLinkState::set_allocated_matrix(::std::string* matrix) {
+  if (matrix_ != &::google::protobuf::internal::kEmptyString) {
+    delete matrix_;
+  }
+  if (matrix) {
+    set_has_matrix();
+    matrix_ = matrix;
+  } else {
+    clear_has_matrix();
+    matrix_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bytes seed = 4;
+inline bool DebugLinkState::has_seed() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void DebugLinkState::set_has_seed() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void DebugLinkState::clear_has_seed() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void DebugLinkState::clear_seed() {
+  if (seed_ != &::google::protobuf::internal::kEmptyString) {
+    seed_->clear();
+  }
+  clear_has_seed();
+}
+inline const ::std::string& DebugLinkState::seed() const {
+  return *seed_;
+}
+inline void DebugLinkState::set_seed(const ::std::string& value) {
+  set_has_seed();
+  if (seed_ == &::google::protobuf::internal::kEmptyString) {
+    seed_ = new ::std::string;
+  }
+  seed_->assign(value);
+}
+inline void DebugLinkState::set_seed(const char* value) {
+  set_has_seed();
+  if (seed_ == &::google::protobuf::internal::kEmptyString) {
+    seed_ = new ::std::string;
+  }
+  seed_->assign(value);
+}
+inline void DebugLinkState::set_seed(const void* value, size_t size) {
+  set_has_seed();
+  if (seed_ == &::google::protobuf::internal::kEmptyString) {
+    seed_ = new ::std::string;
+  }
+  seed_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* DebugLinkState::mutable_seed() {
+  set_has_seed();
+  if (seed_ == &::google::protobuf::internal::kEmptyString) {
+    seed_ = new ::std::string;
+  }
+  return seed_;
+}
+inline ::std::string* DebugLinkState::release_seed() {
+  clear_has_seed();
+  if (seed_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = seed_;
+    seed_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void DebugLinkState::set_allocated_seed(::std::string* seed) {
+  if (seed_ != &::google::protobuf::internal::kEmptyString) {
+    delete seed_;
+  }
+  if (seed) {
+    set_has_seed();
+    seed_ = seed;
+  } else {
+    clear_has_seed();
+    seed_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// -------------------------------------------------------------------
+
+// DebugLinkStop
+
 
 // @@protoc_insertion_point(namespace_scope)
 
@@ -6468,6 +7303,10 @@ TxOutput::mutable_script_args() {
 namespace google {
 namespace protobuf {
 
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::MessageType>() {
+  return ::MessageType_descriptor();
+}
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::ScriptType>() {
   return ::ScriptType_descriptor();

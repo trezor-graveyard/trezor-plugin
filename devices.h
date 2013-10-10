@@ -11,6 +11,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/noncopyable.hpp>
+
 #include "hidapi.h"
 #include "messages.h"
 
@@ -61,16 +63,16 @@ private:
 public:
     DeviceChannel(const DeviceDescriptor &desc)
         : _buffer_length(0),
-          _read_timeout(10),
+          _read_timeout(60),
           _hid_device(0) { open(desc); } // opens on construction
     virtual ~DeviceChannel() { close(); } // closes on destruction
 
 public:
     // protobuf rpc
-    void write(const PB::Message &message, const unsigned short type);
-    std::pair<boost::shared_ptr<PB::Message>, unsigned short> read();
-    std::pair<boost::shared_ptr<PB::Message>, unsigned short> call(const PB::Message &message,
-                                                                   const unsigned short type);
+    void write(const PB::Message &message, uint16_t type);
+
+    std::pair<uint16_t, boost::shared_ptr<PB::Message> >
+    read(bool timeout = true);
 
 private:
     // opening/closing channel
@@ -78,9 +80,9 @@ private:
     void close();
 
     // i/o primitives
-    void write_bytes(const unsigned char *bytes, const size_t length);
-    void read_bytes(unsigned char *bytes, const size_t length);
-    void read_header(unsigned short &type, unsigned long &length);
+    void write_bytes(const unsigned char *bytes, size_t length);
+    void read_bytes(unsigned char *bytes, size_t length, bool timeout);
+    void read_header(uint16_t *type, uint32_t *length, bool timeout);
 };
 
 #endif  /* DEVICES_H */

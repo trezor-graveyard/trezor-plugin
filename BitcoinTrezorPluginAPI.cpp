@@ -12,14 +12,6 @@
 #include "BitcoinTrezorPluginAPI.h"
 #include "exceptions.h"
 
-std::string bytes_of_string_to_hex(const std::string &str)
-{
-    std::stringstream stream;
-    for (size_t i = 0; i < str.length(); i++)
-        stream << std::hex << (((unsigned short) str[i]) & 0xFF);
-    return stream.str();
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn BitcoinTrezorPluginPtr BitcoinTrezorPluginAPI::getPlugin()
 ///
@@ -56,36 +48,41 @@ std::vector<FB::JSAPIPtr> BitcoinTrezorPluginAPI::get_devices()
     return result;
 }
 
-void BitcoinTrezorDeviceAPI::call(const unsigned short type,
-                                  const FB::VariantMap &message,
+void BitcoinTrezorDeviceAPI::call(const std::string &type_name,
+                                  const FB::VariantMap &message_map,
                                   const FB::JSObjectPtr &callback)
 {
     boost::thread t(boost::bind(&BitcoinTrezorDeviceAPI::call_internal,
-                                this, type, message, callback));
+                                this, type_name, message_map, callback));
 }
 
-void BitcoinTrezorDeviceAPI::call_internal(const unsigned short type,
-                                           const FB::VariantMap &message,
+void BitcoinTrezorDeviceAPI::call_internal(const std::string &type_name,
+                                           const FB::VariantMap &message_map,
                                            const FB::JSObjectPtr &callback)
 {
-    boost::mutex::scoped_lock lock(_mutex);
-    FB::VariantMap result_message;
-    unsigned short result_type;
-
     try {
-        DeviceChannel device(_device);
-        boost::shared_ptr<PB::Message> message_ = message_of_type_and_map(type, message);
-        std::pair<boost::shared_ptr<PB::Message>, unsigned short > result =
-            device.call(*message_, type);
-        result_message = message_serialize_as_map(*result.first);
-        result_type = result.second;
-    } catch (const ActionCanceled &e) {
-        fire_cancel();
-    } catch (const ReadTimeout &e) {
-        fire_timeout();
-    } catch (const std::exception &e) {
-        fire_failure(e.what());
-    }
+        boost::shared_ptr<PB::Message> message = create_message(type_name);
+        uint16_t type = message_type(type_name);
+        message_from_map(*message, message_map);
 
-    callback->InvokeAsync("", FB::variant_list_of(result_type)(result_message));
+        std::pair<uint16_t, boost::shared_ptr<PB::Message> > result;
+
+        {
+            boost::mutex::scoped_lock lock(_mutex);
+            DeviceChannel device(_device);
+            device.write(*message, type);
+            result = device.read();
+        }
+
+        callback->InvokeAsync("", FB::variant_list_of
+                              (false)
+                              (message_name(result.first))
+                              (message_to_map(*result.second)));
+
+    } catch (const std::exception &e) {
+        FBLOG_FATAL("call_internal()", "Exception occurred");
+        FBLOG_FATAL("call_internal()", e.what());
+
+        callback->InvokeAsync("", FB::variant_list_of(e.what()));
+    }
 }

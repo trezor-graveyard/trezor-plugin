@@ -19,7 +19,7 @@ file (GLOB GENERAL RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
 
 include(FindProtobuf)
 find_package(Protobuf REQUIRED)
-find_package(Boost REQUIRED COMPONENTS random)
+find_package(Boost REQUIRED COMPONENTS filesystem system random thread)
 
 include_directories(${PROTOBUF_INCLUDE_DIR})
 include_directories(${Boost_RANDOM_INCLUDE_DIRS})
@@ -49,6 +49,7 @@ target_link_libraries(${PROJECT_NAME}
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_RANDOM_LIBRARY}
+    ${Boost_THREAD_LIBRARY}
     ${PROTOBUF_LIBRARY}
 )
 

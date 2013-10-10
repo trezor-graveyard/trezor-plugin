@@ -3,20 +3,6 @@
 
 #include "JSExceptions.h"
 
-struct ActionCanceled : FB::script_error
-{
-    ActionCanceled()
-        : FB::script_error("Action cancelled by user") {}
-    ~ActionCanceled() throw() {}
-};
-
-struct PinInvalid : FB::script_error
-{
-    PinInvalid()
-        : FB::script_error("Invalid PIN") {}
-    ~PinInvalid() throw() {}
-};
-
 struct ReadTimeout : FB::script_error {
     ReadTimeout()
         : FB::script_error("Read timeout") {}
@@ -27,6 +13,12 @@ struct ReadError : FB::script_error {
     ReadError()
         : FB::script_error("Read error") {}
     ~ReadError() throw() {}
+};
+
+struct WriteError : FB::script_error {
+    WriteError()
+        : FB::script_error("Write error") {}
+    ~WriteError() throw() {}
 };
 
 struct MessageTypeError : FB::script_error {

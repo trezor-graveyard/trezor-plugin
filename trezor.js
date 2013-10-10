@@ -1,96 +1,186 @@
 var trezor = (function (exports) {
 
-    var Trezor = function (plugin) {
-        this.plugin = plugin;
+    /**
+     * Trezor plugin.
+     */
+
+    var Trezor = function () {
+        this._plugin = Trezor._inject();
+    };
+
+    Trezor._inject = function () {
+        var body = document.getElementsByTagName('body')[0],
+            elem = document.createElement('object');
+
+        elem.type = "application/x-bitcointrezorplugin";
+        elem.width = 0;
+        elem.height = 0;
+        body.appendChild(elem);
+
+        return elem;
     };
 
     Trezor.prototype.version = function () {
-        return this.plugin.version;
+        return this._plugin.version;
     };
 
     Trezor.prototype.devices = function () {
-        return this.plugin.devices;
+        return this._plugin.devices;
     };
 
     Trezor.prototype.open = function (device, on) {
-        return new Channel(device, on);
+        return new Session(device, on);
     };
 
     exports.Trezor = Trezor;
 
     /**
-     * Trezor device handle.
+     * Trezor device session handle.
      */
 
-    var Channel = function (device, on) {
-        this.device = device;
-        this.on = on || {};
+    var Session = function (device, on) {
+        this._device = device;
+        this._on = on || {};
     };
 
-    Channel.prototype.getEntropy = function (size, cb) {
-        this.call('GetEntropy', { size: size }, function (t, m) {
-            if (t !== 'Entropy')
-                return cb(new Error('Message of unknown type'));
-            return cb(null, m.entropy);
+    Session.prototype.initialize = function (success, failure) {
+        this._call('Initialize', {}, function (t, m) {
+            if (t === 'Failure') {
+                failure(new Error(m.message));
+                return;
+            }
+            if (t !== 'Features') {
+                failure(new Error('Response of unexpected type'));
+                return;
+            }
+
+            success(m);
         });
     };
 
-    Channel.prototype.getAddress = function (address_n, cb) {
-        this.call('GetAddress', { address_n: address_n }, function (t, m) {
-            if (t !== 'Address')
-                return cb(new Error('Message of unknown type'));
-            return cb(null, m.address);
+    Session.prototype.getEntropy = function (size, success, failure) {
+        this._call('GetEntropy', { size: size }, function (t, m) {
+            if (t === 'Failure') {
+                failure(new Error(m.message));
+                return;
+            }
+            if (t !== 'Entropy') {
+                failure(new Error('Response of unexpected type'));
+                return;
+            }
+
+            success(m.entropy);
         });
     };
 
-    Channel.prototype.getMasterPublicKey = function (cb) {
-        this.call('GetMasterPublicKey', {}, function (t, m) {
-            if (t !== 'MasterPublicKey')
-                return cb(new Error('Message of unknown type'));
-            return cb(null, m.key);
+    Session.prototype.getAddress = function (address_n, success, failure) {
+        this._call('GetAddress', { address_n: address_n }, function (t, m) {
+            if (t === 'Failure') {
+                failure(new Error(m.message));
+                return;
+            }
+            if (t !== 'Address') {
+                failure(new Error('Response of unexpected type'));
+                return;
+            }
+
+            success(m.address);
         });
     };
 
-    Channel.prototype.signTx = function (inputs, outputs, cb) {
+    Session.prototype.getMasterPublicKey = function (success, failure) {
+        this._call('GetMasterPublicKey', {}, function (t, m) {
+            if (t === 'Failure') {
+                failure(new Error(m.message));
+                return;
+            }
+            if (t !== 'MasterPublicKey') {
+                failure(new Error('Response of unexpected type'));
+                return;
+            }
+
+            success(m.key);
+        });
+    };
+
+    Session.prototype.signTx = function (inputs, outputs, success, failure) {
         var self = this,
             signatures = [],
             serializedTx = '';
 
-        this.call('SignTx', { inputs_count: inputs.length,
-                              outputs_count: outputs.length }, process);
+        this._call('SignTx', { inputs_count: inputs.length,
+                               outputs_count: outputs.length }, process);
 
         function process (t, m) {
 
+            if (t === 'Failure') {
+                failure(new Error(m.message));
+                return;
+            }
+            if (t !== 'TxInputRequest') {
+                failure(new Error('Response of unexpected type'));
+                return;
+            }
+
             if (m.serialized_tx)
                 serializedTx += m.serialized_tx;
+
             if (m.signature && m.signed_index >= 0)
                 signatures[m.signed_index] = m.signature;
 
-            if (m.request_index < 0)
-                return cb(null, signatures, serializedTx);
+            if (m.request_index < 0) {
+                success(signatures, serializedTx);
+                return;
+            }
 
             if (m.request_type == 'TXINPUT')
-                return self.call('TxInput', inputs[m.request_index], process);
+                self._call('TxInput', inputs[m.request_index], process);
             else
-                return self.call('TxOutput', outputs[m.request_index], process);
+                self._call('TxOutput', outputs[m.request_index], process);
         }
     };
 
-    Channel.prototype.call = function (type, msg, cb) {
+    Session.prototype._log = function () {
+        [].unshift.call(arguments, '[trezor]');
+        console.log.apply(console, arguments);
+    };
+
+    Session.prototype._call = function (type, msg, callback) {
         var self = this;
-        this.device.call(type, msg, function (t, m) {
-            switch (t) {
-            case 'Failure':
-                return self.on.failure(m);
-            case 'ButtonRequest':
-                return self.call('ButtonAck', {}, cb);
-            case 'PinMatrixRequest':
-                return self.on.pin(m, function (pin) {
-                    return self.call('PinMatrix', { pin: pin }, cb);
-                });
-            default:
-                return cb(t, m);
+
+        self._log('Sending:', type, msg);
+
+        self._device.call(type, msg, function (err, t, m) {
+            if (err) {
+                self._log('Received error:', err);
+                if (self._on.error)
+                    self._on.error(err);
+                return;
             }
+
+            self._log('Received:', t, m);
+
+            if (t === 'ButtonRequest') {
+                self._call('ButtonAck', {}, callback);
+                return;
+            }
+
+            if (t === 'PinMatrixRequest') {
+                if (self._on.pin)
+                    self._on.pin(function (pin) {
+                        if (pin)
+                            self._call('PinMatrixAck', { pin: pin }, callback);
+                        else
+                            self._call('PinMatrixCancel', {}, callback);
+                    });
+                else {
+                    self._log('PIN callback not configured, cancelling PIN request');
+                    self._call('PinMatrixCancel', {}, callback);
+                }
+                return;
+            }
+
+            callback(t, m);
         });
     };
 
