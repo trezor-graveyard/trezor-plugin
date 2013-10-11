@@ -1,0 +1,16 @@
+//
+// This file defines the configuration format for initialing the
+// plugin.
+//
+
+import "google/protobuf/descriptor.proto";
+
+message Configuration {
+    // regexes of allowed/forbidden urls
+    repeated bytes whitelist_urls = 1;
+    repeated bytes blacklist_urls = 2;
+
+    // compiled specification of the wire protocol, serialized
+    // FileDescriptorSet can be generated with `protoc -o`
+    required FileDescriptorSet wire_protocol = 3;
+}
