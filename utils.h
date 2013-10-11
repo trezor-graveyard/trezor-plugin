@@ -1,9 +1,20 @@
-#ifndef UTILS_H
-#define	UTILS_H
+#ifndef TREZOR_UTILS_H
+#define TREZOR_UTILS_H
 
 #include <string>
 #include <sstream>
 #include <boost/algorithm/hex.hpp>
+
+//
+// Crypto
+//
+
+bool check_signature(const uint8_t *data, size_t datalen,
+                     const uint8_t *sig, size_t siglen);
+
+//
+// Hex codec
+//
 
 template <typename T>
 inline std::string hex_encode(const T &val)
@@ -30,4 +41,4 @@ inline std::string hex_decode(const std::string &hex)
     return stream.str();
 }
 
-#endif
+#endif // TREZOR_UTILS_H
