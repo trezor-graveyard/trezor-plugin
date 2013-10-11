@@ -5,8 +5,8 @@
  * Created on April 1, 2013, 6:34 PM
  */
 
-#ifndef DEVICES_H
-#define DEVICES_H
+#ifndef TREZOR_DEVICES_H
+#define TREZOR_DEVICES_H
 
 #include <string>
 #include <vector>
@@ -83,4 +83,4 @@ private:
     void read_header(uint16_t *type, uint32_t *length, bool timeout);
 };
 
-#endif  /* DEVICES_H */
+#endif // TREZOR_DEVICES_H

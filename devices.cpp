@@ -20,7 +20,10 @@ DeviceChannel::open(const DeviceDescriptor &desc)
                            desc.product_id,
                            desc.serial_number.c_str());
 
-    // TODO: handle _hid_device == NULL
+    if (!_hid_device) {
+        FBLOG_FATAL("open()", "Failed to open device");
+        throw OpenError();
+    }
 
     FBLOG_INFO("open()", "Sending features");
     hid_send_feature_report(_hid_device, uart, 2); // enable UART

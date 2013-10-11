@@ -9,6 +9,12 @@ struct ReadTimeout : FB::script_error {
     ~ReadTimeout() throw() {}
 };
 
+struct OpenError : FB::script_error {
+    OpenError()
+        : FB::script_error("Failed to open device") {}
+    ~OpenError() throw() {}
+};
+
 struct ReadError : FB::script_error {
     ReadError()
         : FB::script_error("Read error") {}
