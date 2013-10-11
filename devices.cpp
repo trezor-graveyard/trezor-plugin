@@ -68,6 +68,12 @@ DeviceChannel::read_bytes(unsigned char *bytes, size_t length, bool timeout)
     FBLOG_INFO("read_bytes()", "Start buffer length");
     FBLOG_INFO("read_bytes()", _buffer_length);
 
+    // check we have enough space in the buffer
+    if (_buffer_length + length > sizeof(_buffer)) {
+        FBLOG_FATAL("read_bytes()", "No space in the read buffer");
+        throw ReadError();
+    }
+
     // buffer up enough chunks
     while (_buffer_length < length) {
         unsigned char chunk[1 + 63]; // extra byte for report number
@@ -166,6 +172,10 @@ DeviceChannel::read(bool timeout)
     FBLOG_INFO("read()", "Type and Length");
     FBLOG_INFO("read()", type);
     FBLOG_INFO("read()", length);
+
+    // check length looks valid before allocating
+    if (length > sizeof(_buffer))
+        throw ReadError();
 
     unsigned char msgbuf[length];
     read_bytes(msgbuf, length, timeout);
