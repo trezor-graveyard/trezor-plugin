@@ -25,6 +25,7 @@
 class BitcoinTrezorDeviceAPI : public FB::JSAPIAuto
 {
 private:
+    DeviceChannel *_channel;
     DeviceDescriptor _device; // descriptor for opening a dev channel in threads
     boost::mutex _mutex; // synchronize access to same device
 
@@ -38,11 +39,15 @@ public:
         registerAttribute("serialNumber", _device.serial_number, true);
 
         // methods
+        registerMethod("open", make_method(this, &BitcoinTrezorDeviceAPI::open));
+        registerMethod("close", make_method(this, &BitcoinTrezorDeviceAPI::close));
         registerMethod("call", make_method(this, &BitcoinTrezorDeviceAPI::call));
     }
     virtual ~BitcoinTrezorDeviceAPI() {};
 
 public:
+    void open();
+    void close();
     void call(const std::string &type_name,
               const FB::VariantMap &message_map,
               const FB::JSObjectPtr &callback);

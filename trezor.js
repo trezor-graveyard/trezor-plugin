@@ -41,6 +41,15 @@ var trezor = (function (exports) {
     var Session = function (device, on) {
         this._device = device;
         this._on = on || {};
+        this.open();
+    };
+
+    Session.prototype.open = function () {
+        this._device.open();
+    };
+
+    Session.prototype.close = function () {
+        this._device.close();
     };
 
     Session.prototype.initialize = function (success, failure) {

@@ -9,7 +9,8 @@
 #include <time.h>
 #include <netinet/in.h>
 
-void DeviceChannel::open(const DeviceDescriptor &desc)
+void
+DeviceChannel::open(const DeviceDescriptor &desc)
 {
     const unsigned char uart[] = {0x41, 0x01};
     const unsigned char txrx[] = {0x43, 0x03};
@@ -27,13 +28,15 @@ void DeviceChannel::open(const DeviceDescriptor &desc)
     hid_set_nonblocking(_hid_device, 0); // block on read
 }
 
-void DeviceChannel::close()
+void
+DeviceChannel::close()
 {
     FBLOG_INFO("close()", "Closing device");
     hid_close(_hid_device);
 }
 
-void DeviceChannel::write_bytes(const unsigned char *bytes, size_t length)
+void
+DeviceChannel::write_bytes(const unsigned char *bytes, size_t length)
 {
     FBLOG_INFO("write_bytes()", "Starting to write n bytes");
     FBLOG_INFO("write_bytes()", length);
@@ -54,7 +57,8 @@ void DeviceChannel::write_bytes(const unsigned char *bytes, size_t length)
     }
 }
 
-void DeviceChannel::read_bytes(unsigned char *bytes, size_t length, bool timeout)
+void
+DeviceChannel::read_bytes(unsigned char *bytes, size_t length, bool timeout)
 {
     const time_t start_time = time(0);
 
@@ -103,7 +107,8 @@ void DeviceChannel::read_bytes(unsigned char *bytes, size_t length, bool timeout
     FBLOG_INFO("read_bytes()", _buffer_length);
 }
 
-void DeviceChannel::read_header(uint16_t *type, uint32_t *length, bool timeout)
+void
+DeviceChannel::read_header(uint16_t *type, uint32_t *length, bool timeout)
 {
     unsigned char header[6];
 
@@ -126,8 +131,10 @@ void DeviceChannel::read_header(uint16_t *type, uint32_t *length, bool timeout)
                     (header[4] << 16) | (header[5] << 24));
 }
 
-void DeviceChannel::write(const PB::Message &message, uint16_t type)
+void
+DeviceChannel::write(const PB::Message &message)
 {
+    const uint16_t type = message_type(message);
     const size_t msgsize = message.ByteSize();
     const size_t bufsize = 2 + 2 + 4 + msgsize; // ## + type + length + message
 
@@ -149,7 +156,7 @@ void DeviceChannel::write(const PB::Message &message, uint16_t type)
     write_bytes(buf, bufsize);
 }
 
-std::pair<uint16_t, boost::shared_ptr<PB::Message> >
+std::auto_ptr<PB::Message>
 DeviceChannel::read(bool timeout)
 {
     uint16_t type;
@@ -163,8 +170,9 @@ DeviceChannel::read(bool timeout)
     unsigned char msgbuf[length];
     read_bytes(msgbuf, length, timeout);
 
-    boost::shared_ptr<PB::Message> message = create_message(message_name(type));
+    std::string name = message_name(type);
+    std::auto_ptr<PB::Message> message = create_message(name);
     message->ParseFromArray(msgbuf, length);
 
-    return std::make_pair(type, message);
+    return message;
 }

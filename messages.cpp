@@ -49,6 +49,12 @@ message_name(uint16_t type)
     return ename.substr(MESSAGE_TYPE_PREFIX.length());
 }
 
+std::string
+message_name(const PB::Message &message)
+{
+    return message.GetTypeName();
+}
+
 uint16_t
 message_type(const std::string &name)
 {
@@ -64,7 +70,13 @@ message_type(const std::string &name)
     return evd->number();
 }
 
-boost::shared_ptr<PB::Message>
+uint16_t
+message_type(const PB::Message &message)
+{
+    return message_type(message_name(message));
+}
+
+std::auto_ptr<PB::Message>
 create_message(const std::string &name)
 {
     PB::MessageFactory *factory = pb_message_factory();
@@ -72,7 +84,7 @@ create_message(const std::string &name)
     const PB::Descriptor *descriptor = message_descriptor(name);
     const PB::Message *prototype = factory->GetPrototype(descriptor);
 
-    return boost::shared_ptr<PB::Message>(prototype->New());
+    return std::auto_ptr<PB::Message>(prototype->New());
 }
 
 //

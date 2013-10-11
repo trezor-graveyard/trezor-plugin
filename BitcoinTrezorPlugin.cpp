@@ -83,7 +83,7 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::list_available_devices()
         DeviceDescriptor curr_desc(*current);
         for (std::vector<DeviceDescriptor>::iterator it = _known_devices.begin();
              it != _known_devices.end();
-             it++)
+             ++it)
         {
             if (it->is_of_same_product(curr_desc)) {
                 result.push_back(curr_desc);

@@ -1,7 +1,6 @@
 #ifndef TREZOR_MESSAGES_H
 #define	TREZOR_MESSAGES_H
 
-#include <boost/shared_ptr.hpp>
 #include <google/protobuf/message.h>
 
 #include "APITypes.h"
@@ -11,10 +10,16 @@ namespace PB = google::protobuf;
 std::string
 message_name(uint16_t type);
 
+std::string
+message_name(const PB::Message &message);
+
 uint16_t
 message_type(const std::string &name);
 
-boost::shared_ptr<PB::Message>
+uint16_t
+message_type(const PB::Message &message);
+
+std::auto_ptr<PB::Message>
 create_message(const std::string &name);
 
 //

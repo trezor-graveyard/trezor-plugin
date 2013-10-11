@@ -47,6 +47,14 @@
          }
 
          function handleEntropy(entropy) {
+             var inputs = [],
+                 outputs = [];
+             session.signTx(inputs, outputs, handleSignTx);
+         }
+
+         function handleSignTx(signatures, serializedTx) {
+             console.log('Signatures:', signatures);
+             console.log('Serialized tx:', serializedTx);
          }
       }
     </script>

@@ -40,12 +40,24 @@ std::vector<FB::JSAPIPtr> BitcoinTrezorPluginAPI::get_devices()
 
     for (std::vector<DeviceDescriptor>::iterator it = available.begin();
          it != available.end();
-         it++)
+         ++it)
     {
         result.push_back(boost::make_shared<BitcoinTrezorDeviceAPI>(*it));
     }
 
     return result;
+}
+
+void BitcoinTrezorDeviceAPI::open()
+{
+    // TODO: do this differently
+    _channel = new DeviceChannel(_device);
+}
+
+void BitcoinTrezorDeviceAPI::close()
+{
+    // TODO: do this differently
+    delete _channel;
 }
 
 void BitcoinTrezorDeviceAPI::call(const std::string &type_name,
@@ -61,23 +73,20 @@ void BitcoinTrezorDeviceAPI::call_internal(const std::string &type_name,
                                            const FB::JSObjectPtr &callback)
 {
     try {
-        boost::shared_ptr<PB::Message> message = create_message(type_name);
-        uint16_t type = message_type(type_name);
-        message_from_map(*message, message_map);
-
-        std::pair<uint16_t, boost::shared_ptr<PB::Message> > result;
+        std::auto_ptr<PB::Message> output_message;
+        std::auto_ptr<PB::Message> input_message = create_message(type_name);
+        message_from_map(*input_message, message_map);
 
         {
             boost::mutex::scoped_lock lock(_mutex);
-            DeviceChannel device(_device);
-            device.write(*message, type);
-            result = device.read();
+            _channel->write(*input_message);
+            output_message = _channel->read();
         }
 
         callback->InvokeAsync("", FB::variant_list_of
                               (false)
-                              (message_name(result.first))
-                              (message_to_map(*result.second)));
+                              (message_name(*output_message))
+                              (message_to_map(*output_message)));
 
     } catch (const std::exception &e) {
         FBLOG_FATAL("call_internal()", "Exception occurred");

@@ -69,10 +69,8 @@ public:
 
 public:
     // protobuf rpc
-    void write(const PB::Message &message, uint16_t type);
-
-    std::pair<uint16_t, boost::shared_ptr<PB::Message> >
-    read(bool timeout = true);
+    std::auto_ptr<PB::Message> read(bool timeout = true);
+    void write(const PB::Message &message);
 
 private:
     // opening/closing channel
