@@ -1,26 +1,49 @@
 #include "exceptions.h"
 #include "messages.h"
 #include "utils.h"
-
 #include "trezor.pb.h"
+
+#include <google/protobuf/dynamic_message.h>
+#include <fstream>
 
 #include "logging.h"
 
 static const std::string MESSAGE_TYPE_ENUM_NAME = "MessageType";
 static const std::string MESSAGE_TYPE_PREFIX = MESSAGE_TYPE_ENUM_NAME + "_";
 
+static PB::DescriptorPool *descriptor_pool = 0;
+static PB::MessageFactory *message_factory = 0;
+
+static void
+init_dynamic_protobuf()
+{
+    std::ifstream stream("/Users/jpochyla/Projects/trezor-plugin/PROTOCOL");
+
+    PB::FileDescriptorSet fdset;
+    fdset.ParseFromIstream(&stream);
+
+    descriptor_pool = new PB::DescriptorPool(PB::DescriptorPool::generated_pool());
+    for (int i = 0; i < fdset.file_size(); i++)
+        descriptor_pool->BuildFile(fdset.file(i));
+    message_factory = new PB::DynamicMessageFactory(descriptor_pool);
+}
+
 static PB::MessageFactory *
 pb_message_factory()
 {
-    // TODO: construct dynamic message factory
-    return PB::MessageFactory::generated_factory();
+    // return PB::MessageFactory::generated_factory();
+    if (!message_factory)
+        init_dynamic_protobuf();
+    return message_factory;
 }
 
 static const PB::DescriptorPool *
 pb_descriptor_pool()
 {
-    // TODO: implement dynamic FileDescriptorProto loading
-    return PB::DescriptorPool::generated_pool();
+    // return PB::DescriptorPool::generated_pool();
+    if (!descriptor_pool)
+        init_dynamic_protobuf();
+    return descriptor_pool;
 }
 
 static const PB::Descriptor *

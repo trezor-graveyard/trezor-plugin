@@ -111,5 +111,6 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::list_available_devices()
 FB::JSAPIPtr BitcoinTrezorPlugin::createJSAPI()
 {
     // m_host is the BrowserHost
-    return boost::make_shared<BitcoinTrezorPluginAPI>(FB::ptr_cast<BitcoinTrezorPlugin>(shared_from_this()), m_host);
+    return boost::make_shared<BitcoinTrezorPluginAPI>(
+        FB::ptr_cast<BitcoinTrezorPlugin>(shared_from_this()), m_host);
 }
