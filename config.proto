@@ -5,6 +5,11 @@
 
 import "google/protobuf/descriptor.proto";
 
+message DeviceDescriptor {
+    required uint32 vendor_id = 1;
+    required uint32 product_id = 2;
+}
+
 message Configuration {
     // regexes of allowed/forbidden urls
     repeated bytes whitelist_urls = 1;
@@ -14,6 +19,9 @@ message Configuration {
     // FileDescriptorSet can be generated with `protoc -o`
     required google.protobuf.FileDescriptorSet wire_protocol = 3;
 
+    // descriptors of allowed devices
+    repeated DeviceDescriptor known_devices = 4;
+
     // timestamp of expiration
-    optional int32 valid_until = 4;
+    optional int32 valid_until = 5;
 }
