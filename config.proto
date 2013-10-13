@@ -12,7 +12,7 @@ message Configuration {
 
     // compiled specification of the wire protocol, serialized
     // FileDescriptorSet can be generated with `protoc -o`
-    required FileDescriptorSet wire_protocol = 3;
+    required google.protobuf.FileDescriptorSet wire_protocol = 3;
 
     // timestamp of expiration
     optional int32 valid_until = 4;
