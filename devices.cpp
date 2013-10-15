@@ -1,7 +1,7 @@
 #include "devices.h"
 #include "messages.h"
 #include "exceptions.h"
-#include "trezor.pb.h"
+#include "utils.h"
 
 #include "logging.h"
 
@@ -16,9 +16,9 @@ DeviceChannel::open(const DeviceDescriptor &desc)
     const unsigned char txrx[] = {0x43, 0x03};
 
     FBLOG_INFO("open()", "Opening device");
-    _hid_device = hid_open(desc.vendor_id,
-                           desc.product_id,
-                           desc.serial_number.c_str());
+    _hid_device = hid_open(desc.vendor_id(),
+                           desc.product_id(),
+                           utils::utf8_decode(desc.serial_number()).c_str());
 
     if (!_hid_device) {
         FBLOG_FATAL("open()", "Failed to open device");
@@ -55,7 +55,7 @@ DeviceChannel::write_bytes(const unsigned char *bytes, size_t length)
         if (res < sizeof(chunk)) {
             FBLOG_FATAL("write_bytes()", "Write error");
             FBLOG_FATAL("write_bytes()", hid_error(_hid_device));
-            throw WriteError();
+            throw WriteError(utils::utf8_encode(hid_error(_hid_device)));
         }
     }
 }
@@ -94,7 +94,7 @@ DeviceChannel::read_bytes(unsigned char *bytes, size_t length, bool timeout)
         else if (res < 0) { // read returns -1 on error
             FBLOG_FATAL("read_bytes()", "Read error");
             FBLOG_FATAL("read_bytes()", hid_error(_hid_device));
-            throw ReadError();
+            throw ReadError(utils::utf8_encode(hid_error(_hid_device)));
         }
     }
 
@@ -124,7 +124,7 @@ DeviceChannel::read_header(uint16_t *type, uint32_t *length, bool timeout)
     read_bytes(header, 1, timeout);
     if (header[0] != '#') {
         FBLOG_FATAL("read_header()", "Second magic character is broken");
-        throw ReadError();
+        throw ReadError("Failed to read header");
     }
 
     FBLOG_INFO("read_header()", "Reading type and length");
@@ -172,8 +172,8 @@ DeviceChannel::read(bool timeout)
 
     // check length looks valid before allocating
     if (length > sizeof(_buffer)) {
-        FBLOG_FATAL("read()", "Message length too big");
-        throw ReadError();
+        FBLOG_FATAL("read()", "Message length is too big, probably invalid");
+        throw ReadError("Invalid data");
     }
 
     unsigned char msgbuf[length];
