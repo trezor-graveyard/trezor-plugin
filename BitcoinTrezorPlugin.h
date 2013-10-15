@@ -13,12 +13,13 @@
 
 #include "hidapi.h"
 #include "devices.h"
+#include "config.pb.h"
 
 FB_FORWARD_PTR(BitcoinTrezorPlugin)
 class BitcoinTrezorPlugin : public FB::PluginCore
 {
 private:
-    std::vector<DeviceDescriptor> _known_devices;
+    Configuration _stored_config;
 
 public:
     static void StaticInitialize();
@@ -38,7 +39,13 @@ public:
     // FB::PluginCore::isWindowless()
     virtual bool isWindowless() { return true; }
 
-    std::vector<DeviceDescriptor> list_available_devices();
+    void configure(const Configuration &config);
+
+    bool authenticate() { return authenticate(_stored_config); }
+    bool authenticate(const Configuration &config);
+
+    std::vector<DeviceDescriptor> enumerate() { return enumerate(_stored_config); }
+    std::vector<DeviceDescriptor> enumerate(const Configuration &config);
 
     BEGIN_PLUGIN_EVENT_MAP()
     END_PLUGIN_EVENT_MAP()

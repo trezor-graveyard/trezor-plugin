@@ -7,9 +7,13 @@
 
 \**********************************************************/
 
-#include "devices.h"
+#include <boost/regex.hpp>
+
+#include "DOM/Window.h"
 
 #include "BitcoinTrezorPluginAPI.h"
+#include "exceptions.h"
+#include "devices.h"
 
 #include "BitcoinTrezorPlugin.h"
 
@@ -42,11 +46,8 @@ void BitcoinTrezorPlugin::StaticDeinitialize()
 ///         at this point, nor the window.  For best results wait to use
 ///         the JSAPI object until the onPluginReady method is called
 ///////////////////////////////////////////////////////////////////////////////
-BitcoinTrezorPlugin::BitcoinTrezorPlugin() :
-    _known_devices()
+BitcoinTrezorPlugin::BitcoinTrezorPlugin()
 {
-    _known_devices.push_back(DeviceDescriptor(0x1cbe, 0xcaf3)); // Trezor
-    _known_devices.push_back(DeviceDescriptor(0x10c4, 0xea80)); // Trezor Pi
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -73,25 +74,72 @@ void BitcoinTrezorPlugin::shutdown()
     // references to this object will be valid
 }
 
-std::vector<DeviceDescriptor> BitcoinTrezorPlugin::list_available_devices()
+void BitcoinTrezorPlugin::configure(const Configuration &config)
+{
+    // check expiration
+    if (config.has_valid_until() && config.valid_until() < time(0)) {
+        FBLOG_ERROR("configure()", "Configuration has expired");
+        throw ConfigurationError("Configuration has expired");
+    }
+
+    // check allowed sites
+    if (!authenticate(config)) {
+        FBLOG_ERROR("configure()", "Access denied");
+        throw ConfigurationError("Access denied");
+    }
+
+    // load wire protocol
+    load_protobuf(config.wire_protocol());
+
+    // store the config
+    _stored_config = config;
+}
+
+bool BitcoinTrezorPlugin::authenticate(const Configuration &config)
+{
+    const std::string location = m_host->getDOMWindow()->getLocation();
+
+    // blacklist
+    for (size_t i = 0; i < config.blacklist_urls_size(); i++) {
+        if (boost::regex_match(location, boost::regex(config.blacklist_urls(i))))
+            return false;
+    }
+
+    // whitelist
+    for (size_t i = 0; i < config.whitelist_urls_size(); i++) {
+        if (boost::regex_match(location, boost::regex(config.whitelist_urls(i))))
+            return true;
+    }
+
+    return false;
+}
+
+std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration &config)
 {
     std::vector<DeviceDescriptor> result;
     struct hid_device_info *devices = hid_enumerate(0x0, 0x0);
     struct hid_device_info *current = devices;
 
     while (current) {
-        DeviceDescriptor curr_desc(*current);
-        for (std::vector<DeviceDescriptor>::iterator it = _known_devices.begin();
-             it != _known_devices.end();
-             ++it)
-        {
-            if (it->is_of_same_product(curr_desc)) {
-                result.push_back(curr_desc);
+        DeviceDescriptor desc;
+        desc.set_vendor_id(current->vendor_id);
+        desc.set_product_id(current->product_id);
+        desc.set_serial_number(utils::utf8_encode(current->serial_number));
+
+        for (size_t i = 0; i < config.known_devices_size(); i++) {
+            const DeviceDescriptor *dd = &config.known_devices(i);
+            if ((!(dd->has_vendor_id()) || dd->vendor_id() == desc.vendor_id()) &&
+                (!(dd->has_product_id()) || dd->product_id() == desc.product_id()) &&
+                (!(dd->has_serial_number()) || dd->serial_number() == desc.serial_number()))
+            {
+                result.push_back(desc);
                 break;
             }
         }
+
         current = current->next;
     }
+
     hid_free_enumeration(devices);
 
     return result;
