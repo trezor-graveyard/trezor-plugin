@@ -6,8 +6,9 @@
 import "google/protobuf/descriptor.proto";
 
 message DeviceDescriptor {
-    required uint32 vendor_id = 1;
-    required uint32 product_id = 2;
+    optional uint32 vendor_id = 1;
+    optional uint32 product_id = 2;
+    optional bytes serial_number = 3;
 }
 
 message Configuration {
