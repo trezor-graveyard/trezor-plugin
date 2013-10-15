@@ -1,6 +1,7 @@
 {
 	"whitelist_urls": [
-		"my\\.bitcointrezor\\.com\\/.*"
+		"file://.*",
+		"https?://my\\.bitcointrezor\\.com\\/.*"
 	],
 	"blacklist_urls": [
 	],

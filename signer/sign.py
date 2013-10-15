@@ -4,13 +4,14 @@ import os
 import json
 import time
 import ecdsa
-import binascii
+import hashlib
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
 
-TREZOR_PROTO_DIR='../trezor-emu/protobuf/'
+PROTOBUF_PROTO_DIR=os.environ.get('PROTOBUF_PROTO_DIR', '/usr/include/')
+TREZOR_PROTO_DIR=os.environ.get('TREZOR_PROTO_DIR', '../trezor-emu/protob/')
 
 def compile_config():
-    cmd = "protoc --python_out=. -I/usr/include/ -I../ ../config.proto"
+    cmd = "protoc --python_out=. -I" + PROTOBUF_PROTO_DIR + " -I../ ../config.proto"
     subprocess.check_call(cmd.split())
 
 def parse_json():
@@ -19,8 +20,9 @@ def parse_json():
 
 def get_compiled_proto():
     # Compile trezor.proto to binary format
-    cmd = "protoc -I" + os.path.abspath(TREZOR_PROTO_DIR) + " " +\
-          os.path.abspath(TREZOR_PROTO_DIR) + "/trezor.proto -otrezor.bin"
+    pdir = os.path.abspath(TREZOR_PROTO_DIR)
+    pfile = os.path.join(pdir, "trezor.proto")
+    cmd = "protoc -I" + PROTOBUF_PROTO_DIR + " -I" + pdir  + " " + pfile + " -otrezor.bin"
 
     subprocess.check_call(cmd.split())
 
@@ -59,9 +61,10 @@ def sign_message(data, key_pem):
     key = ecdsa.keys.SigningKey.from_pem(key_pem)
 
     verify = key.get_verifying_key()
-    print "Verifying key:", binascii.hexlify(verify.to_string())
+    print "Verifying key:"
+    print verify.to_pem()
 
-    return key.sign_deterministic(data)
+    return key.sign_deterministic(data, hashfunc=hashlib.sha1)
 
 def pack_datafile(filename, signature, data):
     if len(signature) != 64:
