@@ -25,8 +25,8 @@
 class BitcoinTrezorDeviceAPI : public FB::JSAPIAuto
 {
 private:
-    DeviceChannel *_channel;
-    DeviceDescriptor _device; // descriptor for opening a dev channel in threads
+    DeviceChannel *_channel; // channel operated in open/close methods
+    DeviceDescriptor _device; // descriptor for opening a dev channel
     boost::mutex _mutex; // synchronize access to same device
 
 public:
@@ -34,9 +34,9 @@ public:
         : _device(device)
     {
         // read-only attributes
-        registerAttribute("vendorId", hex_encode(_device.vendor_id), true);
-        registerAttribute("productId", hex_encode(_device.product_id), true);
-        registerAttribute("serialNumber", _device.serial_number, true);
+        registerAttribute("vendorId", utils::hex_encode(_device.vendor_id()), true);
+        registerAttribute("productId", utils::hex_encode(_device.product_id()), true);
+        registerAttribute("serialNumber", _device.serial_number(), true);
 
         // methods
         registerMethod("open", make_method(this, &BitcoinTrezorDeviceAPI::open));
@@ -75,8 +75,12 @@ public:
     BitcoinTrezorPluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
         m_plugin(plugin), m_host(host)
     {
+        // read-only attributes
         registerProperty("version", make_property(this, &BitcoinTrezorPluginAPI::get_version));
         registerProperty("devices", make_property(this, &BitcoinTrezorPluginAPI::get_devices));
+
+        // methods
+        registerMethod("configure", make_method(this, &BitcoinTrezorPluginAPI::configure));
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -90,6 +94,7 @@ public:
 
     BitcoinTrezorPluginPtr getPlugin();
 
+    void configure(const std::string &config_str);
     std::string get_version();
     std::vector<FB::JSAPIPtr> get_devices();
 

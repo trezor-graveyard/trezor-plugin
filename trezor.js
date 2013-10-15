@@ -6,6 +6,7 @@ var trezor = (function (exports) {
 
     var Trezor = function () {
         this._plugin = Trezor._inject();
+        this._configure();
     };
 
     Trezor._inject = function () {
@@ -18,6 +19,10 @@ var trezor = (function (exports) {
         body.appendChild(elem);
 
         return elem;
+    };
+
+    Trezor.prototype._configure = function () {
+        this._plugin.configure("xxx"); // TODO
     };
 
     Trezor.prototype.version = function () {

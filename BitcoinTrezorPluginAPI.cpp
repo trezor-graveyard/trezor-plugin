@@ -4,13 +4,14 @@
 
 \**********************************************************/
 
+#include <fstream>
+
 #include "JSObject.h"
-#include "variant_list.h"
-#include "DOM/Document.h"
 #include "global/config.h"
 
 #include "BitcoinTrezorPluginAPI.h"
 #include "exceptions.h"
+#include "config.pb.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 /// @fn BitcoinTrezorPluginPtr BitcoinTrezorPluginAPI::getPlugin()
@@ -28,6 +29,35 @@ BitcoinTrezorPluginPtr BitcoinTrezorPluginAPI::getPlugin()
     return plugin;
 }
 
+void BitcoinTrezorPluginAPI::configure(const std::string &config_strxx)
+{
+    std::ifstream ifs("/Users/jpochyla/Projects/trezor-plugin/signer/config_signed.bin");
+    std::string config_str((std::istreambuf_iterator<char>(ifs)),
+                           std::istreambuf_iterator<char>());
+
+    if (config_str.size() < utils::SIGNATURE_LENGTH) {
+        FBLOG_ERROR("configure()", "Invalid data");
+        throw ConfigurationError("Invalid data");
+    }
+
+    // split signature and config data
+    const uint8_t *sig = (uint8_t*)config_str.c_str();
+    const uint8_t *data = sig + utils::SIGNATURE_LENGTH;
+    const size_t datalen = config_str.size() - utils::SIGNATURE_LENGTH;
+
+    // verify signature
+    bool verified = utils::signature_verify(sig, data, datalen);
+    if (!verified) {
+        FBLOG_ERROR("configure()", "Signature verification failed");
+        throw ConfigurationError("Signature verification failed");
+    }
+
+    // load config
+    Configuration config;
+    config.ParseFromArray(data, datalen);
+    getPlugin()->configure(config);
+}
+
 std::string BitcoinTrezorPluginAPI::get_version()
 {
     return FBSTRING_PLUGIN_VERSION;
@@ -35,29 +65,25 @@ std::string BitcoinTrezorPluginAPI::get_version()
 
 std::vector<FB::JSAPIPtr> BitcoinTrezorPluginAPI::get_devices()
 {
-    std::vector<DeviceDescriptor> available = getPlugin()->list_available_devices();
+    std::vector<DeviceDescriptor> devices = getPlugin()->enumerate();
     std::vector<FB::JSAPIPtr> result;
 
-    for (std::vector<DeviceDescriptor>::iterator it = available.begin();
-         it != available.end();
-         ++it)
-    {
-        result.push_back(boost::make_shared<BitcoinTrezorDeviceAPI>(*it));
-    }
+    for (size_t i = 0; i < devices.size(); i++)
+        result.push_back(boost::make_shared<BitcoinTrezorDeviceAPI>(devices[i]));
 
     return result;
 }
 
 void BitcoinTrezorDeviceAPI::open()
 {
-    // TODO: do this differently
-    _channel = new DeviceChannel(_device);
+    if (!_channel)
+        _channel = new DeviceChannel(_device);
 }
 
 void BitcoinTrezorDeviceAPI::close()
 {
-    // TODO: do this differently
     delete _channel;
+    _channel = 0;
 }
 
 void BitcoinTrezorDeviceAPI::call(const std::string &type_name,
