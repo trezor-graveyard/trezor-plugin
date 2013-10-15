@@ -1,36 +1,37 @@
-#ifndef EXCEPTIONS_H
-#define	EXCEPTIONS_H
+#ifndef TREZOR_EXCEPTIONS_H
+#define TREZOR_EXCEPTIONS_H
 
 #include "JSExceptions.h"
 
+struct ReadError : FB::script_error
+{
+    ReadError(const std::string &msg)
+        : FB::script_error("Read error: " + msg) {}
+};
+
+struct WriteError : FB::script_error
+{
+    WriteError(const std::string &msg)
+        : FB::script_error("Write error: " + msg) {}
+};
+
+struct ConfigurationError : FB::script_error
+{
+    ConfigurationError(const std::string &msg)
+        : FB::script_error("Failed to load configuration: " + msg) {}
+};
+
+struct OpenError : FB::script_error
+{
+    OpenError() : FB::script_error("Failed to open device") {}
+};
+
 struct ReadTimeout : FB::script_error {
-    ReadTimeout()
-        : FB::script_error("Read timeout") {}
-    ~ReadTimeout() throw() {}
+    ReadTimeout() : FB::script_error("Read timeout") {}
 };
 
-struct OpenError : FB::script_error {
-    OpenError()
-        : FB::script_error("Failed to open device") {}
-    ~OpenError() throw() {}
+struct MessageTypeUnknown : FB::script_error {
+    MessageTypeUnknown() : FB::script_error("Message type unknown") {}
 };
 
-struct ReadError : FB::script_error {
-    ReadError()
-        : FB::script_error("Read error") {}
-    ~ReadError() throw() {}
-};
-
-struct WriteError : FB::script_error {
-    WriteError()
-        : FB::script_error("Write error") {}
-    ~WriteError() throw() {}
-};
-
-struct MessageTypeError : FB::script_error {
-    MessageTypeError()
-        : FB::script_error("Message type unknown") {}
-    ~MessageTypeError() throw() {}
-};
-
-#endif	/* EXCEPTIONS_H */
+#endif // TREZOR_EXCEPTIONS_H
