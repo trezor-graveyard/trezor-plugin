@@ -2,10 +2,14 @@
 #define	TREZOR_MESSAGES_H
 
 #include <google/protobuf/message.h>
+#include <google/protobuf/descriptor.pb.h>
 
 #include "APITypes.h"
 
 namespace PB = google::protobuf;
+
+void
+load_protobuf(const PB::FileDescriptorSet &fdset);
 
 std::string
 message_name(uint16_t type);

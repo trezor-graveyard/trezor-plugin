@@ -1,49 +1,34 @@
 #include "exceptions.h"
 #include "messages.h"
 #include "utils.h"
-#include "trezor.pb.h"
 
 #include <google/protobuf/dynamic_message.h>
-#include <fstream>
 
 #include "logging.h"
 
 static const std::string MESSAGE_TYPE_ENUM_NAME = "MessageType";
 static const std::string MESSAGE_TYPE_PREFIX = MESSAGE_TYPE_ENUM_NAME + "_";
 
-static PB::DescriptorPool *descriptor_pool = 0;
-static PB::MessageFactory *message_factory = 0;
+static PB::DescriptorPool descriptor_pool(PB::DescriptorPool::generated_pool());
+static PB::DynamicMessageFactory message_factory(&descriptor_pool);
 
-static void
-init_dynamic_protobuf()
+void
+load_protobuf(const PB::FileDescriptorSet &fdset)
 {
-    std::ifstream stream("/Users/jpochyla/Projects/trezor-plugin/PROTOCOL");
-
-    PB::FileDescriptorSet fdset;
-    fdset.ParseFromIstream(&stream);
-
-    descriptor_pool = new PB::DescriptorPool(PB::DescriptorPool::generated_pool());
     for (int i = 0; i < fdset.file_size(); i++)
-        descriptor_pool->BuildFile(fdset.file(i));
-    message_factory = new PB::DynamicMessageFactory(descriptor_pool);
+        descriptor_pool.BuildFile(fdset.file(i));
 }
 
 static PB::MessageFactory *
 pb_message_factory()
 {
-    // return PB::MessageFactory::generated_factory();
-    if (!message_factory)
-        init_dynamic_protobuf();
-    return message_factory;
+    return &message_factory;
 }
 
 static const PB::DescriptorPool *
 pb_descriptor_pool()
 {
-    // return PB::DescriptorPool::generated_pool();
-    if (!descriptor_pool)
-        init_dynamic_protobuf();
-    return descriptor_pool;
+    return &descriptor_pool;
 }
 
 static const PB::Descriptor *
@@ -52,7 +37,7 @@ message_descriptor(const std::string &name)
     const PB::DescriptorPool *dp = pb_descriptor_pool();
 
     const PB::Descriptor *md = dp->FindMessageTypeByName(name);
-    if (!md) throw MessageTypeError();
+    if (!md) throw MessageTypeUnknown();
 
     return md;
 }
@@ -63,10 +48,10 @@ message_name(uint16_t type)
     const PB::DescriptorPool *dp = pb_descriptor_pool();
 
     const PB::EnumDescriptor *ed = dp->FindEnumTypeByName(MESSAGE_TYPE_ENUM_NAME);
-    if (!ed) throw MessageTypeError();
+    if (!ed) throw MessageTypeUnknown();
 
     const PB::EnumValueDescriptor *evd = ed->FindValueByNumber(type);
-    if (!evd) throw MessageTypeError();
+    if (!evd) throw MessageTypeUnknown();
 
     const std::string ename = evd->name();
     return ename.substr(MESSAGE_TYPE_PREFIX.length());
@@ -84,11 +69,11 @@ message_type(const std::string &name)
     const PB::DescriptorPool *dp = pb_descriptor_pool();
 
     const PB::EnumDescriptor *ed = dp->FindEnumTypeByName(MESSAGE_TYPE_ENUM_NAME);
-    if (!ed) throw MessageTypeError();
+    if (!ed) throw MessageTypeUnknown();
 
     const std::string ename = MESSAGE_TYPE_PREFIX + name;
     const PB::EnumValueDescriptor *evd = ed->FindValueByName(ename);
-    if (!evd) throw MessageTypeError();
+    if (!evd) throw MessageTypeUnknown();
 
     return evd->number();
 }
@@ -117,7 +102,12 @@ create_message(const std::string &name)
 static bool
 is_field_binary(const PB::FieldDescriptor &fd)
 {
-    return fd.options().GetExtension(binary);
+    const PB::FieldOptions *opt = &fd.options();
+    const PB::Reflection *ref = opt->GetReflection();
+    const PB::FieldDescriptor *efd = ref->FindKnownExtensionByName("binary");
+    if (!efd)
+        throw std::runtime_error("Extention 'binary' not found");
+    return ref->GetBool(*opt, efd);
 }
 
 static FB::variant
@@ -150,7 +140,7 @@ serialize_single_field(const PB::Message &message,
 
     case PB::FieldDescriptor::CPPTYPE_STRING: {
         std::string str = ref.GetString(message, &fd);
-        return is_field_binary(fd) ? hex_encode(str) : str;
+        return is_field_binary(fd) ? utils::hex_encode(str) : str;
     }
 
     case PB::FieldDescriptor::CPPTYPE_ENUM:
@@ -203,7 +193,7 @@ serialize_repeated_field(const PB::Message &message,
     case PB::FieldDescriptor::CPPTYPE_STRING:
         for (int i = 0; i < size; i++) {
             std::string str = ref.GetString(message, &fd);
-            result.push_back(is_field_binary(fd) ? hex_encode(str) : str);
+            result.push_back(is_field_binary(fd) ? utils::hex_encode(str) : str);
         }
         break;
 
@@ -254,7 +244,7 @@ parse_single_field(PB::Message &message,
 
     case PB::FieldDescriptor::CPPTYPE_STRING: {
         const std::string str = val.convert_cast<std::string>();
-        ref.SetString(&message, &fd, is_field_binary(fd) ? hex_decode(str) : str);
+        ref.SetString(&message, &fd, is_field_binary(fd) ? utils::hex_decode(str) : str);
         break;
     }
 
@@ -314,7 +304,7 @@ parse_repeated_field(PB::Message &message,
     case PB::FieldDescriptor::CPPTYPE_STRING:
         for (int i = 0; i < val.size(); i++) {
             const std::string str = val[i].convert_cast<std::string>();
-            ref.AddString(&message, &fd, is_field_binary(fd) ? hex_decode(str) : str);
+            ref.AddString(&message, &fd, is_field_binary(fd) ? utils::hex_decode(str) : str);
         }
         break;
 
