@@ -1,73 +1,101 @@
-#include "utils.h"
-
 #include <openssl/bio.h>
 #include <openssl/pem.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
 
 #include <boost/algorithm/hex.hpp>
+#include <boost/locale.hpp>
 
 #include "logging.h"
 
-static const char X509_CERT[] =
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIIBajCCARmgAwIBAgIJAIvilCV4UmbIMAkGByqGSM49BAEwDTELMAkGA1UEBhMC\n"
-    "Q1MwHhcNMTMxMDEzMDkzNzEzWhcNMTMxMTEyMDkzNzEzWjANMQswCQYDVQQGEwJD\n"
-    "UzBOMBAGByqGSM49AgEGBSuBBAAhAzoABG+bgXlu3LkwqRi/H+ZQ+xZ7gVsunnhK\n"
-    "5OnY5miFqHPq/kTfgzeiDAh6Qpvwf6uHj1jIbgRuZbRgo24wbDAdBgNVHQ4EFgQU\n"
-    "WQUM9OJ9RhD8H/TndbmEuNhS/2QwPQYDVR0jBDYwNIAUWQUM9OJ9RhD8H/TndbmE\n"
-    "uNhS/2ShEaQPMA0xCzAJBgNVBAYTAkNTggkAi+KUJXhSZsgwDAYDVR0TBAUwAwEB\n"
-    "/zAJBgcqhkjOPQQBA0AAMD0CHQCU6Rll+Cq00jzY4/gnT0k1L44d1ZvlOvRgED/s\n"
-    "Ahxb1AEOZf5Ls8v8Pfzd63KgswFxdPCz5KuVlk0p\n"
-    "-----END CERTIFICATE-----\n";
+#include "utils.h"
+#include "utils_keys.h" // defines signature_keys and signature_keys_length
 
 // openssl marked as deprecated since osx 10.7
-#pragma clang diagnostic push
+#ifdef __APPLE__
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-bool check_signature(const uint8_t *data, size_t datalen,
-                     const uint8_t *sig, size_t siglen)
-{
-    bool ret = false;
-    BIO *bufio;
-    EVP_PKEY *evpkey;
-    EC_KEY *eckey;
-    X509 *cert;
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
-    bufio = BIO_new_mem_buf((void*)X509_CERT, sizeof(X509_CERT));
-    if (!bufio) {
+namespace utils {
+
+static void make_digest(const EVP_MD *type, const uint8_t *data, size_t datalen,
+                        uint8_t *dig, size_t *diglen)
+{
+    EVP_MD_CTX ctx;
+    unsigned int digleni;
+
+    EVP_MD_CTX_init(&ctx);
+    EVP_DigestInit(&ctx, type);
+    EVP_DigestUpdate(&ctx, data, datalen);
+    EVP_DigestFinal(&ctx, dig, &digleni); 
+    EVP_MD_CTX_cleanup(&ctx);
+    *diglen = digleni;
+}
+
+static EC_KEY *read_eckey(const char *buf, size_t buflen)
+{
+    BIO *bio;
+    EVP_PKEY *evpkey;
+    EC_KEY *eckey = 0;
+
+    bio = BIO_new_mem_buf((void*)buf, buflen);
+    if (!bio) {
         FBLOG_FATAL("check_signature()", "BIO_new_mem_buf failed");
         goto ret;
     }
-    cert = PEM_read_bio_X509(bufio, 0, 0, 0);
-    if (!cert) {
-        FBLOG_FATAL("check_signature()", "PEM_read_bio_X509 failed");
-        goto err0;
-    }
-    evpkey = X509_get_pubkey(cert);
+    evpkey = PEM_read_bio_PUBKEY(bio, 0, 0, 0);
     if (!evpkey) {
-        FBLOG_FATAL("check_signature()", "X509_get_pubkey failed");
-        goto err1;
+        FBLOG_FATAL("check_signature()", "PEM_read_bio_PUBKEY failed");
+        goto err0;
     }
     eckey = EVP_PKEY_get1_EC_KEY(evpkey);
     if (!eckey) {
         FBLOG_FATAL("check_signature()", "EVP_PKEY_get1_EC_KEY failed");
-        goto err2;
+        goto err1;
     }
 
-    // TODO: compute the data digest?
-    ret = ECDSA_verify(0, data, datalen, sig, siglen, eckey);
-
-    EC_KEY_free(eckey);
-err2:
-    EVP_PKEY_free(evpkey);
 err1:
-    X509_free(cert);
+    EVP_PKEY_free(evpkey);
 err0:
-    BIO_free(bufio);
+    BIO_free(bio);
 ret:
-    return ret;
+    return eckey;
 }
-#pragma clang diagnostic pop
+
+bool signature_verify(const uint8_t *sig, const uint8_t *data, size_t datalen)
+{
+    ECDSA_SIG ecsig;
+    const uint8_t *sig_r = sig;
+    const uint8_t *sig_s = sig + SIGNATURE_LENGTH / 2;
+    ecsig.r = BN_bin2bn(sig_r, SIGNATURE_LENGTH / 2, 0);
+    ecsig.s = BN_bin2bn(sig_s, SIGNATURE_LENGTH / 2, 0);
+
+    size_t diglen;
+    uint8_t dig[EVP_MAX_MD_SIZE];
+    make_digest(EVP_sha1(), data, datalen, dig, &diglen);
+
+    for (size_t i = 0; i < signature_keys_count; i++) {
+        EC_KEY *eckey = read_eckey(signature_keys[i], strlen(signature_keys[i]));
+        if (!eckey) continue;
+
+        int ret = ECDSA_do_verify(dig, diglen, &ecsig, eckey);
+        EC_KEY_free(eckey);
+        if (ret > 0) return true;
+    }
+
+    return false;
+}
+
+std::string utf8_encode(const std::wstring &str)
+{
+    return boost::locale::conv::utf_to_utf<char>(str);
+}
+
+std::wstring utf8_decode(const std::string &str)
+{
+    return boost::locale::conv::utf_to_utf<wchar_t>(str);
+}
 
 template<>
 std::string hex_encode<std::string>(const std::string &str)
@@ -84,4 +112,6 @@ std::string hex_decode(const std::string &hex)
     std::ostream_iterator<char> iterator(stream);
     boost::algorithm::unhex(hex, iterator);
     return stream.str();
+}
+
 }
