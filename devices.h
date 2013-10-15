@@ -15,38 +15,7 @@
 
 #include "hidapi.h"
 #include "messages.h"
-
-//
-// HID device information structure.
-//
-// We need this to pluck certain information out of hid_device_info,
-// copying the struct itself is not safe.
-//
-struct DeviceDescriptor
-{
-public:
-    unsigned short vendor_id;
-    unsigned short product_id;
-    std::wstring serial_number; // optional
-
-public:
-    DeviceDescriptor(const unsigned short vendor_id_,
-                     const unsigned short product_id_)
-        : vendor_id(vendor_id_),
-          product_id(product_id_),
-          serial_number() {};
-    DeviceDescriptor(const struct hid_device_info &info)
-        : vendor_id(info.vendor_id),
-          product_id(info.product_id),
-          serial_number(info.serial_number) {};
-    virtual ~DeviceDescriptor() {};
-
-public:
-    bool is_of_same_product(const DeviceDescriptor &desc) const {
-        return (desc.vendor_id == vendor_id)
-            && (desc.product_id == product_id);
-    }
-};
+#include "config.pb.h"
 
 //
 // Channel for communicating with a trezor device, intended to be used in
