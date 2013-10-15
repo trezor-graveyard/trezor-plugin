@@ -8,7 +8,7 @@ import hashlib
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
 
 PROTOBUF_PROTO_DIR=os.environ.get('PROTOBUF_PROTO_DIR', '/usr/include/')
-TREZOR_PROTO_DIR=os.environ.get('TREZOR_PROTO_DIR', '../trezor-emu/protob/')
+TREZOR_PROTO_DIR=os.environ.get('TREZOR_PROTO_DIR', '../trezor-emu/protobuf/')
 
 def compile_config():
     cmd = "protoc --python_out=. -I" + PROTOBUF_PROTO_DIR + " -I../ ../config.proto"
@@ -64,7 +64,7 @@ def sign_message(data, key_pem):
     print "Verifying key:"
     print verify.to_pem()
 
-    return key.sign_deterministic(data, hashfunc=hashlib.sha1)
+    return key.sign_deterministic(data, hashfunc=hashlib.sha256)
 
 def pack_datafile(filename, signature, data):
     if len(signature) != 64:
