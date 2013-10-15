@@ -73,7 +73,7 @@ bool signature_verify(const uint8_t *sig, const uint8_t *data, size_t datalen)
 
     size_t diglen;
     uint8_t dig[EVP_MAX_MD_SIZE];
-    make_digest(EVP_sha1(), data, datalen, dig, &diglen);
+    make_digest(EVP_sha256(), data, datalen, dig, &diglen);
 
     for (size_t i = 0; i < signature_keys_count; i++) {
         EC_KEY *eckey = read_eckey(signature_keys[i], strlen(signature_keys[i]));
