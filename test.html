@@ -5,38 +5,44 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   </head>
   <body>
-    <button onclick="testPlugin()" style="padding: 3em">Test plugin</button>
+    <button onclick="testPlugin()" style="padding: 3em">
+        Test plugin
+    </button>
 
     <script src="trezor.js"></script>
     <script>
-     // Load the plugin early to create a plugin process, so we can
-     // attach a debugger
      var trezor_ = new trezor.Trezor();
 
+     var version = trezor_.version(),
+         devices = trezor_.devices();
+
+     console.log('Version:', version);
+     console.log('Devices:', devices);
+
+     var device = devices[0];
+     console.log('Vendor ID:', device.vendorId);
+     console.log('Product ID:', device.productId);
+     console.log('Serial Number:', device.serialNumber);
+
+     var session = trezor_.open(device, {
+         error: handleError,
+         pin: handlePin
+     });
+     
+     function handleFailure(error) {
+         console.log('Failure:', error);
+         session.close();
+         session.open();
+     }
+     function handleError(error) {
+         console.log('Error:', error);
+         session.close();
+         session.open();
+     }
+     function handlePin(callback) { callback(prompt('Enter PIN:')); }
+     
      function testPlugin() {
-         var version = trezor_.version(),
-             devices = trezor_.devices();
-
-         console.log('Version:', version);
-         console.log('Devices:', devices);
-
-         if (!devices.length) return;
-
-         var device = devices[0];
-         console.log('Vendor ID:', device.vendorId);
-         console.log('Product ID:', device.productId);
-         console.log('Serial Number:', device.serialNumber);
-
-         var session = trezor_.open(device, {
-             error: handleError,
-             pin: handlePin
-         });
-
          session.initialize(handleInit, handleFailure);
-
-         function handleFailure(error) { console.log('Failure:', error); }
-         function handleError(error) { console.log('Error:', error); }
-         function handlePin(callback) { callback(prompt('Enter PIN:')); }
 
          function handleInit(features) {
              session.getMasterPublicKey(handleKey, handleFailure);
