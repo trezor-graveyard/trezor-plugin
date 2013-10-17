@@ -84,8 +84,8 @@ void BitcoinTrezorPlugin::configure(const Configuration &config)
 
     // check allowed sites
     if (!authenticate(config)) {
-        FBLOG_ERROR("configure()", "Access denied");
-        throw ConfigurationError("Access denied");
+        FBLOG_ERROR("configure()", "URL is not allowed");
+        throw ConfigurationError("URL is not allowed");
     }
 
     // load wire protocol
