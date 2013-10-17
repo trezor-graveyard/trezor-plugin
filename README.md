@@ -5,7 +5,7 @@ HOWTO
 
 System requirements
     
-    sudo apt-get install git cmake libprotobuf-dev libboost-random-dev libusb-1.0-0-dev
+    sudo apt-get install git cmake libprotobuf-dev libboost1.48-all-dev libusb-1.0-0-dev
 
 Project cloning and initialization
 
