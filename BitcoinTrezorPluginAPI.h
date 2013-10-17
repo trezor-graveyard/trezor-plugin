@@ -22,12 +22,68 @@
 #ifndef H_BitcoinTrezorPluginAPI
 #define H_BitcoinTrezorPluginAPI
 
+struct DeviceCallJob
+{
+    std::string type_name;
+    FB::VariantMap message_map;
+    FB::JSObjectPtr callback;
+};
+
+template <typename T>
+class JobQueue
+{
+private:
+    std::queue<T> _queue;
+    boost::condition_variable _cond;
+    boost::mutex _mutex;
+    bool _closed;
+
+public:
+    JobQueue() : _closed(false) {}
+
+public:
+    void close()
+    {
+        boost::mutex::scoped_lock lock(_mutex);
+        _closed = true;
+        _cond.notify_all();
+    }
+    
+    void open()
+    {
+        boost::mutex::scoped_lock lock(_mutex);
+        _closed = false;
+        _cond.notify_all();
+    }
+    
+    void put(const T &item)
+    {
+        boost::mutex::scoped_lock lock(_mutex);
+        if (_closed)
+            throw std::logic_error("Cannot put into closed queue");
+        _queue.push(item);
+        _cond.notify_one();
+    }
+
+    bool get(T &item)
+    {
+        boost::mutex::scoped_lock lock(_mutex);
+        while (!_closed && _queue.empty())
+            _cond.wait(lock);
+        if (_closed)
+            return false;
+        item = _queue.front();
+        _queue.pop();
+        return true;
+    }
+};
+
 class BitcoinTrezorDeviceAPI : public FB::JSAPIAuto
 {
 private:
-    DeviceChannel *_channel; // channel operated in open/close methods
-    DeviceDescriptor _device; // descriptor for opening a dev channel
-    boost::mutex _mutex; // synchronize access to same device
+    DeviceDescriptor _device;
+    JobQueue<DeviceCallJob> _call_queue;
+    boost::thread _call_thread;
 
 public:
     BitcoinTrezorDeviceAPI(const DeviceDescriptor &device)
@@ -43,19 +99,22 @@ public:
         registerMethod("close", make_method(this, &BitcoinTrezorDeviceAPI::close));
         registerMethod("call", make_method(this, &BitcoinTrezorDeviceAPI::call));
     }
-    virtual ~BitcoinTrezorDeviceAPI() {};
+    virtual ~BitcoinTrezorDeviceAPI() { close(); };
 
 public:
     void open();
     void close();
+    
     void call(const std::string &type_name,
               const FB::VariantMap &message_map,
               const FB::JSObjectPtr &callback);
 
 private:
-    void call_internal(const std::string &type_name,
-                       const FB::VariantMap &message_map,
-                       const FB::JSObjectPtr &callback);
+    void consume_calls();
+    void process_call(DeviceChannel &channel,
+                      const std::string &type_name,
+                      const FB::VariantMap &message_map,
+                      const FB::JSObjectPtr &callback);
 };
 
 class BitcoinTrezorPluginAPI : public FB::JSAPIAuto

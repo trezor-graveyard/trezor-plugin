@@ -4,8 +4,6 @@
 
 \**********************************************************/
 
-#include <fstream>
-
 #include "JSObject.h"
 #include "global/config.h"
 
@@ -29,11 +27,9 @@ BitcoinTrezorPluginPtr BitcoinTrezorPluginAPI::getPlugin()
     return plugin;
 }
 
-void BitcoinTrezorPluginAPI::configure(const std::string &config_strxx)
+void BitcoinTrezorPluginAPI::configure(const std::string &config_str_hex)
 {
-    std::ifstream ifs("/Users/jpochyla/Projects/trezor-plugin/signer/config_signed.bin");
-    std::string config_str((std::istreambuf_iterator<char>(ifs)),
-                           std::istreambuf_iterator<char>());
+    std::string config_str = utils::hex_decode(config_str_hex);
 
     if (config_str.size() < utils::SIGNATURE_LENGTH) {
         FBLOG_ERROR("configure()", "Invalid data");
@@ -76,47 +72,80 @@ std::vector<FB::JSAPIPtr> BitcoinTrezorPluginAPI::get_devices()
 
 void BitcoinTrezorDeviceAPI::open()
 {
-    if (!_channel)
-        _channel = new DeviceChannel(_device);
+    FBLOG_INFO("open()", "Starting call consumer");
+    try {
+        if (_call_thread.joinable())
+            throw std::logic_error("Already open");
+        _call_queue.open();
+        _call_thread = boost::thread(boost::bind(
+            &BitcoinTrezorDeviceAPI::consume_calls, this));
+    } catch (const std::exception &e) {
+        throw FB::script_error(e.what());
+    }
 }
 
 void BitcoinTrezorDeviceAPI::close()
 {
-    delete _channel;
-    _channel = 0;
+    try {
+        FBLOG_INFO("close()", "Closing call queue, waiting for consumer to join");
+        _call_queue.close();
+        _call_thread.join(); // TODO: rewrite to async
+    } catch (const std::exception &e) {
+        throw FB::script_error(e.what());
+    }
 }
 
 void BitcoinTrezorDeviceAPI::call(const std::string &type_name,
                                   const FB::VariantMap &message_map,
                                   const FB::JSObjectPtr &callback)
 {
-    boost::thread t(boost::bind(&BitcoinTrezorDeviceAPI::call_internal,
-                                this, type_name, message_map, callback));
+    try {
+        FBLOG_INFO("call()", "Enqueing call job");
+       _call_queue.put((DeviceCallJob){type_name, message_map, callback});
+    } catch (const std::exception &e) {
+        throw FB::script_error(e.what());
+    }
 }
 
-void BitcoinTrezorDeviceAPI::call_internal(const std::string &type_name,
-                                           const FB::VariantMap &message_map,
-                                           const FB::JSObjectPtr &callback)
+void BitcoinTrezorDeviceAPI::consume_calls()
+{
+    FBLOG_INFO("consume_calls()", "Call job consumer started");
+
+    HIDBuffer buffer;
+    DeviceChannel channel(_device, &buffer);
+    DeviceCallJob job;
+
+    while (_call_queue.get(job))
+        process_call(channel, job.type_name, job.message_map, job.callback);
+    
+    FBLOG_INFO("consume_calls()", "Call job consumer finished");
+}
+
+void BitcoinTrezorDeviceAPI::process_call(DeviceChannel &channel,
+                                          const std::string &type_name,
+                                          const FB::VariantMap &message_map,
+                                          const FB::JSObjectPtr &callback)
 {
     try {
-        std::auto_ptr<PB::Message> output_message;
-        std::auto_ptr<PB::Message> input_message = create_message(type_name);
-        message_from_map(*input_message, message_map);
+        FBLOG_INFO("process_call()", "Call starting");
+        
+        std::auto_ptr<PB::Message> outmsg;
+        std::auto_ptr<PB::Message> inmsg = create_message(type_name);
+        message_from_map(*inmsg, message_map);
 
-        {
-            boost::mutex::scoped_lock lock(_mutex);
-            _channel->write(*input_message);
-            output_message = _channel->read();
-        }
+        channel.write(*inmsg);
+        outmsg = channel.read();
+
+        FBLOG_INFO("process_call()", "Call finished");
 
         callback->InvokeAsync("", FB::variant_list_of
                               (false)
-                              (message_name(*output_message))
-                              (message_to_map(*output_message)));
+                              (message_name(*outmsg))
+                              (message_to_map(*outmsg)));
 
     } catch (const std::exception &e) {
-        FBLOG_FATAL("call_internal()", "Exception occurred");
-        FBLOG_FATAL("call_internal()", e.what());
+        FBLOG_FATAL("process_call()", "Exception occurred");
+        FBLOG_FATAL("process_call()", e.what());
 
         callback->InvokeAsync("", FB::variant_list_of(e.what()));
     }
