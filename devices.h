@@ -17,39 +17,46 @@
 #include "messages.h"
 #include "config.pb.h"
 
-//
-// Channel for communicating with a trezor device, intended to be used in
-// a RAII manner.
-//
+class HIDBuffer
+{
+public:
+    static const size_t BUFFER_SIZE = 2048; // in bytes
+
+private:
+    uint8_t _buffer[BUFFER_SIZE];
+    size_t _buffer_length; // in bytes
+    time_t _read_timeout; // in seconds
+
+public:
+    HIDBuffer(time_t read_timeout = 60)
+        : _read_timeout(read_timeout),
+          _buffer_length(0) {}
+
+public:
+    void read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout = true);
+    void write(hid_device *dev, const uint8_t *bytes, size_t length);
+};
+
+// Channel for communicating with a trezor device.
 class DeviceChannel : public boost::noncopyable
 {
 private:
-    unsigned char _buffer[64 * 32]; // buffer for 64-byte chunks
-    size_t _buffer_length; // bytes, length of buffered data
-    time_t _read_timeout; // whole seconds, timeout for entire message read call
-    hid_device *_hid_device; // HID device handle
+    HIDBuffer *_buffer; // borrowed
+    hid_device *_device; // owned
 
 public:
-    DeviceChannel(const DeviceDescriptor &desc)
-        : _buffer_length(0),
-          _read_timeout(60),
-          _hid_device(0) { open(desc); } // opens on construction
+    DeviceChannel(const DeviceDescriptor &desc, HIDBuffer *buffer)
+        : _buffer(buffer) { open(desc); } // opens on construction
     virtual ~DeviceChannel() { close(); } // closes on destruction
 
 public:
-    // protobuf rpc
     std::auto_ptr<PB::Message> read(bool timeout = true);
     void write(const PB::Message &message);
 
 private:
-    // opening/closing channel
+    void read_header(uint16_t *type, uint32_t *length, bool timeout);
     void open(const DeviceDescriptor &desc);
     void close();
-
-    // i/o primitives
-    void write_bytes(const unsigned char *bytes, size_t length);
-    void read_bytes(unsigned char *bytes, size_t length, bool timeout);
-    void read_header(uint16_t *type, uint32_t *length, bool timeout);
 };
 
 #endif // TREZOR_DEVICES_H
