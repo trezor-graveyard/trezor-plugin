@@ -10,7 +10,7 @@ static const std::string MESSAGE_TYPE_ENUM_NAME = "MessageType";
 static const std::string MESSAGE_TYPE_PREFIX = MESSAGE_TYPE_ENUM_NAME + "_";
 
 static PB::DescriptorPool descriptor_pool(PB::DescriptorPool::generated_pool());
-static PB::DynamicMessageFactory message_factory(&descriptor_pool);
+static PB::DynamicMessageFactory message_factory;
 
 void
 load_protobuf(const PB::FileDescriptorSet &fdset)
@@ -102,12 +102,29 @@ create_message(const std::string &name)
 static bool
 is_field_binary(const PB::FieldDescriptor &fd)
 {
-    const PB::FieldOptions *opt = &fd.options();
-    const PB::Reflection *ref = opt->GetReflection();
-    const PB::FieldDescriptor *efd = ref->FindKnownExtensionByName("binary");
+    const PB::DescriptorPool *dp = pb_descriptor_pool();
+
+    const PB::FieldDescriptor *efd = dp->FindExtensionByName("binary");
     if (!efd)
         throw std::runtime_error("Extention 'binary' not found");
-    return ref->GetBool(*opt, efd);
+
+    const PB::FieldOptions *opt = &fd.options();
+    const PB::Reflection *ref = opt->GetReflection();
+    const PB::UnknownFieldSet *ufs = &ref->GetUnknownFields(*opt);
+    
+    // TODO: We are looking through the unknown fields of parsed FieldOptions
+    // and trying to find a field matching the extension by number. Instead,
+    // we should fix the message loading to properly recognize this extension.
+    for (size_t i = 0; i < ufs->field_count(); i++) {
+        const PB::UnknownField *uf = &ufs->field(i);
+        if (uf->number() == efd->number() &&
+            uf->type() == PB::UnknownField::TYPE_VARINT) // bools are parsed as varints
+        {
+            return uf->varint();
+        }
+    }
+
+    return false;
 }
 
 static FB::variant
