@@ -1,13 +1,26 @@
 var trezor = (function (exports) {
 
+    function bin2hex(bin) {
+        var chr, hex = '';
+        for (var i = 0; i < bin.length; i++) {
+            chr = (bin.charCodeAt(i) & 0xFF).toString(16);
+            hex += chr.length < 2 ? '0' + chr : chr;
+        }
+        return hex;
+    }
+
+    exports.bin2hex = bin2hex;
+
     /**
      * Trezor plugin.
      */
 
-    var Trezor = function () {
+    var Trezor = function (url) {
         this._plugin = Trezor._inject();
-        this._configure();
+        this._configure(url || Trezor._DEFAULT_CONFIG_URL);
     };
+
+    Trezor._DEFAULT_CONFIG_URL = 'http://localhost:8000/signer/config_signed.bin';
 
     Trezor._inject = function () {
         var body = document.getElementsByTagName('body')[0],
@@ -21,8 +34,18 @@ var trezor = (function (exports) {
         return elem;
     };
 
-    Trezor.prototype._configure = function () {
-        this._plugin.configure("xxx"); // TODO
+    Trezor.prototype._configure = function (url) {
+        var req = new XMLHttpRequest(),
+            time = new Date().getTime();
+
+        req.overrideMimeType("text\/plain; charset=x-user-defined");
+        req.open('get', url + '?' + time, false);
+        req.send();
+
+        if (req.status !== 200)
+            throw Error('Failed to load configuration');
+
+        this._plugin.configure(bin2hex(req.responseText));
     };
 
     Trezor.prototype.version = function () {
