@@ -27,6 +27,15 @@ struct DeviceCallJob
     std::string type_name;
     FB::VariantMap message_map;
     FB::JSObjectPtr callback;
+
+public:
+    DeviceCallJob() {};
+    DeviceCallJob(const std::string &type_name_,
+                  const FB::VariantMap &message_map_,
+                  const FB::JSObjectPtr &callback_)
+        : type_name(type_name_),
+          message_map(message_map_),
+		  callback(callback_) {}
 };
 
 template <typename T>

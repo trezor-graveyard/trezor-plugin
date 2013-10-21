@@ -101,7 +101,7 @@ void BitcoinTrezorDeviceAPI::call(const std::string &type_name,
 {
     try {
         FBLOG_INFO("call()", "Enqueing call job");
-       _call_queue.put((DeviceCallJob){type_name, message_map, callback});
+       _call_queue.put(DeviceCallJob(type_name, message_map, callback));
     } catch (const std::exception &e) {
         throw FB::script_error(e.what());
     }

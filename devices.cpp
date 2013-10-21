@@ -7,7 +7,13 @@
 
 #include <sstream>
 #include <time.h>
+
+#ifdef _WIN32
+#define NOMINMAX
+#include <winsock2.h>
+#else
 #include <netinet/in.h>
+#endif
 
 void
 HIDBuffer::read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout)
@@ -133,12 +139,12 @@ DeviceChannel::read(bool timeout)
         throw ReadError("Invalid data");
     }
     
-    unsigned char msgbuf[length];
-    _buffer->read(_device, msgbuf, length, timeout);
-    
+    std::vector<unsigned char> msgbuf(length);
+    _buffer->read(_device, msgbuf.data(), length, timeout);
+
     std::string name = message_name(type);
     std::auto_ptr<PB::Message> message = create_message(name);
-    message->ParseFromArray(msgbuf, length);
+    message->ParseFromArray(msgbuf.data(), length);
     
     return message;
 }
@@ -150,7 +156,7 @@ DeviceChannel::write(const PB::Message &message)
     const size_t msgsize = message.ByteSize();
     const size_t bufsize = 2 + 2 + 4 + msgsize; // ## + type + length + message
     
-    unsigned char buf[bufsize];
+    std::vector<unsigned char> buf(bufsize);
     buf[0] = '#';
     buf[1] = '#';
     
@@ -166,7 +172,7 @@ DeviceChannel::write(const PB::Message &message)
     
     if (msgsize)
         message.SerializeToArray(&buf[8], msgsize);
-    _buffer->write(_device, buf, bufsize);
+    _buffer->write(_device, buf.data(), bufsize);
 }
 
 void

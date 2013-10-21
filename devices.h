@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #include <boost/noncopyable.hpp>
 
