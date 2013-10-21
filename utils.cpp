@@ -4,9 +4,9 @@
 #include <openssl/ssl.h>
 
 #include <boost/algorithm/hex.hpp>
-#include <boost/locale.hpp>
 
 #include "logging.h"
+#include "utf8_tools.h"
 
 #include "utils.h"
 #include "utils_keys.h" // defines signature_keys and signature_keys_length
@@ -89,12 +89,12 @@ bool signature_verify(const uint8_t *sig, const uint8_t *data, size_t datalen)
 
 std::string utf8_encode(const std::wstring &str)
 {
-    return boost::locale::conv::utf_to_utf<char>(str);
+    return FB::wstring_to_utf8(str);
 }
 
 std::wstring utf8_decode(const std::string &str)
 {
-    return boost::locale::conv::utf_to_utf<wchar_t>(str);
+    return FB::utf8_to_wstring(str);
 }
 
 template<>
