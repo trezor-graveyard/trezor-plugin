@@ -18,7 +18,7 @@ Project cloning and initialization
 
 If you add any new library/header requirement you should rerun `prepmake`
 
-    ./prepmake.sh
+    ./prepmake.sh -DWITH_SYSTEM_BOOST=1 -DBoost_USE_STATIC_LIBS=on -DBoost_USE_STATIC_RUNTIME=on
 
 (Re)building project
 
