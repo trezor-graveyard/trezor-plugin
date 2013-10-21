@@ -17,12 +17,12 @@ file (GLOB GENERAL RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     [^.]*.cmake
     )
 
+# Needed to link protobuf statically
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
 include(FindProtobuf)
-find_package(Protobuf REQUIRED)
-find_package(Boost REQUIRED COMPONENTS filesystem system thread regex locale)
+find_package(Protobuf REQUIRED STATIC)
 
 include_directories(${PROTOBUF_INCLUDE_DIR})
-include_directories(${Boost_RANDOM_INCLUDE_DIRS})
 include_directories(${PLUGIN_INCLUDE_DIRS})
 
 # Generated files are stored in ${GENERATED} by the project configuration
@@ -46,11 +46,6 @@ SET( SOURCES
 include_platform()
 
 target_link_libraries(${PROJECT_NAME}
-    ${Boost_FILESYSTEM_LIBRARY}
-    ${Boost_SYSTEM_LIBRARY}
-    ${Boost_THREAD_LIBRARY}
-    ${Boost_REGEX_LIBRARY}
-    ${Boost_LOCALE_LIBRARY}
     ${PROTOBUF_LIBRARY}
 )
 

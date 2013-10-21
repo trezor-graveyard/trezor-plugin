@@ -69,3 +69,7 @@ set(FBMAC_USE_INVALIDATINGCOREANIMATION 0)
 
 add_firebreath_library(log4cplus)
 add_firebreath_library(openssl)
+add_boost_library(regex)
+add_boost_library(system)
+add_boost_library(filesystem)
+add_boost_library(thread)
