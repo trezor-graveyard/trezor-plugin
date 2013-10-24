@@ -60,7 +60,7 @@ extern "C" {
 #include <stdlib.h>
 
 
-#include "hidapi.h"
+#include "../hidapi.h"
 
 #ifdef _MSC_VER
 	/* Thanks Microsoft, but I know how to use strncpy(). */
@@ -170,7 +170,7 @@ static void register_error(hid_device *device, const char *op)
 		NULL,
 		GetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		(LPVOID)&msg, 0/*sz*/,
+		(LPWSTR)&msg, 0/*sz*/,
 		NULL);
 	
 	/* Get rid of the CR and LF that FormatMessage() sticks at the
