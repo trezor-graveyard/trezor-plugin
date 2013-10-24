@@ -28,6 +28,8 @@ set (SOURCES
 
 add_windows_plugin(${PROJECT_NAME} SOURCES)
 
+FIND_LIBRARY(SETUPAPI_LIBRARY setupapi)
+
 # This is an example of how to add a build step to sign the plugin DLL before
 # the WiX installer builds.  The first filename (certificate.pfx) should be
 # the path to your pfx file.  If it requires a passphrase, the passphrase
@@ -48,6 +50,7 @@ add_windows_plugin(${PROJECT_NAME} SOURCES)
 # add library dependencies here; leave ${PLUGIN_INTERNAL_DEPS} there unless you know what you're doing!
 target_link_libraries(${PROJECT_NAME}
     ${PLUGIN_INTERNAL_DEPS}
+    ${SETUPAPI_LIBRARY}
     )
 
 set(WIX_HEAT_FLAGS
