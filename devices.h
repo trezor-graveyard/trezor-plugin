@@ -10,7 +10,12 @@
 
 #include <string>
 #include <vector>
-#include <cstdint>
+
+#ifdef _MSC_VER
+#  include <cstdint>
+#else
+#  include <stdint.h>
+#endif
 
 #include <boost/noncopyable.hpp>
 
