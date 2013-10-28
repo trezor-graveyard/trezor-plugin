@@ -24,8 +24,15 @@ you're running the newest version.
 Building on Linux
 -----------------
 
+Instructions for Ubuntu 13.04 (raring):
+
     # install dependencies
-    sudo apt-get install git cmake libprotobuf-dev libboost1.48-all-dev libusb-1.0-0-dev
+    sudo apt-get install python-software-properties
+    sudo add-apt-repository -y ppa:chris-lea/protobuf
+    sudo apt-get update
+    sudo apt-get install \
+        build-essential cmake git \
+        libprotobuf-dev libssl-dev libboost1.53-all-dev libusb-1.0-0-dev
 
     # generate the makefiles, rerun if you add any library/header
     ./prepmake.sh projects build \
