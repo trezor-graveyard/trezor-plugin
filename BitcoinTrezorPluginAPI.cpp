@@ -111,12 +111,19 @@ void BitcoinTrezorDeviceAPI::consume_calls()
 {
     FBLOG_INFO("consume_calls()", "Call job consumer started");
 
-    HIDBuffer buffer;
-    DeviceChannel channel(_device, &buffer);
-    DeviceCallJob job;
+    try {
+        HIDBuffer buffer;
+        DeviceChannel channel(_device, &buffer);
+        DeviceCallJob job;
 
-    while (_call_queue.get(job))
-        process_call(channel, job.type_name, job.message_map, job.callback);
+        while (_call_queue.get(job))
+            process_call(channel, job.type_name, job.message_map, job.callback);
+    
+    } catch (const std::exception &e) {
+        FBLOG_ERROR("consume_calls()", "Exception caught");
+        FBLOG_ERROR("consume_calls()", e.what());
+        _call_queue.close();
+    }
     
     FBLOG_INFO("consume_calls()", "Call job consumer finished");
 }

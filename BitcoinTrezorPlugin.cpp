@@ -124,7 +124,8 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
         DeviceDescriptor desc;
         desc.set_vendor_id(current->vendor_id);
         desc.set_product_id(current->product_id);
-        desc.set_serial_number(utils::utf8_encode(current->serial_number));
+        if (current->serial_number)
+            desc.set_serial_number(utils::utf8_encode(current->serial_number));
 
         for (size_t i = 0; i < config.known_devices_size(); i++) {
             const DeviceDescriptor *dd = &config.known_devices(i);
