@@ -100,10 +100,14 @@ DeviceChannel::open(const DeviceDescriptor &desc)
     const unsigned char uart[] = {0x41, 0x01};
     const unsigned char txrx[] = {0x43, 0x03};
 
+    std::wstring serial_number;
+    if (desc.has_serial_number())
+        serial_number = utils::utf8_decode(desc.serial_number());
+
     FBLOG_INFO("open()", "Opening device");
     _device = hid_open(desc.vendor_id(),
                        desc.product_id(),
-                       utils::utf8_decode(desc.serial_number()).c_str());
+                       serial_number.empty() ? 0 : serial_number.c_str());
 
     if (!_device) {
         FBLOG_FATAL("open()", "Failed to open device");
