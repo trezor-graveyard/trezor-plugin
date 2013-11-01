@@ -38,14 +38,14 @@ var trezor = (function (exports) {
         var req = new XMLHttpRequest(),
             time = new Date().getTime();
 
-        req.overrideMimeType("text\/plain; charset=x-user-defined");
+        // req.overrideMimeType("text\/plain; charset=x-user-defined");
         req.open('get', url + '?' + time, false);
         req.send();
 
         if (req.status !== 200)
             throw Error('Failed to load configuration');
 
-        this._plugin.configure(bin2hex(req.responseText));
+        this._plugin.configure(req.responseText);
     };
 
     Trezor.prototype.version = function () {
