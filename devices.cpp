@@ -32,9 +32,10 @@ HIDBuffer::read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout)
         const int res = hid_read_timeout(dev, chunk, sizeof(chunk), 10);
         
         if (res > 0) {
+            int chlen = std::min(res, int(chunk[0])+1);
             FBLOG_INFO("read()", "Buffering n bytes");
-            FBLOG_INFO("read()", res);
-            for (size_t i = 1; i < res; i++, _buffer_length++)
+            FBLOG_INFO("read()", chlen-1);
+            for (size_t i = 1; i < chlen; i++, _buffer_length++)
                 _buffer[_buffer_length] = chunk[i];
         }
         
