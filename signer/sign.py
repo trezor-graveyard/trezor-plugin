@@ -5,6 +5,7 @@ import json
 import time
 import ecdsa
 import hashlib
+import binascii
 from google.protobuf.descriptor_pb2 import FileDescriptorSet
 
 PROTOBUF_PROTO_DIR=os.environ.get('PROTOBUF_PROTO_DIR', '/usr/include/')
@@ -71,8 +72,8 @@ def pack_datafile(filename, signature, data):
         raise Exception("Signature must be 64 bytes long")
 
     fp = open(filename, 'w')
-    fp.write(signature)
-    fp.write(data)
+    fp.write(binascii.hexlify(signature))
+    fp.write(binascii.hexlify(data))
     fp.close()
     
     print "Signature and data stored to", filename
