@@ -12,27 +12,79 @@ var trezor = (function (exports) {
     exports.bin2hex = bin2hex;
 
     /**
+     * Plugin loader.
+     */
+
+    var TrezorLoader = {
+        waiting: null,
+        trezor: null,
+        timeout: null,
+
+        load: function(success, failure, timeout) {
+            if (this.trezor) {
+                success(this.trezor);
+                return;
+            }
+            if (this.waiting) {
+                failure(new Error('Plugin is already being loaded'));
+                return;
+            }
+            this.waiting = { success: success, failure: failure };
+            this.inject('__trezorPluginOnLoad', timeout);
+        },
+
+        inject: function(callbackName, timeout) {
+            var body = document.getElementsByTagName('body')[0],
+                elem = document.createElement('div');
+            body.appendChild(elem);
+            elem.innerHTML =
+                '<object width="1" height="1" '+
+                'id="__trezor-plugin" '+
+                'type="application/x-bitcointrezorplugin">'+
+                '<param name="onload" value="'+callbackName+'"></param>'+
+                '</object>';
+            if (timeout) {
+                this.timeout = setTimeout(function () {
+                    TrezorLoader.resolve(null, new Error('Plugin loading timed out'));
+                }, timeout);
+            }
+        },
+
+        resolve: function(plugin, error) {
+            if (!this.waiting)
+                return;
+            var success = this.waiting.success,
+                failure = this.waiting.failure;
+            if (this.timeout)
+                clearTimeout(this.timeout);
+            this.timeout = null;
+            this.waiting = null;
+            if (plugin && plugin.version !== 'undefined') {
+                this.trezor = new Trezor(plugin);
+                if (success)
+                    success(this.trezor);
+            }
+            else if (failure)
+                failure(error);
+        }
+    };
+
+    window.__trezorPluginOnLoad = function () {
+        TrezorLoader.resolve(document.getElementById('__trezor-plugin'));
+    };
+
+    exports.load = function () { TrezorLoader.load.apply(TrezorLoader, arguments); };
+
+    /**
      * Trezor plugin.
      */
 
-    var Trezor = function (url) {
-        this._plugin = Trezor._inject();
-        this._configure(url || Trezor._DEFAULT_CONFIG_URL);
+    var Trezor = function (plugin, url) {
+        this._plugin = plugin;
+        this._configure(url || Trezor._DEFAULT_URL);
     };
 
-    Trezor._DEFAULT_CONFIG_URL = 'http://localhost:8000/signer/config_signed.bin';
-
-    Trezor._inject = function () {
-        var body = document.getElementsByTagName('body')[0],
-            elem = document.createElement('object');
-
-        elem.type = "application/x-bitcointrezorplugin";
-        elem.width = 0;
-        elem.height = 0;
-        body.appendChild(elem);
-
-        return elem;
-    };
+    Trezor._DEFAULT_URL = 'http://localhost:8000/signer/config_signed.bin';
 
     Trezor.prototype._configure = function (url) {
         var req = new XMLHttpRequest(),
@@ -59,8 +111,6 @@ var trezor = (function (exports) {
     Trezor.prototype.open = function (device, on) {
         return new Session(device, on);
     };
-
-    exports.Trezor = Trezor;
 
     /**
      * Trezor device session handle.

@@ -11,56 +11,62 @@
 
     <script src="trezor.js"></script>
     <script>
-     var trezor_ = new trezor.Trezor();
+     trezor.load(trezorLoaded, trezorFailure, 1000);
 
-     var version = trezor_.version(),
+     function trezorFailure(error) {
+         console.log('Trezor loading failed', error);
+     }
+
+     function trezorLoaded(trezor_) {
+         var version = trezor_.version(),
          devices = trezor_.devices();
 
-     console.log('Version:', version);
-     console.log('Devices:', devices);
+         console.log('Version:', version);
+         console.log('Devices:', devices);
 
-     var device = devices[0];
-     console.log('Vendor ID:', device.vendorId);
-     console.log('Product ID:', device.productId);
-     console.log('Serial Number:', device.serialNumber);
+         var device = devices[0];
+         console.log('Vendor ID:', device.vendorId);
+         console.log('Product ID:', device.productId);
+         console.log('Serial Number:', device.serialNumber);
 
-     var session = trezor_.open(device, {
-         error: handleError,
-         pin: handlePin
-     });
-     
-     function handleFailure(error) {
-         console.log('Failure:', error);
-     }
-     function handleError(error) {
-         console.log('Error:', error);
-         session.close();
-         session.open();
-     }
-     function handlePin(callback) { callback(prompt('Enter PIN:')); }
-     
-     function testPlugin() {
-         session.initialize(handleInit, handleFailure);
-
-         function handleInit(features) {
-             session.getMasterPublicKey(handleKey, handleFailure);
+         var session = trezor_.open(device, {
+             error: handleError,
+             pin: handlePin
+         });
+         
+         function handleFailure(error) {
+             console.log('Failure:', error);
          }
-
-         function handleKey(key) {
-             session.getEntropy(64, handleEntropy, handleFailure);
+         function handleError(error) {
+             console.log('Error:', error);
+             session.close();
+             session.open();
          }
+         function handlePin(callback) { callback(prompt('Enter PIN:')); }
+         
+         function testPlugin() {
+             session.initialize(handleInit, handleFailure);
 
-         function handleEntropy(entropy) {
-             var inputs = [],
+             function handleInit(features) {
+                 session.getMasterPublicKey(handleKey, handleFailure);
+             }
+
+             function handleKey(key) {
+                 session.getEntropy(64, handleEntropy, handleFailure);
+             }
+
+             function handleEntropy(entropy) {
+                 var inputs = [],
                  outputs = [];
-             session.signTx(inputs, outputs, handleSignTx);
-         }
+                 session.signTx(inputs, outputs, handleSignTx);
+             }
 
-         function handleSignTx(signatures, serializedTx) {
-             console.log('Signatures:', signatures);
-             console.log('Serialized tx:', serializedTx);
+             function handleSignTx(signatures, serializedTx) {
+                 console.log('Signatures:', signatures);
+                 console.log('Serialized tx:', serializedTx);
+             }
          }
-      }
+     }
     </script>
   </body>
 </html>
