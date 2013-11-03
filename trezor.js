@@ -228,8 +228,13 @@ var trezor = (function (exports) {
     };
 
     Session.prototype._log = function () {
+        if (!console || !console.log)
+            return;
         [].unshift.call(arguments, '[trezor]');
-        console.log.apply(console, arguments);
+        if (console.log.apply)
+            console.log.apply(console, arguments);
+        else
+            console.log(arguments);
     };
 
     Session.prototype._call = function (type, msg, callback) {
