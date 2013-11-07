@@ -11,9 +11,16 @@
                 MigrateFeatures="yes" />
         </Upgrade>
 		<Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
+        <Property Id="BROWSER">
+          <RegistrySearch Id='DefaultBrowser' Type='raw' Root='HKCR'
+                          Key='http\shell\open\command' />
+        </Property>
+        <CustomAction Id='LaunchBrowser' Property='BROWSER'
+                      ExeCommand='https://my.bitcointrezor.com' Return='asyncNoWait' />
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
+            <Custom Action='LaunchBrowser' After='InstallFinalize'>NOT Installed</Custom>
         </InstallExecuteSequence>
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />
 
