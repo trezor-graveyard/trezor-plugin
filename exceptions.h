@@ -18,16 +18,16 @@ struct WriteError : FB::script_error
 struct ConfigurationError : FB::script_error
 {
     ConfigurationError(const std::string &msg)
-        : FB::script_error("Failed to load configuration: " + msg) {}
+        : FB::script_error("Configuration error: " + msg) {}
 };
 
 struct OpenError : FB::script_error
 {
-    OpenError() : FB::script_error("Failed to open device") {}
+    OpenError() : FB::script_error("Opening device failed") {}
 };
 
 struct ReadTimeout : FB::script_error {
-    ReadTimeout() : FB::script_error("Read timeout") {}
+    ReadTimeout() : FB::script_error("Reading timed out") {}
 };
 
 struct MessageTypeUnknown : FB::script_error {
