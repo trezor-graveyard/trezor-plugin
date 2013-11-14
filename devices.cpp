@@ -51,7 +51,7 @@ HIDBuffer::read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout)
             const wchar_t *err = hid_error(dev);
             FBLOG_FATAL("read()", "Read error");
             FBLOG_FATAL("read()", err);
-            throw ReadError(utils::utf8_encode(err));
+            throw ReadError(err ? utils::utf8_encode(err) : "Unknown read error");
         }
     }
     
@@ -90,7 +90,7 @@ HIDBuffer::write(hid_device *dev, const uint8_t *bytes, size_t length)
             const wchar_t *err = hid_error(dev);
             FBLOG_FATAL("write_bytes()", "Write error");
             FBLOG_FATAL("write_bytes()", err);
-            throw WriteError(utils::utf8_encode(err));
+            throw WriteError(err ? utils::utf8_encode(err) : "Unknown read error");
         }
     }
 }
