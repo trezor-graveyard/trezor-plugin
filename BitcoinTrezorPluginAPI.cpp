@@ -27,74 +27,107 @@ BitcoinTrezorPluginPtr BitcoinTrezorPluginAPI::getPlugin()
     return plugin;
 }
 
-void BitcoinTrezorPluginAPI::configure(const std::string &config_str_hex)
-{
-    std::string config_str = utils::hex_decode(config_str_hex);
-
-    if (config_str.size() < utils::SIGNATURE_LENGTH) {
-        FBLOG_ERROR("configure()", "Invalid data");
-        throw ConfigurationError("Invalid data");
-    }
-
-    // split signature and config data
-    const uint8_t *sig = (uint8_t*)config_str.c_str();
-    const uint8_t *data = sig + utils::SIGNATURE_LENGTH;
-    const size_t datalen = config_str.size() - utils::SIGNATURE_LENGTH;
-
-    // verify signature
-    bool verified = utils::signature_verify(sig, data, datalen);
-    if (!verified) {
-        FBLOG_ERROR("configure()", "Signature verification failed");
-        throw ConfigurationError("Signature verification failed");
-    }
-
-    // load config
-    Configuration config;
-    config.ParseFromArray(data, datalen);
-    getPlugin()->configure(config);
-}
-
+/// Returns plugin version.
+/// Unauthenticated.
 std::string BitcoinTrezorPluginAPI::get_version()
 {
     return FBSTRING_PLUGIN_VERSION;
 }
 
-std::vector<FB::JSAPIPtr> BitcoinTrezorPluginAPI::get_devices()
+/// Loads configuration from a serialized and signed Protobuf
+/// Configuration message.
+/// Unauthenticated.
+void BitcoinTrezorPluginAPI::configure(const std::string &config_str_hex)
 {
-    std::vector<DeviceDescriptor> devices = getPlugin()->enumerate();
-    std::vector<FB::JSAPIPtr> result;
+    try {
+        const std::string config_str = utils::hex_decode(config_str_hex);
+        const uint8_t *config_buf = (const uint8_t *)config_str.c_str();
+        const size_t config_len = config_str.size();
+        bool verified = false;
 
-    for (size_t i = 0; i < devices.size(); i++)
-        result.push_back(boost::make_shared<BitcoinTrezorDeviceAPI>(devices[i]));
+        if (config_len >= utils::SIGNATURE_LENGTH)
+            verified = utils::signature_verify(config_buf,
+                                               config_buf + utils::SIGNATURE_LENGTH,
+                                               config_len - utils::SIGNATURE_LENGTH);
+        if (!verified) {
+            FBLOG_ERROR("configure()", "Signature verification failed");
+            throw ConfigurationError("Signature verification failed");
+        }
 
-    return result;
+        Configuration config;
+        config.ParseFromArray(config_buf + utils::SIGNATURE_LENGTH,
+                              config_len - utils::SIGNATURE_LENGTH);
+        getPlugin()->configure(config);
+
+    } catch (const std::exception &e) {
+        FBLOG_ERROR("configure()", "Exception caught");
+        FBLOG_ERROR("configure()", e.what());
+        throw FB::script_error(e.what());
+    }
 }
 
+/// Lists allowed device objects.
+/// Authentication required.
+/// Returns array of BitcoinTrezorDeviceAPI.
+std::vector<FB::JSAPIPtr> BitcoinTrezorPluginAPI::get_devices()
+{
+    if (!getPlugin()->authenticate()) {
+        FBLOG_ERROR("get_devices()", "URL not allowed");
+        throw ConfigurationError("URL not allowed");
+    }
+
+    try {
+        std::vector<DeviceDescriptor> devices = getPlugin()->enumerate();
+        std::vector<FB::JSAPIPtr> result;
+
+        for (size_t i = 0; i < devices.size(); i++)
+            result.push_back(boost::make_shared<BitcoinTrezorDeviceAPI>(devices[i]));
+
+        return result;
+        
+    } catch (const std::exception &e) {
+        FBLOG_ERROR("get_devices()", "Exception caught");
+        FBLOG_ERROR("get_devices()", e.what());
+        throw FB::script_error(e.what());
+    }
+}
+
+/// Starts device communication thread.
 void BitcoinTrezorDeviceAPI::open()
 {
-    FBLOG_INFO("open()", "Starting call consumer");
     try {
+        FBLOG_INFO("open()", "Starting call consumer");
         if (_call_thread.joinable())
             throw std::logic_error("Already open");
         _call_queue.open();
         _call_thread = boost::thread(boost::bind(
             &BitcoinTrezorDeviceAPI::consume_calls, this));
+
     } catch (const std::exception &e) {
+        FBLOG_ERROR("open()", "Exception caught");
+        FBLOG_ERROR("open()", e.what());
         throw FB::script_error(e.what());
     }
 }
 
+/// Stops device communication thread.
 void BitcoinTrezorDeviceAPI::close()
 {
     try {
         FBLOG_INFO("close()", "Closing call queue, waiting for consumer to join");
         _call_queue.close();
-        _call_thread.join(); // TODO: rewrite to async
+        _call_thread.join();
+
     } catch (const std::exception &e) {
+        FBLOG_ERROR("close()", "Exception caught");
+        FBLOG_ERROR("close()", e.what());
         throw FB::script_error(e.what());
     }
 }
 
+/// Puts a device call to the call queue, to be picked up by the call
+/// thread.
+/// Errors returned through the callback param.
 void BitcoinTrezorDeviceAPI::call(const std::string &type_name,
                                   const FB::VariantMap &message_map,
                                   const FB::JSObjectPtr &callback)
@@ -102,11 +135,16 @@ void BitcoinTrezorDeviceAPI::call(const std::string &type_name,
     try {
         FBLOG_INFO("call()", "Enqueing call job");
        _call_queue.put(DeviceCallJob(type_name, message_map, callback));
+
     } catch (const std::exception &e) {
-        throw FB::script_error(e.what());
+        FBLOG_ERROR("call()", "Exception caught");
+        FBLOG_ERROR("call()", e.what());
+        callback->InvokeAsync("", FB::variant_list_of(e.what()));
     }
 }
 
+/// Device call job consumer. Runs in a special thread.
+/// On error, closes the call queue with the exception.
 void BitcoinTrezorDeviceAPI::consume_calls()
 {
     FBLOG_INFO("consume_calls()", "Call job consumer started");
@@ -116,18 +154,23 @@ void BitcoinTrezorDeviceAPI::consume_calls()
         DeviceChannel channel(_device, &buffer);
         DeviceCallJob job;
 
+        // wait for jobs and process them. process_call does not
+        // throw, it passes the errors through the callback param
         while (_call_queue.get(job))
             process_call(channel, job.type_name, job.message_map, job.callback);
-    
+
     } catch (const std::exception &e) {
-        FBLOG_ERROR("consume_calls()", "Exception caught");
+        FBLOG_ERROR("consume_calls()", "Exception caught, closing");
         FBLOG_ERROR("consume_calls()", e.what());
-        _call_queue.close();
+        _call_queue.close(std::auto_ptr<std::exception>(
+                              new std::exception(e))); // re-throw on next put
     }
-    
+
     FBLOG_INFO("consume_calls()", "Call job consumer finished");
 }
 
+/// Executes an individual device call. Runs in a special thread.
+/// Errors returned through the callback param.
 void BitcoinTrezorDeviceAPI::process_call(DeviceChannel &channel,
                                           const std::string &type_name,
                                           const FB::VariantMap &message_map,
@@ -135,7 +178,7 @@ void BitcoinTrezorDeviceAPI::process_call(DeviceChannel &channel,
 {
     try {
         FBLOG_INFO("process_call()", "Call starting");
-        
+
         std::auto_ptr<PB::Message> outmsg;
         std::auto_ptr<PB::Message> inmsg = create_message(type_name);
         message_from_map(*inmsg, message_map);
@@ -153,7 +196,6 @@ void BitcoinTrezorDeviceAPI::process_call(DeviceChannel &channel,
     } catch (const std::exception &e) {
         FBLOG_FATAL("process_call()", "Exception occurred");
         FBLOG_FATAL("process_call()", e.what());
-
         callback->InvokeAsync("", FB::variant_list_of(e.what()));
     }
 }

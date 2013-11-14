@@ -43,18 +43,27 @@ class JobQueue
 {
 private:
     std::queue<T> _queue;
-    boost::condition_variable _cond;
     boost::mutex _mutex;
+    boost::condition_variable _cond;
+    std::auto_ptr<std::exception> _exception;
     bool _closed;
 
 public:
-    JobQueue() : _closed(false) {}
+    JobQueue(bool closed = false)
+        : _closed(closed),
+          _exception(0) {}
 
 public:
     void close()
     {
+        close(std::auto_ptr<std::exception>());
+    }
+
+    void close(std::auto_ptr<std::exception> e)
+    {
         boost::mutex::scoped_lock lock(_mutex);
         _closed = true;
+        _exception = e;
         _cond.notify_all();
     }
     
@@ -62,12 +71,16 @@ public:
     {
         boost::mutex::scoped_lock lock(_mutex);
         _closed = false;
+        _exception.reset();
         _cond.notify_all();
     }
     
     void put(const T &item)
     {
         boost::mutex::scoped_lock lock(_mutex);
+        std::exception *e = _exception.get();
+        if (e)
+            throw *e;
         if (_closed)
             throw std::logic_error("Cannot put into closed queue");
         _queue.push(item);
@@ -96,7 +109,7 @@ private:
 
 public:
     BitcoinTrezorDeviceAPI(const DeviceDescriptor &device)
-        : _device(device)
+        : _device(device), _call_queue(true)
     {
         // read-only attributes
         registerAttribute("vendorId", utils::hex_encode(_device.vendor_id()), true);
