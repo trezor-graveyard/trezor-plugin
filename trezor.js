@@ -12,68 +12,83 @@ var trezor = (function (exports) {
     exports.bin2hex = bin2hex;
 
     /**
-     * Plugin loader.
+     * Trezor plugin loader.
      */
 
     var TrezorLoader = {
         waiting: null,
         trezor: null,
-        timeout: null,
+        timeout: null
+    };
 
-        load: function(success, failure, timeout) {
-            if (this.trezor) {
-                success(this.trezor);
-                return;
-            }
-            if (this.waiting) {
-                failure(new Error('Plugin is already being loaded'));
-                return;
-            }
-            this.waiting = { success: success, failure: failure };
-            this.inject('__trezorPluginOnLoad', timeout);
-        },
-
-        inject: function(callbackName, timeout) {
-            var body = document.getElementsByTagName('body')[0],
-                elem = document.createElement('div');
-            body.appendChild(elem);
-            elem.innerHTML =
-                '<object width="1" height="1" '+
-                'id="__trezor-plugin" '+
-                'type="application/x-bitcointrezorplugin">'+
-                '<param name="onload" value="'+callbackName+'"></param>'+
-                '</object>';
-            if (timeout) {
-                this.timeout = setTimeout(function () {
-                    TrezorLoader.resolve(null, new Error('Plugin loading timed out'));
-                }, timeout);
-            }
-        },
-
-        resolve: function(plugin, error) {
-            if (!this.waiting)
-                return;
-            var success = this.waiting.success,
-                failure = this.waiting.failure;
-            if (this.timeout)
-                clearTimeout(this.timeout);
-            this.timeout = null;
-            this.waiting = null;
-            if (plugin && plugin.version !== 'undefined') {
-                this.trezor = new Trezor(plugin);
-                if (success)
-                    success(this.trezor);
-            }
-            else if (failure)
-                failure(error);
+    TrezorLoader.load = function(success, failure, timeout) {
+        if (this.trezor) { // already loaded
+            success(this.trezor);
+            return;
         }
+        if (this.waiting) { // in the process of loading
+            failure(new Error('Plugin is already being loaded'));
+            return;
+        }
+
+        // register the callbacks and load the plugin
+        this.waiting = { success: success, failure: failure };
+        this.inject('__trezorPluginOnLoad', timeout);
+    };
+
+    TrezorLoader.inject = function(callbackName, timeout) {
+        // load installed plugins
+        navigator.plugins.refresh(false);
+
+        // inject wrapper element
+        var body = document.getElementsByTagName('body')[0],
+            elem = document.createElement('div');
+        body.appendChild(elem);
+
+        // inject <object> with async callback
+        elem.innerHTML =
+            '<object width="1" height="1" id="__trezor-plugin" '+
+            'type="application/x-bitcointrezorplugin">'+
+            '<param name="onload" value="'+callbackName+'"></param>'+
+            '</object>';
+
+        // register timeout function
+        if (timeout) {
+            this.timeout = setTimeout(function () {
+                TrezorLoader.resolve(null, new Error('Plugin loading timed out'));
+            }, timeout);
+        }
+    };
+
+    TrezorLoader.resolve = function(plugin, error) {
+        if (!this.waiting) // not being loaded, bogus call
+            return;
+
+        var success = this.waiting.success,
+            failure = this.waiting.failure;
+
+        // reset state
+        if (this.timeout)
+            clearTimeout(this.timeout);
+        this.timeout = null;
+        this.waiting = null;
+
+        if (plugin && plugin.version !== 'undefined') { // loaded successfully
+            this.trezor = new Trezor(plugin);
+            if (success)
+                success(this.trezor);
+        }
+        else if (failure) // error occured
+            failure(error);
     };
 
     window.__trezorPluginOnLoad = function () {
         TrezorLoader.resolve(document.getElementById('__trezor-plugin'));
     };
 
-    exports.load = function () { TrezorLoader.load.apply(TrezorLoader, arguments); };
+    exports.load = function () {
+        TrezorLoader.load.apply(TrezorLoader, arguments);
+    };
 
     /**
      * Trezor plugin.
@@ -90,7 +105,6 @@ var trezor = (function (exports) {
         var req = new XMLHttpRequest(),
             time = new Date().getTime();
 
-        // req.overrideMimeType("text\/plain; charset=x-user-defined");
         req.open('get', url + '?' + time, false);
         req.send();
 
@@ -100,14 +114,17 @@ var trezor = (function (exports) {
         this._plugin.configure(req.responseText);
     };
 
+    // Returns the plugin version
     Trezor.prototype.version = function () {
         return this._plugin.version;
     };
 
+    // Returns the list of connected Trezor devices.
     Trezor.prototype.devices = function () {
         return this._plugin.devices;
     };
 
+    // Opens a given device and returns a Session object.
     Trezor.prototype.open = function (device, on) {
         return new Session(device, on);
     };
@@ -122,10 +139,12 @@ var trezor = (function (exports) {
         this.open();
     };
 
+    // Opens the session and acquires the HID device handle.
     Session.prototype.open = function () {
         this._device.open();
     };
 
+    // Closes the session and the HID device.
     Session.prototype.close = function () {
         this._device.close();
     };
