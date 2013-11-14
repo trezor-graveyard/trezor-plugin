@@ -58,13 +58,14 @@ You will need to have Xcode installed.
 
     # generate the makefiles
     ./prepmac.sh projects build \
+        -DCMAKE_OSX_ARCHITECTURES=i386 \
         -DWITH_SYSTEM_BOOST=1 \
         -DBoost_USE_STATIC_LIBS=on \
         -DBoost_USE_STATIC_RUNTIME=on
 
     # build the project
     cd build
-    xcodebuild
+    xcodebuild -configuration Debug # or Release
 
     # symlink to the plugin directory
     ln -s `pwd`/projects/BitcoinTrezorPlugin/Debug/Bitcoin\ Trezor\ Plugin.plugin \
