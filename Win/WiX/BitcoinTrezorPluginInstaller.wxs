@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Product Id="*" Name="${FBSTRING_PluginName}" Language="1033" Version="${FBSTRING_PLUGIN_VERSION}" Manufacturer="${FBSTRING_CompanyName}" UpgradeCode="{${FBControl_WixUpgradeCode_GUID}}">
-        <Package InstallerVersion="200" Compressed="yes" Description="Installer for the ${FBSTRING_PluginName} plugin" InstallScope="perUser" />
+        <Package InstallerVersion="200" Compressed="yes" Description="Installer for the ${FBSTRING_PluginName}" InstallScope="perUser" />
         <Upgrade Id="{b84694c1-5c92-5c10-9b72-7ef16f7a9903}">
             <UpgradeVersion
                 Property="OLD_VERSION_FOUND"
@@ -11,16 +11,18 @@
                 MigrateFeatures="yes" />
         </Upgrade>
 		<Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
-        <Property Id="BROWSER">
-          <RegistrySearch Id='DefaultBrowser' Type='raw' Root='HKCR'
-                          Key='http\shell\open\command' />
-        </Property>
-        <CustomAction Id='LaunchBrowser' Property='BROWSER'
-                      ExeCommand='https://my.bitcointrezor.com' Return='asyncNoWait' />
+        <CustomAction Id="SetOpenURL"
+                      Property="WixShellExecTarget"
+                      Value="https://my.bitcointrezor.com" />
+        <CustomAction Id="OpenURL" BinaryKey="WixCA"
+                      DllEntry="WixShellExec"
+                      Impersonate="yes"
+                      Return="ignore" />
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallInitialize" />
             <InstallExecute After="RemoveExistingProducts" />
-            <Custom Action='LaunchBrowser' After='InstallFinalize'>NOT Installed</Custom>
+            <Custom Action="SetOpenURL" After="InstallFinalize">NOT Installed</Custom>
+            <Custom Action="OpenURL" After="SetOpenURL">NOT Installed</Custom>
         </InstallExecuteSequence>
         <Media Id="1" Cabinet="${PLUGIN_NAME}.cab" EmbedCab="yes" />
 
