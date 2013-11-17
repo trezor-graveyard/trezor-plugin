@@ -10,7 +10,7 @@ Project cloning and initialization:
     git submodule update --recursive --init
 
     mkdir -p projects
-    ln -s `pwd`/../trezor-plugin projects/BitcoinTrezorPlugin
+    ln -s ../../trezor-plugin projects/BitcoinTrezorPlugin
 
 After you build the plugin according to instructions below, you can
 open the test page in your web browser:
