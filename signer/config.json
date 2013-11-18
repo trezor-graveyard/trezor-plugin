@@ -1,14 +1,14 @@
 {
 	"whitelist_urls": [
+		".*",
 		"file://.*",
 		"https?://my\\.bitcointrezor\\.com\\/.*"
 	],
 	"blacklist_urls": [
 	],
 	"known_devices": [
-	    ["0x1cbe", "0xcaf3", "Trezor"],
+	    ["0x534c", "0x0001", "Trezor"],
     	["0x10c4", "0xea80", "Trezor Shield"] 
 	],
 	"valid_days": 30
 }
-	
