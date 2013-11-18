@@ -11,9 +11,9 @@
 
 #include "DOM/Window.h"
 
-#include "BitcoinTrezorPluginAPI.h"
 #include "exceptions.h"
 #include "devices.h"
+#include "apis.h"
 
 #include "BitcoinTrezorPlugin.h"
 
@@ -160,6 +160,6 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
 FB::JSAPIPtr BitcoinTrezorPlugin::createJSAPI()
 {
     // m_host is the BrowserHost
-    return boost::make_shared<BitcoinTrezorPluginAPI>(
+    return boost::make_shared<PluginAPI>(
         FB::ptr_cast<BitcoinTrezorPlugin>(shared_from_this()), m_host);
 }

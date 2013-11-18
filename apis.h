@@ -1,9 +1,3 @@
-/**********************************************************\
-
-  Auto-generated BitcoinTrezorPluginAPI.h
-
-\**********************************************************/
-
 #pragma once
 
 #include <string>
@@ -18,11 +12,13 @@
 
 #include "JSAPIAuto.h"
 #include "BrowserHost.h"
+
 #include "BitcoinTrezorPlugin.h"
 #include "utils.h"
 
 struct DeviceCallJob
 {
+public:
     std::string type_name;
     FB::VariantMap message_map;
     FB::JSObjectPtr callback;
@@ -99,7 +95,7 @@ public:
     }
 };
 
-class BitcoinTrezorDeviceAPI : public FB::JSAPIAuto
+class DeviceAPI : public FB::JSAPIAuto
 {
 private:
     DeviceDescriptor _device;
@@ -107,7 +103,7 @@ private:
     boost::thread _call_thread;
 
 public:
-    BitcoinTrezorDeviceAPI(const DeviceDescriptor &device)
+    DeviceAPI(const DeviceDescriptor &device)
         : _device(device), _call_queue(true)
     {
         // read-only attributes
@@ -116,11 +112,11 @@ public:
         registerAttribute("serialNumber", _device.serial_number(), true);
 
         // methods
-        registerMethod("open", make_method(this, &BitcoinTrezorDeviceAPI::open));
-        registerMethod("close", make_method(this, &BitcoinTrezorDeviceAPI::close));
-        registerMethod("call", make_method(this, &BitcoinTrezorDeviceAPI::call));
+        registerMethod("open", make_method(this, &DeviceAPI::open));
+        registerMethod("close", make_method(this, &DeviceAPI::close));
+        registerMethod("call", make_method(this, &DeviceAPI::call));
     }
-    virtual ~BitcoinTrezorDeviceAPI() { close(); };
+    virtual ~DeviceAPI() { close(); };
 
 public:
     void open();
@@ -138,11 +134,11 @@ private:
                       const FB::JSObjectPtr &callback);
 };
 
-class BitcoinTrezorPluginAPI : public FB::JSAPIAuto
+class PluginAPI : public FB::JSAPIAuto
 {
 public:
     ////////////////////////////////////////////////////////////////////////////
-    /// @fn BitcoinTrezorPluginAPI::BitcoinTrezorPluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr host)
+    /// @fn PluginAPI::PluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr host)
     ///
     /// @brief  Constructor for your JSAPI object.
     ///         You should register your methods, properties, and events
@@ -152,25 +148,25 @@ public:
     /// @see FB::JSAPIAuto::registerProperty
     /// @see FB::JSAPIAuto::registerEvent
     ////////////////////////////////////////////////////////////////////////////
-    BitcoinTrezorPluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
+    DeviceAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
         m_plugin(plugin), m_host(host)
     {
         // read-only attributes
-        registerProperty("version", make_property(this, &BitcoinTrezorPluginAPI::get_version));
-        registerProperty("devices", make_property(this, &BitcoinTrezorPluginAPI::get_devices));
+        registerProperty("version", make_property(this, &PluginAPI::get_version));
+        registerProperty("devices", make_property(this, &PluginAPI::get_devices));
 
         // methods
-        registerMethod("configure", make_method(this, &BitcoinTrezorPluginAPI::configure));
+        registerMethod("configure", make_method(this, &PluginAPI::configure));
     }
 
     ///////////////////////////////////////////////////////////////////////////////
-    /// @fn BitcoinTrezorPluginAPI::~BitcoinTrezorPluginAPI()
+    /// @fn PluginAPI::~PluginAPI()
     ///
     /// @brief  Destructor.  Remember that this object will not be released until
     ///         the browser is done with it; this will almost definitely be after
     ///         the plugin is released.
     ///////////////////////////////////////////////////////////////////////////////
-    virtual ~BitcoinTrezorPluginAPI() {};
+    virtual ~PluginAPI() {};
 
     BitcoinTrezorPluginPtr getPlugin();
 
