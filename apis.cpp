@@ -155,7 +155,7 @@ void DeviceAPI::consume_calls()
     } catch (const std::exception &e) {
         FBLOG_ERROR("consume_calls()", "Exception caught, closing");
         FBLOG_ERROR("consume_calls()", e.what());
-        _call_queue.close(std::auto_ptr<std::exception>(
+        _call_queue.error(std::auto_ptr<std::exception>(
                               new std::exception(e))); // re-throw on next put
     }
 

@@ -40,48 +40,59 @@ private:
     std::queue<T> _queue;
     boost::mutex _mutex;
     boost::condition_variable _cond;
-    std::auto_ptr<std::exception> _exception;
+    std::auto_ptr<std::exception> _error;
     bool _closed;
 
 public:
     JobQueue(bool closed = false)
         : _closed(closed),
-          _exception(0) {}
+          _error(0) {}
 
 public:
+    /// Closes the queue, subsequent puts will fail and gets will
+    /// indicate a closed state.
     void close()
-    {
-        close(std::auto_ptr<std::exception>());
-    }
-
-    void close(std::auto_ptr<std::exception> e)
     {
         boost::mutex::scoped_lock lock(_mutex);
         _closed = true;
-        _exception = e;
         _cond.notify_all();
     }
-    
+
+    /// Closes and sets the error ptr, subsequent puts will throw.
+    void error(std::auto_ptr<std::exception> error)
+    {
+        boost::mutex::scoped_lock lock(_mutex);
+        _error = error;
+        _closed = true;
+        _cond.notify_all();
+    }
+
+    /// Opens the queue and resets the error ptr.
     void open()
     {
         boost::mutex::scoped_lock lock(_mutex);
+        _error.reset();
         _closed = false;
-        _exception.reset();
         _cond.notify_all();
     }
-    
+
+    /// Enqueues an item.  Throws in case of error ptr or closed
+    /// queue.
     void put(const T &item)
     {
         boost::mutex::scoped_lock lock(_mutex);
-        std::exception *e = _exception.get();
-        if (e)
-            throw *e;
+        std::exception *err = _error.get();
+        if (err)
+            throw *err;
         if (_closed)
             throw std::logic_error("Cannot put into closed queue");
         _queue.push(item);
         _cond.notify_one();
     }
 
+    /// Given a ref, waits and pops from the queue into it, if
+    /// possible.  In case of closed queue, does not pop and returns
+    /// false.
     bool get(T &item)
     {
         boost::mutex::scoped_lock lock(_mutex);
