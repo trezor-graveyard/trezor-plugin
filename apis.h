@@ -148,7 +148,7 @@ public:
     /// @see FB::JSAPIAuto::registerProperty
     /// @see FB::JSAPIAuto::registerEvent
     ////////////////////////////////////////////////////////////////////////////
-    DeviceAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
+    PluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
         m_plugin(plugin), m_host(host)
     {
         // read-only attributes
