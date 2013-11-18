@@ -1,5 +1,4 @@
-#ifndef TREZOR_UTILS_H
-#define TREZOR_UTILS_H
+#pragma once
 
 #include <string>
 #include <sstream>
@@ -46,5 +45,3 @@ std::string hex_encode<std::string>(const std::string &str);
 std::string hex_decode(const std::string &hex);
 
 }
-
-#endif // TREZOR_UTILS_H

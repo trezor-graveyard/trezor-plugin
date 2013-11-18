@@ -1,13 +1,4 @@
-/**********************************************************\
-
-  Auto-generated BitcoinTrezorPlugin.h
-
-  This file contains the auto-generated main plugin object
-  implementation for the Bitcoin Trezor Plugin project
-
-\**********************************************************/
-#ifndef H_BitcoinTrezorPluginPLUGIN
-#define H_BitcoinTrezorPluginPLUGIN
+#pragma once
 
 #include "PluginCore.h"
 

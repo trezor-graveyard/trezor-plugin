@@ -1,5 +1,4 @@
-#ifndef TREZOR_EXCEPTIONS_H
-#define TREZOR_EXCEPTIONS_H
+#pragma once
 
 #include "JSExceptions.h"
 
@@ -33,5 +32,3 @@ struct ReadTimeout : FB::script_error {
 struct MessageTypeUnknown : FB::script_error {
     MessageTypeUnknown() : FB::script_error("Message type unknown") {}
 };
-
-#endif // TREZOR_EXCEPTIONS_H

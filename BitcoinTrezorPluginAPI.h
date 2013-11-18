@@ -4,6 +4,8 @@
 
 \**********************************************************/
 
+#pragma once
+
 #include <string>
 #include <sstream>
 #include <vector>
@@ -18,9 +20,6 @@
 #include "BrowserHost.h"
 #include "BitcoinTrezorPlugin.h"
 #include "utils.h"
-
-#ifndef H_BitcoinTrezorPluginAPI
-#define H_BitcoinTrezorPluginAPI
 
 struct DeviceCallJob
 {
@@ -183,5 +182,3 @@ private:
     BitcoinTrezorPluginWeakPtr m_plugin;
     FB::BrowserHostPtr m_host;
 };
-
-#endif // H_BitcoinTrezorPluginAPI

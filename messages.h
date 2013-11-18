@@ -1,5 +1,4 @@
-#ifndef TREZOR_MESSAGES_H
-#define	TREZOR_MESSAGES_H
+#pragma once
 
 #include <google/protobuf/message.h>
 #include <google/protobuf/descriptor.pb.h>
@@ -35,5 +34,3 @@ message_to_map(const PB::Message &message);
 
 void
 message_from_map(PB::Message &message, const FB::VariantMap &map);
-
-#endif // TREZOR_MESSAGES_H

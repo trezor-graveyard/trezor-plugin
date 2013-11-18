@@ -1,12 +1,4 @@
-/*
- * File:   devices.h
- * Author: arembish
- *
- * Created on April 1, 2013, 6:34 PM
- */
-
-#ifndef TREZOR_DEVICES_H
-#define TREZOR_DEVICES_H
+#pragma once
 
 #include <string>
 #include <vector>
