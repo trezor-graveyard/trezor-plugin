@@ -14,8 +14,10 @@
     <script>
      trezor.load(trezorLoaded, trezorFailure, 1000);
 
-     function trezorFailure(error) {
+     function trezorFailure(error, install) {
          console.log('Trezor loading failed', error);
+         if (install)
+            install();
      }
 
      function trezorLoaded(trezor_) {
@@ -34,7 +36,7 @@
              error: handleError,
              pin: handlePin
          });
-         
+
          function handleFailure(error) {
              console.log('Failure:', error);
          }
@@ -44,7 +46,7 @@
              session.open();
          }
          function handlePin(callback) { callback(prompt('Enter PIN:')); }
-         
+
          function testPlugin() {
              session.initialize(handleInit, handleFailure);
 
