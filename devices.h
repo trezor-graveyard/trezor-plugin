@@ -56,5 +56,3 @@ private:
     void open(const DeviceDescriptor &desc);
     void close();
 };
-
-#endif // TREZOR_DEVICES_H

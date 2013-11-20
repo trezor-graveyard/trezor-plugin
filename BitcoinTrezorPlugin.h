@@ -41,5 +41,3 @@ public:
     BEGIN_PLUGIN_EVENT_MAP()
     END_PLUGIN_EVENT_MAP()
 };
-
-#endif
