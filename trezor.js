@@ -218,7 +218,7 @@ var TrezorApi = function() {
     //
     var Trezor = function (plugin, url) {
         this._plugin = plugin;
-        this._configure(url || _DEFAULT_URL);
+        this._configure(url || DEFAULT_URL);
     };
 
     // Downloads configuration from given url in blocking way and
