@@ -9,6 +9,13 @@ var BrowserPlugin = (function () {
         PLUGIN_CALLBACK = '__trezorPluginLoaded',
         PLUGIN_MIMETYPE = 'application/x-bitcointrezorplugin';
 
+    var PLUGIN_DOWNLOAD_URLS = {
+        win: 'http://localhost:8000/trezor-plugin.msi',
+        mac: 'http://localhost:8000/trezor-plugin.dmg',
+        deb: 'http://localhost:8000/trezor-plugin.deb',
+        rpm: 'http://localhost:8000/trezor-plugin.rpm'
+    };
+
     var loaded = null,
         waiting, timer;
 
@@ -146,7 +153,7 @@ var BrowserPlugin = (function () {
 
         function assign() {
             var opt = select.options[select.selectedIndex];
-            button.href = opt.value;
+            button.href = PLUGIN_DOWNLOAD_URLS[opt.value];
         }
 
         function cancel() {
