@@ -16,6 +16,7 @@
 #include "BitcoinTrezorPlugin.h"
 #include "utils.h"
 
+/// Structure representing enqueued device call.
 struct DeviceCallJob
 {
 public:
@@ -33,6 +34,7 @@ public:
 		  callback(callback_) {}
 };
 
+/// Generic producer-consumer work queue.
 template <typename T>
 class JobQueue
 {

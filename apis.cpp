@@ -118,9 +118,9 @@ void DeviceAPI::close()
     }
 }
 
-/// Puts a device call to the call queue, to be picked up by the call
+/// Puts a device call to the call queue to get picked up by the call
 /// thread.
-/// Errors returned through the callback param.
+/// Errors are returned through the callback param.
 void DeviceAPI::call(const std::string &type_name,
                      const FB::VariantMap &message_map,
                      const FB::JSObjectPtr &callback)
@@ -163,7 +163,7 @@ void DeviceAPI::consume_calls()
 }
 
 /// Executes an individual device call. Runs in a special thread.
-/// Errors returned through the callback param.
+/// Errors are returned through the callback param.
 void DeviceAPI::process_call(DeviceChannel &channel,
                              const std::string &type_name,
                              const FB::VariantMap &message_map,
