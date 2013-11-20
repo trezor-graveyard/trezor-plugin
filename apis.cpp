@@ -107,9 +107,8 @@ void DeviceAPI::open()
 void DeviceAPI::close()
 {
     try {
-        FBLOG_INFO("close()", "Closing call queue, waiting for consumer to join");
+        FBLOG_INFO("close()", "Closing call queue");
         _call_queue.close();
-        _call_thread.join();
 
     } catch (const std::exception &e) {
         FBLOG_ERROR("close()", "Exception caught");
