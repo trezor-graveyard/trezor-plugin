@@ -1,6 +1,3 @@
-[submodule "trezor-emu"]
-	path = trezor-emu
-	url = https://github.com/trezor/trezor-emu.git
 [submodule "trezor.js"]
 	path = trezor.js
 	url = git@github.com:trezor/trezor.js.git
