@@ -3,7 +3,7 @@ HOWTO
 
 Project cloning and initialization:
 
-    git clone git@github.com:slush0/trezor-plugin.git
+    git clone https://github.com/slush0/trezor-plugin.git
     git clone git://github.com/firebreath/FireBreath.git firebreath-dev
 
     cd firebreath-dev
@@ -21,32 +21,26 @@ open the test page in your web browser:
 If you rebuild the plugin you should restart the browser to be sure
 you're running the newest version.
 
-Building on Linux
------------------
+Building on Linux (Debian Wheezy 7)
+-----------------------------------
 
-Instructions for Ubuntu 13.04 (raring):
+* install essential build tools and libraries
 
-    # install dependencies
-    sudo apt-get install python-software-properties
-    sudo add-apt-repository -y ppa:chris-lea/protobuf
     sudo apt-get update
-    sudo apt-get install \
-        build-essential cmake git \
-        libprotobuf-dev libssl-dev libboost1.53-all-dev libusb-1.0-0-dev
+    sudo apt-get install build-essential cmake git
+    sudo apt-get install libssl-dev libusb-1.0-0-dev libprotobuf-dev
 
-    # generate the makefiles, rerun if you add any library/header
-    ./prepmake.sh projects build \
-        -DWITH_SYSTEM_BOOST=1 \
-        -DBoost_USE_STATIC_LIBS=on \
-        -DBoost_USE_STATIC_RUNTIME=on
+(clone and setup project as written in previous chapter)
 
-    # build the project
+* generate make files and build the project
+
+    cd firebreath-dev
+    ./prepmake.sh
+
     cd build
     make
 
-    # symlink to the plugin directory
-    mkdir -p ~/.mozilla/plugins
-    ln -s `pwd`/bin/BitcoinTrezorPlugin/npBitcoinTrezorPlugin.so ~/.mozilla/plugins/
+* binary is located in build/bin/BitcoinTrezorPlugin/npBitcoinTrezorPlugin.so
 
 Building on Mac OS X
 --------------------
