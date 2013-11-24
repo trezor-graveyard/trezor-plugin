@@ -6,7 +6,7 @@
 		<em:name>BitcoinTrezorPlugin</em:name>
 		<em:version>${FBSTRING_PLUGIN_VERSION}</em:version>
 		<!--<em:iconURL></em:iconURL>-->
-		<!--em:updateURL>http://bitcointrezorcom.com/update.rdf</em:updateURL>
+		<!--em:updateURL>http://bitcointrezor.com/update.rdf</em:updateURL>
 		<em:updateKey></em:updateKey-->
 		<em:unpack>true</em:unpack>
 
@@ -16,7 +16,7 @@
 				<em:name>Bitcoin Trezor Plugin</em:name>
 				<em:description>Plugin for embedding Bitcoin Trezor into websites</em:description>
 				<em:creator>bitcointrezor.com</em:creator>
-				<em:homepageURL>http://bitcointrezorcom.com</em:homepageURL>
+				<em:homepageURL>http://bitcointrezor.com</em:homepageURL>
 			</Description>
 		</em:localized> 
 

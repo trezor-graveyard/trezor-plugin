@@ -22,5 +22,5 @@
 #define FBComJavascriptObject_DESC "BitcoinTrezorPlugin ComJavascriptObject Class"
 #define IFBComEventSource_GUID 92f09d9f-7bbe-519c-87e7-14956e95baf7
 #define IFBComEventSource_DESC "BitcoinTrezorPlugin IFBComEventSource Interface"
-#define MOZILLA_PLUGINID "bitcointrezorcom.com/BitcoinTrezorPlugin"
+#define MOZILLA_PLUGINID "bitcointrezor.com/BitcoinTrezorPlugin"
 #define VERSION_NUM "1"

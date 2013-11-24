@@ -58,7 +58,7 @@ HKCU {
             }
         }
         NoRemove MozillaPlugins {
-            ForceRemove 'bitcointrezorcom.com/BitcoinTrezorPlugin' {
+            ForceRemove 'bitcointrezor.com/BitcoinTrezorPlugin' {
                 val Path = s '%MODULE%'
             }
         }

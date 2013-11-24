@@ -34,7 +34,7 @@ endif ( FB_PLATFORM_ARCH_32 )
 
 # these are the pieces that are relevant to using it from Javascript
 set(ACTIVEX_PROGID "bitcointrezorcom.BitcoinTrezorPlugin")
-set(MOZILLA_PLUGINID "bitcointrezorcom.com/BitcoinTrezorPlugin")
+set(MOZILLA_PLUGINID "bitcointrezor.com/BitcoinTrezorPlugin")
 
 # strings
 set(FBSTRING_CompanyName "bitcointrezor.com")
