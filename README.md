@@ -8,7 +8,7 @@ Bitcoin Trezor Plugin
     git clone git://github.com/firebreath/FireBreath.git firebreath-dev
 
     cd firebreath-dev
-    git submodule update --recursive --init # (only when using non-system boost, see below)
+    git submodule update --recursive --init
 
     mkdir -p projects
     ln -s ../../trezor-plugin projects/BitcoinTrezorPlugin
@@ -51,16 +51,33 @@ Bitcoin Trezor Plugin
 
 * install essential build tools and libraries
 
-    yum install cmake gcc-c++ git make
-    yum install boost-static glibc-static openssl-static protobuf-devel protobuf-static zlib-static
+    yum install bzip2 cmake gcc-c++ git make wget
+    yum install libudev-devel zlib-devel
 
-* download and install libusbx from source (unfortunately there's no libusbx-static in distro)
+* download and install openssl from source
 
-    yum install bzip2 wget libudev-devel
+    wget http://www.openssl.org/source/openssl-1.0.1e.tar.gz
+    tar xfz openssl-1.0.1e.tar.gz
+    cd openssl-1.0.1e
+    ./config -fPIC no-shared --openssldir=/usr/local
+    make
+    make install
+
+* download and install protobuf from source
+
+    wget https://protobuf.googlecode.com/files/protobuf-2.5.0.tar.bz2
+    tar xfj protobuf-2.5.0.tar.bz2
+    cd protobuf-2.5.0
+    ./configure --with-pic --disable-shared --enable-static
+    make
+    make install
+
+* download and install libusbx from source
+
     wget http://downloads.sourceforge.net/project/libusbx/releases/1.0.17/source/libusbx-1.0.17.tar.bz2
     tar xfj libusbx-1.0.17.tar.bz2
     cd libusbx-1.0.17
-    ./configure
+    ./configure --with-pic --disable-shared --enable-static
     make
     make install
 
@@ -69,7 +86,7 @@ Bitcoin Trezor Plugin
 * generate make files and build the project
 
       cd firebreath-dev
-      ./prepmake.sh -DWITH_SYSTEM_BOOST=1
+      ./prepmake.sh
 
       cd build
       make
