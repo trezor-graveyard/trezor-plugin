@@ -1,0 +1,16 @@
+Bitcoin Trezor Plugin
+=====================
+
+Manual installation:
+
+  1) install udev rule definition
+     * copy trezor-udev.rules to /usr/lib/udev/rules.d/51-trezor-udev.rules
+
+  2a) install plugin (32-bit Linux)
+      * copy file npBitcoinTrezorPlugin.32bit.so to your browsers plugin directory
+        - the directory usually is /usr/lib/mozilla/plugins or /usr/lib/browser-plugins
+
+  2b) install plugin (64-bit Linux)
+      * copy file npBitcoinTrezorPlugin.64bit.so to your browsers plugin directory
+        - the directory usually is /usr/lib/mozilla/plugins or /usr/lib/browser-plugins
+        - it can also be located in /usr/lib64 instead of /usr/lib

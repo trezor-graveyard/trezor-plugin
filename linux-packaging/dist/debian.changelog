@@ -1,0 +1,5 @@
+browser-plugin-trezor (0.1-1) stable; urgency=low
+  - created package (version 0.1)
+
+ -- Pavol Rusnak <stick@satoshilabs.com>  Sun, 17 Nov 2013 00:00:00 +0000
+
