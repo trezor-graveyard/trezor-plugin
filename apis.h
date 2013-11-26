@@ -92,17 +92,17 @@ public:
         _cond.notify_one();
     }
 
-    /// Given a ref, waits and pops from the queue into it, if
+    /// Given a pointer, waits and pops from the queue into it, if
     /// possible.  In case of closed queue, does not pop and returns
     /// false.
-    bool get(T &item)
+    bool get(T *item)
     {
         boost::mutex::scoped_lock lock(_mutex);
         while (!_closed && _queue.empty())
             _cond.wait(lock);
         if (_closed)
             return false;
-        item = _queue.front();
+        *item = _queue.front();
         _queue.pop();
         return true;
     }
@@ -129,18 +129,22 @@ public:
         registerMethod("close", make_method(this, &DeviceAPI::close));
         registerMethod("call", make_method(this, &DeviceAPI::call));
     }
-    virtual ~DeviceAPI() { close(); };
+    virtual ~DeviceAPI() { close(true); };
 
 public:
-    void open();
-    void close();
+    void open(const FB::JSObjectPtr &open_callback,
+              const FB::JSObjectPtr &close_callback,
+              const FB::JSObjectPtr &error_callback);
+    void close(bool wait=false);
     
     void call(const std::string &type_name,
               const FB::VariantMap &message_map,
               const FB::JSObjectPtr &callback);
 
 private:
-    void consume_calls();
+    void consume_calls(const FB::JSObjectPtr &open_callback,
+                       const FB::JSObjectPtr &close_callback,
+                       const FB::JSObjectPtr &error_callback);
     void process_call(DeviceChannel &channel,
                       const std::string &type_name,
                       const FB::VariantMap &message_map,

@@ -26,7 +26,7 @@ private:
     time_t _read_timeout; // in seconds
 
 public:
-    HIDBuffer(time_t read_timeout = 30)
+    HIDBuffer(time_t read_timeout = 10)
         : _read_timeout(read_timeout),
           _buffer_length(0) {}
 
