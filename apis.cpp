@@ -87,20 +87,19 @@ std::vector<FB::JSAPIPtr> PluginAPI::get_devices()
 }
 
 /// Starts device communication thread. 
-void DeviceAPI::open(const FB::JSObjectPtr &open_callback,
-                     const FB::JSObjectPtr &close_callback,
-                     const FB::JSObjectPtr &error_callback)
+void DeviceAPI::open(const FB::JSObjectPtr &callbacks)
 {
     try {
         FBLOG_INFO("open()", "Starting call consumer");
+        if (_call_thread.joinable())
+            throw std::logic_error("Device is already open");
         _call_thread = boost::thread(
-            boost::bind(&DeviceAPI::consume_calls, this,
-                        open_callback, close_callback, error_callback));
+            boost::bind(&DeviceAPI::consume_calls, this, callbacks));
 
     } catch (const std::exception &e) {
         FBLOG_ERROR("open()", "Exception caught");
         FBLOG_ERROR("open()", e.what());
-        throw FB::script_error(e.what());
+        callbacks->InvokeAsync("openError", FB::variant_list_of(e.what()));
     }
 }
 
@@ -140,9 +139,7 @@ void DeviceAPI::call(const std::string &type_name,
 
 /// Device call job consumer. Runs in a special thread.
 /// On error, closes the call queue with the exception.
-void DeviceAPI::consume_calls(const FB::JSObjectPtr &open_success_callback,
-                              const FB::JSObjectPtr &open_error_callback,
-                              const FB::JSObjectPtr &close_callback)
+void DeviceAPI::consume_calls(const FB::JSObjectPtr &callbacks)
 {
     FBLOG_INFO("consume_calls()", "Call job consumer started");
 
@@ -152,23 +149,22 @@ void DeviceAPI::consume_calls(const FB::JSObjectPtr &open_success_callback,
         DeviceCallJob job;
 
         _call_queue.open();
-        open_success_callback->InvokeAsync("", FB::variant_list_of());
+        callbacks->InvokeAsync("openSuccess", FB::variant_list_of());
 
         // wait for jobs and process them. process_call does not
         // throw, it passes the errors through the callback param
         while (_call_queue.get(&job))
             process_call(channel, job.type_name, job.message_map, job.callback);
 
-        close_callback->InvokeAsync("", FB::variant_list_of());
+        callbacks->InvokeAsync("close", FB::variant_list_of());
 
     } catch (const std::exception &e) {
         FBLOG_ERROR("consume_calls()", "Exception caught, closing");
         FBLOG_ERROR("consume_calls()", e.what());
-        _call_queue.error(std::auto_ptr<std::exception>(
-                              new std::exception(e))); // re-throw on next put
+        _call_queue.error(boost::copy_exception(e)); // re-throw on next put
 
         try { // ignore expired host
-            open_error_callback->InvokeAsync("", FB::variant_list_of(e.what()));
+            callbacks->InvokeAsync("openError", FB::variant_list_of(e.what()));
         } catch (...) { }
     }
 

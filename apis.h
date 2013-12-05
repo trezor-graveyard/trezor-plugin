@@ -42,13 +42,12 @@ private:
     std::queue<T> _queue;
     boost::mutex _mutex;
     boost::condition_variable _cond;
-    std::auto_ptr<std::exception> _error;
+    boost::exception_ptr _error;
     bool _closed;
 
 public:
     JobQueue(bool closed = false)
-        : _closed(closed),
-          _error(0) {}
+        : _closed(closed) {}
 
 public:
     /// Closes the queue, subsequent puts will fail and gets will
@@ -61,7 +60,7 @@ public:
     }
 
     /// Closes and sets the error ptr, subsequent puts will throw.
-    void error(std::auto_ptr<std::exception> error)
+    void error(const boost::exception_ptr &error)
     {
         boost::mutex::scoped_lock lock(_mutex);
         _error = error;
@@ -73,7 +72,7 @@ public:
     void open()
     {
         boost::mutex::scoped_lock lock(_mutex);
-        _error.reset();
+        _error = boost::exception_ptr();
         _closed = false;
         _cond.notify_all();
     }
@@ -83,9 +82,8 @@ public:
     void put(const T &item)
     {
         boost::mutex::scoped_lock lock(_mutex);
-        std::exception *err = _error.get();
-        if (err)
-            throw *err;
+        if (_error != boost::exception_ptr())
+            boost::rethrow_exception(_error);
         if (_closed)
             throw std::logic_error("Cannot put into closed queue");
         _queue.push(item);
@@ -132,9 +130,7 @@ public:
     virtual ~DeviceAPI() { close(true); };
 
 public:
-    void open(const FB::JSObjectPtr &open_callback,
-              const FB::JSObjectPtr &close_callback,
-              const FB::JSObjectPtr &error_callback);
+    void open(const FB::JSObjectPtr &callbacks);
     void close(bool wait=false);
     
     void call(const std::string &type_name,
@@ -142,9 +138,7 @@ public:
               const FB::JSObjectPtr &callback);
 
 private:
-    void consume_calls(const FB::JSObjectPtr &open_callback,
-                       const FB::JSObjectPtr &close_callback,
-                       const FB::JSObjectPtr &error_callback);
+    void consume_calls(const FB::JSObjectPtr &callbacks);
     void process_call(DeviceChannel &channel,
                       const std::string &type_name,
                       const FB::VariantMap &message_map,
