@@ -162,11 +162,11 @@ public:
     PluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
         m_plugin(plugin), m_host(host)
     {
-        // read-only attributes
-        registerProperty("version", make_property(this, &PluginAPI::get_version));
-        registerProperty("devices", make_property(this, &PluginAPI::get_devices));
+        // read-only properties
+        registerProperty("version", make_property(this, &PluginAPI::version));
 
         // methods
+        registerMethod("devices", make_method(this, &PluginAPI::devices));
         registerMethod("configure", make_method(this, &PluginAPI::configure));
     }
 
@@ -182,8 +182,8 @@ public:
     BitcoinTrezorPluginPtr getPlugin();
 
     void configure(const std::string &config_str);
-    std::string get_version();
-    std::vector<FB::JSAPIPtr> get_devices();
+    std::string version();
+    std::vector<FB::JSAPIPtr> devices();
 
 private:
     BitcoinTrezorPluginWeakPtr m_plugin;

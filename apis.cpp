@@ -23,7 +23,7 @@ BitcoinTrezorPluginPtr PluginAPI::getPlugin()
 
 /// Returns plugin version.
 /// Unauthenticated.
-std::string PluginAPI::get_version()
+std::string PluginAPI::version()
 {
     return FBSTRING_PLUGIN_VERSION;
 }
@@ -63,7 +63,7 @@ void PluginAPI::configure(const std::string &config_str_hex)
 /// Lists allowed device objects.
 /// Authentication required.
 /// Returns array of DeviceAPI.
-std::vector<FB::JSAPIPtr> PluginAPI::get_devices()
+std::vector<FB::JSAPIPtr> PluginAPI::devices()
 {
     if (!getPlugin()->authenticate()) {
         FBLOG_ERROR("get_devices()", "URL not allowed");
