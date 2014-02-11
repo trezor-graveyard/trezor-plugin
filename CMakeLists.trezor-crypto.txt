@@ -1,0 +1,2 @@
+add_library(TrezorCrypto STATIC
+        bignum.c ecdsa.c secp256k1.c sha2.c rand.c hmac.c bip32.c ripemd160.c bip39.c pbkdf2.c)

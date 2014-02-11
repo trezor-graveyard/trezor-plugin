@@ -13,6 +13,10 @@ Bitcoin Trezor Plugin
     mkdir -p projects
     ln -s ../../trezor-plugin projects/BitcoinTrezorPlugin
 
+    cd BitcoinTrezorPlugin
+    git submodule update --recursive --init
+    cp CMakeLists.trezor-crypto.txt trezor-crypto/CMakeLists.txt
+
 
 2. Building on Linux
 --------------------
