@@ -436,24 +436,17 @@ message_to_hdnode(const PB::Message &message, HDNode &node)
     const PB::Descriptor *md = message.GetDescriptor();
     const PB::Reflection *ref = message.GetReflection();
 
-    // void hdnode_from_pub(uint32_t version,
-    //                      uint32_t depth,
-    //                      uint32_t fingerprint,
-    //                      uint32_t child_num,
-    //                      uint8_t *chain_code,
-    //                      uint8_t *public_key,
-    //                      HDNode *out);
-
     std::string chain_code = ref->GetString(message, field_or_throw(md, "chain_code"));
     std::string public_key = ref->GetString(message, field_or_throw(md, "public_key"));
 
-    hdnode_from_pub(ref->GetUInt32(message, field_or_throw(md, "version")),
-                    ref->GetUInt32(message, field_or_throw(md, "depth")),
-                    ref->GetUInt32(message, field_or_throw(md, "fingerprint")),
-                    ref->GetUInt32(message, field_or_throw(md, "child_num")),
-                    (uint8_t*) chain_code.data(),
-                    (uint8_t*) public_key.data(),
-                    &node);
+    hdnode_from_xpub(0, // TODO: use proper version byte
+                     ref->GetUInt32(message, field_or_throw(md, "version")),
+                     ref->GetUInt32(message, field_or_throw(md, "depth")),
+                     ref->GetUInt32(message, field_or_throw(md, "fingerprint")),
+                     ref->GetUInt32(message, field_or_throw(md, "child_num")),
+                     (uint8_t*) chain_code.data(),
+                     (uint8_t*) public_key.data(),
+                     &node);
 }
 
 void
@@ -461,17 +454,6 @@ message_from_hdnode(PB::Message &message, const HDNode &node)
 {
     const PB::Descriptor *md = message.GetDescriptor();
     const PB::Reflection *ref = message.GetReflection();
-
-    // typedef struct {
-    //     uint32_t version;
-    //     uint32_t depth;
-    //     uint32_t fingerprint;
-    //     uint32_t child_num;
-    //     uint8_t private_key[32]; // private_key + chain_code have to
-    //     uint8_t chain_code[32];  // form a continuous 64 byte block
-    //     uint8_t public_key[33];
-    //     char address[35];
-    // } HDNode;
 
     std::string chain_code(reinterpret_cast<const char *>(node.chain_code),
                            sizeof(node.chain_code));
