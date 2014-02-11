@@ -100,18 +100,27 @@ std::wstring utf8_decode(const std::string &str)
 template<>
 std::string hex_encode<std::string>(const std::string &str)
 {
-    std::ostringstream stream;
-    std::ostream_iterator<char> iterator(stream);
-    boost::algorithm::hex(str, iterator);
-    return stream.str();
+    try {
+        std::ostringstream stream;
+        std::ostream_iterator<char> iterator(stream);
+        boost::algorithm::hex(str, iterator);
+        return stream.str();
+    } catch (const std::exception &e) {
+        throw std::invalid_argument("Cannot encode to HEX");
+    }
+    
 }
 
 std::string hex_decode(const std::string &hex)
 {
-    std::ostringstream stream;
-    std::ostream_iterator<char> iterator(stream);
-    boost::algorithm::unhex(hex, iterator);
-    return stream.str();
+    try {
+        std::ostringstream stream;
+        std::ostream_iterator<char> iterator(stream);
+        boost::algorithm::unhex(hex, iterator);
+        return stream.str();
+    } catch (const std::exception &e) {
+        throw std::invalid_argument("Cannot decode from HEX");
+    }
 }
 
 }

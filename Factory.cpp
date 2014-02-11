@@ -1,15 +1,8 @@
-/**********************************************************\ 
- 
- Auto-generated Factory.cpp
- 
- This file contains the auto-generated factory methods 
- for the BitcoinTrezorPlugin project
- 
-\**********************************************************/
+#include <boost/make_shared.hpp>
 
 #include "FactoryBase.h"
-#include "BitcoinTrezorPlugin.h"
-#include <boost/make_shared.hpp>
+
+#include "plugin.h"
 
 class PluginFactory : public FB::FactoryBase
 {
@@ -58,4 +51,3 @@ FB::FactoryBasePtr getFactoryInstance()
     static boost::shared_ptr<PluginFactory> factory = boost::make_shared<PluginFactory>();
     return factory;
 }
-

@@ -37,7 +37,7 @@ message_descriptor(const std::string &name)
     const PB::DescriptorPool *dp = pb_descriptor_pool();
 
     const PB::Descriptor *md = dp->FindMessageTypeByName(name);
-    if (!md) throw MessageTypeUnknown();
+    if (!md) throw MessageTypeUnknown(name);
 
     return md;
 }
@@ -48,10 +48,10 @@ message_name(uint16_t type)
     const PB::DescriptorPool *dp = pb_descriptor_pool();
 
     const PB::EnumDescriptor *ed = dp->FindEnumTypeByName(MESSAGE_TYPE_ENUM_NAME);
-    if (!ed) throw MessageTypeUnknown();
+    if (!ed) throw MessageTypeUnknown(type);
 
     const PB::EnumValueDescriptor *evd = ed->FindValueByNumber(type);
-    if (!evd) throw MessageTypeUnknown();
+    if (!evd) throw MessageTypeUnknown(type);
 
     const std::string ename = evd->name();
     return ename.substr(MESSAGE_TYPE_PREFIX.length());
@@ -69,11 +69,11 @@ message_type(const std::string &name)
     const PB::DescriptorPool *dp = pb_descriptor_pool();
 
     const PB::EnumDescriptor *ed = dp->FindEnumTypeByName(MESSAGE_TYPE_ENUM_NAME);
-    if (!ed) throw MessageTypeUnknown();
+    if (!ed) throw MessageTypeUnknown(name);
 
     const std::string ename = MESSAGE_TYPE_PREFIX + name;
     const PB::EnumValueDescriptor *evd = ed->FindValueByName(ename);
-    if (!evd) throw MessageTypeUnknown();
+    if (!evd) throw MessageTypeUnknown(name);
 
     return evd->number();
 }
@@ -246,13 +246,21 @@ parse_single_field(PB::Message &message,
     case PB::FieldDescriptor::CPPTYPE_FLOAT:
         ref.SetFloat(&message, &fd, val.convert_cast<float>());
         break;
+            
+    case PB::FieldDescriptor::CPPTYPE_INT64:
+        ref.SetInt64(&message, &fd, val.convert_cast<int64_t>());
+        break;
 
     case PB::FieldDescriptor::CPPTYPE_INT32:
-        ref.SetInt32(&message, &fd, val.convert_cast<int>());
+        ref.SetInt32(&message, &fd, val.convert_cast<int32_t>());
+        break;
+
+    case PB::FieldDescriptor::CPPTYPE_UINT64:
+        ref.SetUInt64(&message, &fd, val.convert_cast<uint64_t>());
         break;
 
     case PB::FieldDescriptor::CPPTYPE_UINT32:
-        ref.SetUInt32(&message, &fd, val.convert_cast<unsigned int>());
+        ref.SetUInt32(&message, &fd, val.convert_cast<uint32_t>());
         break;
 
     case PB::FieldDescriptor::CPPTYPE_BOOL:
@@ -276,7 +284,7 @@ parse_single_field(PB::Message &message,
 
     case PB::FieldDescriptor::CPPTYPE_MESSAGE: {
         PB::Message *fm = ref.MutableMessage(&message, &fd);
-        message_from_map(*fm, val.cast<FB::VariantMap>());
+        message_from_map(*fm, val.convert_cast<FB::VariantMap>());
         break;
     }
 
@@ -303,9 +311,19 @@ parse_repeated_field(PB::Message &message,
             ref.AddFloat(&message, &fd, val[i].convert_cast<float>());
         break;
 
+    case PB::FieldDescriptor::CPPTYPE_INT64:
+        for (int i = 0; i < val.size(); i++)
+            ref.AddInt64(&message, &fd, val[i].convert_cast<int>());
+        break;
+
     case PB::FieldDescriptor::CPPTYPE_INT32:
         for (int i = 0; i < val.size(); i++)
             ref.AddInt32(&message, &fd, val[i].convert_cast<int>());
+        break;
+
+    case PB::FieldDescriptor::CPPTYPE_UINT64:
+        for (int i = 0; i < val.size(); i++)
+            ref.AddUInt64(&message, &fd, val[i].convert_cast<unsigned int>());
         break;
 
     case PB::FieldDescriptor::CPPTYPE_UINT32:
@@ -338,7 +356,7 @@ parse_repeated_field(PB::Message &message,
 
     case PB::FieldDescriptor::CPPTYPE_MESSAGE:
         for (int i = 0; i < val.size(); i++) {
-            PB::Message *fm = ref.MutableRepeatedMessage(&message, &fd, i);
+            PB::Message *fm = ref.AddMessage(&message, &fd, pb_message_factory());
             message_from_map(*fm, val[i].convert_cast<FB::VariantMap>());
         }
         break;
@@ -359,11 +377,18 @@ message_to_map(const PB::Message &message)
     for (int i = 0; i < md->field_count(); i++) {
         const PB::FieldDescriptor *fd = md->field(i);
 
-        if (fd->is_repeated())
-            result[fd->name()] = serialize_repeated_field(message, *ref, *fd);
-
-        else if (ref->HasField(message, fd))
-            result[fd->name()] = serialize_single_field(message, *ref, *fd);
+        try {
+            if (fd->is_repeated())
+                result[fd->name()] = serialize_repeated_field(message, *ref, *fd);
+            else if (ref->HasField(message, fd))
+                result[fd->name()] = serialize_single_field(message, *ref, *fd);
+        }
+        catch (const std::exception &e) {
+            throw std::invalid_argument("Error while serializing '"
+                                        + fd->full_name()
+                                        + "', caused by: "
+                                        + e.what());
+        }
     }
 
     return result;
@@ -381,9 +406,82 @@ message_from_map(PB::Message &message, const FB::VariantMap &map)
 
         if (it == map.end()) continue;
 
-        if (fd->is_repeated())
-            parse_repeated_field(message, *ref, *fd, it->second.cast<FB::VariantList>());
-        else
-            parse_single_field(message, *ref, *fd, it->second);
+        try {
+            if (fd->is_repeated())
+                parse_repeated_field(message, *ref, *fd,
+                                     it->second.convert_cast<FB::VariantList>());
+            else
+                parse_single_field(message, *ref, *fd, it->second);
+        }
+        catch (const std::exception &e) {
+            throw std::invalid_argument("Error while parsing "
+                                        + fd->full_name()
+                                        + ", caused by: "
+                                        + e.what());
+        }
     }
+}
+
+static const PB::FieldDescriptor *
+field_or_throw(const PB::Descriptor *md, const std::string &name)
+{
+    const PB::FieldDescriptor *fd = md->FindFieldByName(name);
+    if (!fd) throw std::invalid_argument("Field '" + name + "' not found");
+    return fd;
+}
+
+void
+message_to_hdnode(const PB::Message &message, HDNode &node)
+{
+    const PB::Descriptor *md = message.GetDescriptor();
+    const PB::Reflection *ref = message.GetReflection();
+
+    // void hdnode_from_pub(uint32_t version,
+    //                      uint32_t depth,
+    //                      uint32_t fingerprint,
+    //                      uint32_t child_num,
+    //                      uint8_t *chain_code,
+    //                      uint8_t *public_key,
+    //                      HDNode *out);
+
+    std::string chain_code = ref->GetString(message, field_or_throw(md, "chain_code"));
+    std::string public_key = ref->GetString(message, field_or_throw(md, "public_key"));
+
+    hdnode_from_pub(ref->GetUInt32(message, field_or_throw(md, "version")),
+                    ref->GetUInt32(message, field_or_throw(md, "depth")),
+                    ref->GetUInt32(message, field_or_throw(md, "fingerprint")),
+                    ref->GetUInt32(message, field_or_throw(md, "child_num")),
+                    (uint8_t*) chain_code.data(),
+                    (uint8_t*) public_key.data(),
+                    &node);
+}
+
+void
+message_from_hdnode(PB::Message &message, const HDNode &node)
+{
+    const PB::Descriptor *md = message.GetDescriptor();
+    const PB::Reflection *ref = message.GetReflection();
+
+    // typedef struct {
+    //     uint32_t version;
+    //     uint32_t depth;
+    //     uint32_t fingerprint;
+    //     uint32_t child_num;
+    //     uint8_t private_key[32]; // private_key + chain_code have to
+    //     uint8_t chain_code[32];  // form a continuous 64 byte block
+    //     uint8_t public_key[33];
+    //     char address[35];
+    // } HDNode;
+
+    std::string chain_code(reinterpret_cast<const char *>(node.chain_code),
+                           sizeof(node.chain_code));
+    std::string public_key(reinterpret_cast<const char *>(node.public_key),
+                           sizeof(node.public_key));
+
+    ref->SetUInt32(&message, field_or_throw(md, "version"), node.version);
+    ref->SetUInt32(&message, field_or_throw(md, "depth"), node.depth);
+    ref->SetUInt32(&message, field_or_throw(md, "fingerprint"), node.fingerprint);
+    ref->SetUInt32(&message, field_or_throw(md, "child_num"), node.child_num);
+    ref->SetString(&message, field_or_throw(md, "chain_code"), chain_code);
+    ref->SetString(&message, field_or_throw(md, "public_key"), public_key);
 }

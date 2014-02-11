@@ -5,6 +5,8 @@
 
 #include "logging.h"
 
+#include <boost/thread.hpp>
+
 #include <sstream>
 #include <time.h>
 
@@ -45,6 +47,8 @@ HIDBuffer::read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout)
                 FBLOG_WARN("read()", "Timed out");
                 throw ReadTimeout();
             }
+            // check thread termination
+            boost::this_thread::interruption_point();
         }
         
         else if (res < 0) { // read returns -1 on error

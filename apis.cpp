@@ -1,31 +1,41 @@
 #include "JSObject.h"
-#include "global/config.h"
 
 #include "apis.h"
 #include "exceptions.h"
 #include "config.pb.h"
 
-///////////////////////////////////////////////////////////////////////////////
-/// @fn BitcoinTrezorPluginPtr PluginAPI::getPlugin()
-///
-/// @brief  Gets a reference to the plugin that was passed in when the object
-///         was created.  If the plugin has already been released then this
-///         will throw a FB::script_error that will be translated into a
-///         javascript exception in the page.
-///////////////////////////////////////////////////////////////////////////////
-BitcoinTrezorPluginPtr PluginAPI::getPlugin()
+DeviceAPI::DeviceAPI(const DeviceDescriptor &device) :
+    device(device)
 {
-    BitcoinTrezorPluginPtr plugin(m_plugin.lock());
+    registerAttribute("id", device.serial_number(), true);
+    registerAttribute("vendorId", utils::hex_encode(device.vendor_id()), true);
+    registerAttribute("productId", utils::hex_encode(device.product_id()), true);
+}
+
+PluginAPI::PluginAPI(const BitcoinTrezorPluginPtr &plugin,
+                     const FB::BrowserHostPtr &host) :
+    _plugin(plugin),
+    _host(host)
+{
+    registerAttribute("version", FBSTRING_PLUGIN_VERSION, true);
+    
+    registerMethod("call", make_method(this, &PluginAPI::call));
+    registerMethod("close", make_method(this, &PluginAPI::close));
+    registerMethod("devices", make_method(this, &PluginAPI::devices));
+    registerMethod("configure", make_method(this, &PluginAPI::configure));
+    registerMethod("deriveChildNode", make_method(this, &PluginAPI::derive_child_node));
+}
+
+/// Gets a reference to the plugin that was passed in when the object
+/// was created.  If the plugin has already been released then this
+/// will throw a FB::script_error that will be translated into a
+/// javascript exception in the page.
+BitcoinTrezorPluginPtr PluginAPI::acquire_plugin()
+{
+    BitcoinTrezorPluginPtr plugin(_plugin.lock());
     if (!plugin)
         throw FB::script_error("The plugin is invalid");
     return plugin;
-}
-
-/// Returns plugin version.
-/// Unauthenticated.
-std::string PluginAPI::version()
-{
-    return FBSTRING_PLUGIN_VERSION;
 }
 
 /// Loads configuration from a serialized and signed Protobuf
@@ -51,7 +61,7 @@ void PluginAPI::configure(const std::string &config_str_hex)
         Configuration config;
         config.ParseFromArray(config_buf + utils::SIGNATURE_LENGTH,
                               config_len - utils::SIGNATURE_LENGTH);
-        getPlugin()->configure(config);
+        acquire_plugin()->configure(config);
 
     } catch (const std::exception &e) {
         FBLOG_ERROR("configure()", "Exception caught");
@@ -65,13 +75,13 @@ void PluginAPI::configure(const std::string &config_str_hex)
 /// Returns array of DeviceAPI.
 std::vector<FB::JSAPIPtr> PluginAPI::devices()
 {
-    if (!getPlugin()->authenticate()) {
+    if (!acquire_plugin()->authenticate()) {
         FBLOG_ERROR("get_devices()", "URL not allowed");
         throw ConfigurationError("URL not allowed");
     }
 
     try {
-        std::vector<DeviceDescriptor> devices = getPlugin()->enumerate();
+        std::vector<DeviceDescriptor> devices = acquire_plugin()->enumerate();
         std::vector<FB::JSAPIPtr> result;
 
         for (size_t i = 0; i < devices.size(); i++)
@@ -86,121 +96,66 @@ std::vector<FB::JSAPIPtr> PluginAPI::devices()
     }
 }
 
-/// Starts device communication thread. 
-void DeviceAPI::open(const FB::JSObjectPtr &callbacks)
+/// BIP32 PubKey derivation
+FB::VariantMap PluginAPI::derive_child_node(const FB::VariantMap &node_map,
+                                            unsigned int index)
 {
     try {
-        FBLOG_INFO("open()", "Starting call consumer");
-        if (_call_thread.joinable())
-            throw std::logic_error("Device is already open");
-        _call_thread = boost::thread(
-            boost::bind(&DeviceAPI::consume_calls, this, callbacks));
+        std::auto_ptr<PB::Message> node_msg;
+        HDNode node;
 
+        node_msg = create_message("HDNodeType");
+        message_from_map(*node_msg, node_map);
+        message_to_hdnode(*node_msg, node);
+
+        hdnode_public_ckd(&node, index);
+
+        message_from_hdnode(*node_msg, node);
+        return message_to_map(*node_msg);
+        
     } catch (const std::exception &e) {
-        FBLOG_ERROR("open()", "Exception caught");
-        FBLOG_ERROR("open()", e.what());
-        callbacks->InvokeAsync("openError", FB::variant_list_of(e.what()));
-    }
-}
-
-/// Stops device communication thread.
-void DeviceAPI::close(bool wait)
-{
-    try {
-        FBLOG_INFO("close()", "Closing call queue");
-        _call_queue.close();
-        if (wait)
-            _call_thread.join();
-
-    } catch (const std::exception &e) {
-        FBLOG_ERROR("close()", "Exception caught");
-        FBLOG_ERROR("close()", e.what());
+        FBLOG_ERROR("hdnode_descent()", "Exception caught");
+        FBLOG_ERROR("hdnode_descent()", e.what());
         throw FB::script_error(e.what());
     }
 }
 
-/// Puts a device call to the call queue to get picked up by the call
-/// thread.
-/// Errors are returned through the callback param.
-void DeviceAPI::call(const std::string &type_name,
+/// Calls the device.
+void PluginAPI::call(const FB::JSAPIPtr &device,
+                     bool use_timeout,
+                     const std::string &type_name,
                      const FB::VariantMap &message_map,
-                     const FB::JSObjectPtr &callback)
+                     const FB::JSObjectPtr &callbacks)
 {
     try {
-        FBLOG_INFO("call()", "Enqueing call job");
-       _call_queue.put(DeviceCallJob(type_name, message_map, callback));
-
+        FBLOG_INFO("call()", "Calling device");
+        
+        acquire_plugin()
+            ->communicator(boost::static_pointer_cast<DeviceAPI>(device)->device)
+            ->call(use_timeout, type_name, message_map, callbacks);
+        
     } catch (const std::exception &e) {
         FBLOG_ERROR("call()", "Exception caught");
         FBLOG_ERROR("call()", e.what());
-        callback->InvokeAsync("", FB::variant_list_of(e.what()));
+        callbacks->InvokeAsync("error", FB::variant_list_of(e.what()));
     }
 }
 
-/// Device call job consumer. Runs in a special thread.
-/// On error, closes the call queue with the exception.
-void DeviceAPI::consume_calls(const FB::JSObjectPtr &callbacks)
-{
-    FBLOG_INFO("consume_calls()", "Call job consumer started");
-
-    try {
-        HIDBuffer buffer;
-        DeviceChannel channel(_device, &buffer);
-        DeviceCallJob job;
-
-        _call_queue.open();
-        callbacks->InvokeAsync("openSuccess", FB::variant_list_of());
-
-        // wait for jobs and process them. process_call does not
-        // throw, it passes the errors through the callback param
-        while (_call_queue.get(&job))
-            process_call(channel, job.type_name, job.message_map, job.callback);
-
-        callbacks->InvokeAsync("close", FB::variant_list_of());
-
-    } catch (const std::exception &e) {
-        FBLOG_ERROR("consume_calls()", "Exception caught, closing");
-        FBLOG_ERROR("consume_calls()", e.what());
-        _call_queue.error(boost::copy_exception(e)); // re-throw on next put
-
-        try { // ignore expired host
-            callbacks->InvokeAsync("openError", FB::variant_list_of(e.what()));
-        } catch (...) { }
-    }
-
-    FBLOG_INFO("consume_calls()", "Call job consumer finished");
-}
-
-/// Executes an individual device call. Runs in a special thread.
-/// Errors are returned through the callback param.
-void DeviceAPI::process_call(DeviceChannel &channel,
-                             const std::string &type_name,
-                             const FB::VariantMap &message_map,
-                             const FB::JSObjectPtr &callback)
+/// Closes the device.
+void PluginAPI::close(const FB::JSAPIPtr &device,
+                      const FB::JSObjectPtr &callbacks)
 {
     try {
-        FBLOG_INFO("process_call()", "Call starting");
-
-        std::auto_ptr<PB::Message> outmsg;
-        std::auto_ptr<PB::Message> inmsg = create_message(type_name);
-        message_from_map(*inmsg, message_map);
-
-        channel.write(*inmsg);
-        outmsg = channel.read();
-
-        FBLOG_INFO("process_call()", "Call finished");
-
-        callback->InvokeAsync("", FB::variant_list_of
-                              (false)
-                              (message_name(*outmsg))
-                              (message_to_map(*outmsg)));
-
+        FBLOG_INFO("close()", "Closing device");
+        
+        acquire_plugin()
+            ->communicator(boost::static_pointer_cast<DeviceAPI>(device)->device)
+            ->close(callbacks);
+        
     } catch (const std::exception &e) {
-        FBLOG_FATAL("process_call()", "Exception occurred");
-        FBLOG_FATAL("process_call()", e.what());
-
-        try { // ignore expired host
-            callback->InvokeAsync("", FB::variant_list_of(e.what()));
-        } catch (...) { }
+        FBLOG_ERROR("close()", "Exception caught");
+        FBLOG_ERROR("close()", e.what());
+        callbacks->InvokeAsync("error", FB::variant_list_of(e.what()));
     }
 }
+

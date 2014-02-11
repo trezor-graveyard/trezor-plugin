@@ -12,180 +12,47 @@
 
 #include "JSAPIAuto.h"
 #include "BrowserHost.h"
+#include "global/config.h"
 
-#include "BitcoinTrezorPlugin.h"
+#include "plugin.h"
 #include "utils.h"
 
-/// Structure representing enqueued device call.
-struct DeviceCallJob
+/// Structure wrapping a device descriptor for the JS API.
+struct DeviceAPI : public FB::JSAPIAuto
 {
 public:
-    std::string type_name;
-    FB::VariantMap message_map;
-    FB::JSObjectPtr callback;
+    DeviceDescriptor device;
 
 public:
-    DeviceCallJob() {};
-    DeviceCallJob(const std::string &type_name_,
-                  const FB::VariantMap &message_map_,
-                  const FB::JSObjectPtr &callback_)
-        : type_name(type_name_),
-          message_map(message_map_),
-		  callback(callback_) {}
+    DeviceAPI(const DeviceDescriptor &device);
+    virtual ~DeviceAPI() {}
 };
 
-/// Generic producer-consumer work queue.
-template <typename T>
-class JobQueue
-{
-private:
-    std::queue<T> _queue;
-    boost::mutex _mutex;
-    boost::condition_variable _cond;
-    boost::exception_ptr _error;
-    bool _closed;
-
-public:
-    JobQueue(bool closed = false)
-        : _closed(closed) {}
-
-public:
-    /// Closes the queue, subsequent puts will fail and gets will
-    /// indicate a closed state.
-    void close()
-    {
-        boost::mutex::scoped_lock lock(_mutex);
-        _closed = true;
-        _cond.notify_all();
-    }
-
-    /// Closes and sets the error ptr, subsequent puts will throw.
-    void error(const boost::exception_ptr &error)
-    {
-        boost::mutex::scoped_lock lock(_mutex);
-        _error = error;
-        _closed = true;
-        _cond.notify_all();
-    }
-
-    /// Opens the queue and resets the error ptr.
-    void open()
-    {
-        boost::mutex::scoped_lock lock(_mutex);
-        _error = boost::exception_ptr();
-        _closed = false;
-        _cond.notify_all();
-    }
-
-    /// Enqueues an item.  Throws in case of error ptr or closed
-    /// queue.
-    void put(const T &item)
-    {
-        boost::mutex::scoped_lock lock(_mutex);
-        if (_error != boost::exception_ptr())
-            boost::rethrow_exception(_error);
-        if (_closed)
-            throw std::logic_error("Cannot put into closed queue");
-        _queue.push(item);
-        _cond.notify_one();
-    }
-
-    /// Given a pointer, waits and pops from the queue into it, if
-    /// possible.  In case of closed queue, does not pop and returns
-    /// false.
-    bool get(T *item)
-    {
-        boost::mutex::scoped_lock lock(_mutex);
-        while (!_closed && _queue.empty())
-            _cond.wait(lock);
-        if (_closed)
-            return false;
-        *item = _queue.front();
-        _queue.pop();
-        return true;
-    }
-};
-
-class DeviceAPI : public FB::JSAPIAuto
-{
-private:
-    DeviceDescriptor _device;
-    JobQueue<DeviceCallJob> _call_queue;
-    boost::thread _call_thread;
-
-public:
-    DeviceAPI(const DeviceDescriptor &device)
-        : _device(device), _call_queue(true)
-    {
-        // read-only attributes
-        registerAttribute("vendorId", utils::hex_encode(_device.vendor_id()), true);
-        registerAttribute("productId", utils::hex_encode(_device.product_id()), true);
-        registerAttribute("serialNumber", _device.serial_number(), true);
-
-        // methods
-        registerMethod("open", make_method(this, &DeviceAPI::open));
-        registerMethod("close", make_method(this, &DeviceAPI::close));
-        registerMethod("call", make_method(this, &DeviceAPI::call));
-    }
-    virtual ~DeviceAPI() { close(true); };
-
-public:
-    void open(const FB::JSObjectPtr &callbacks);
-    void close(bool wait=false);
-    
-    void call(const std::string &type_name,
-              const FB::VariantMap &message_map,
-              const FB::JSObjectPtr &callback);
-
-private:
-    void consume_calls(const FB::JSObjectPtr &callbacks);
-    void process_call(DeviceChannel &channel,
-                      const std::string &type_name,
-                      const FB::VariantMap &message_map,
-                      const FB::JSObjectPtr &callback);
-};
-
+/// Root plugin API object.
 class PluginAPI : public FB::JSAPIAuto
 {
+private:
+    BitcoinTrezorPluginWeakPtr _plugin;
+    FB::BrowserHostPtr _host;
+
 public:
-    ////////////////////////////////////////////////////////////////////////////
-    /// @fn PluginAPI::PluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr host)
-    ///
-    /// @brief  Constructor for your JSAPI object.
-    ///         You should register your methods, properties, and events
-    ///         that should be accessible to Javascript from here.
-    ///
-    /// @see FB::JSAPIAuto::registerMethod
-    /// @see FB::JSAPIAuto::registerProperty
-    /// @see FB::JSAPIAuto::registerEvent
-    ////////////////////////////////////////////////////////////////////////////
-    PluginAPI(const BitcoinTrezorPluginPtr& plugin, const FB::BrowserHostPtr& host) :
-        m_plugin(plugin), m_host(host)
-    {
-        // read-only properties
-        registerProperty("version", make_property(this, &PluginAPI::version));
+    PluginAPI(const BitcoinTrezorPluginPtr &plugin,
+              const FB::BrowserHostPtr &host);
+    virtual ~PluginAPI() {}
 
-        // methods
-        registerMethod("devices", make_method(this, &PluginAPI::devices));
-        registerMethod("configure", make_method(this, &PluginAPI::configure));
-    }
-
-    ///////////////////////////////////////////////////////////////////////////////
-    /// @fn PluginAPI::~PluginAPI()
-    ///
-    /// @brief  Destructor.  Remember that this object will not be released until
-    ///         the browser is done with it; this will almost definitely be after
-    ///         the plugin is released.
-    ///////////////////////////////////////////////////////////////////////////////
-    virtual ~PluginAPI() {};
-
-    BitcoinTrezorPluginPtr getPlugin();
-
-    void configure(const std::string &config_str);
-    std::string version();
+public:
     std::vector<FB::JSAPIPtr> devices();
+    void configure(const std::string &config_str_hex);
+    void close(const FB::JSAPIPtr &device,
+               const FB::JSObjectPtr &callbacks);
+    void call(const FB::JSAPIPtr &device,
+              bool use_timeout,
+              const std::string &type_name,
+              const FB::VariantMap &message_map,
+              const FB::JSObjectPtr &callbacks);
+    FB::VariantMap derive_child_node(const FB::VariantMap &node_map,
+                                     unsigned int index);
 
 private:
-    BitcoinTrezorPluginWeakPtr m_plugin;
-    FB::BrowserHostPtr m_host;
+    BitcoinTrezorPluginPtr acquire_plugin();
 };

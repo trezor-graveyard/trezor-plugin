@@ -25,6 +25,8 @@ find_package(Protobuf REQUIRED STATIC)
 include_directories(${PROTOBUF_INCLUDE_DIR})
 include_directories(${PLUGIN_INCLUDE_DIRS})
 
+add_subdirectory(trezor-crypto)
+
 # Generated files are stored in ${GENERATED} by the project configuration
 SET_SOURCE_FILES_PROPERTIES(
     ${GENERATED}
@@ -47,6 +49,7 @@ include_platform()
 
 target_link_libraries(${PROJECT_NAME}
     ${PROTOBUF_LIBRARY}
+    TrezorCrypto
 )
 
 # this will build a Chrome package

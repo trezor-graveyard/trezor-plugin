@@ -4,6 +4,10 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 
+extern "C" {
+#include "trezor-crypto/bip32.h"
+}
+
 #include "APITypes.h"
 
 namespace PB = google::protobuf;
@@ -25,6 +29,16 @@ message_type(const PB::Message &message);
 
 std::auto_ptr<PB::Message>
 create_message(const std::string &name);
+
+//
+// Bip32 functions
+//
+
+void
+message_to_hdnode(const PB::Message &message, HDNode &node);
+
+void
+message_from_hdnode(PB::Message &message, const HDNode &node);
 
 //
 // Firebreath API functions

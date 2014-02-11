@@ -15,6 +15,7 @@
 #include "messages.h"
 #include "config.pb.h"
 
+// Buffer for reading from a HID device.
 class HIDBuffer
 {
 public:
@@ -26,9 +27,9 @@ private:
     time_t _read_timeout; // in seconds
 
 public:
-    HIDBuffer(time_t read_timeout = 10)
-        : _read_timeout(read_timeout),
-          _buffer_length(0) {}
+    HIDBuffer(time_t read_timeout = 15)
+        : _buffer_length(0),
+          _read_timeout(read_timeout) {}
 
 public:
     void read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout = true);

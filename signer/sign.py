@@ -22,8 +22,8 @@ def parse_json():
 def get_compiled_proto():
     # Compile trezor.proto to binary format
     pdir = os.path.abspath(TREZOR_PROTO_DIR)
-    pfile = os.path.join(pdir, "trezor.proto")
-    cmd = "protoc -I" + PROTOBUF_PROTO_DIR + " -I" + pdir  + " " + pfile + " -otrezor.bin"
+    pfile = os.path.join(pdir, "messages.proto")
+    cmd = "protoc --include_imports -I" + PROTOBUF_PROTO_DIR + " -I" + pdir  + " " + pfile + " -otrezor.bin"
 
     subprocess.check_call(cmd.split())
 
@@ -75,7 +75,7 @@ def pack_datafile(filename, signature, data):
     fp.write(binascii.hexlify(signature))
     fp.write(binascii.hexlify(data))
     fp.close()
-    
+
     print "Signature and data stored to", filename
 
 if __name__ == '__main__':
