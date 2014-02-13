@@ -101,6 +101,7 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
     struct hid_device_info *current = devices;
 
     while (current) {
+        // convert to device desc
         DeviceDescriptor desc;
         desc.set_path(current->path);
         desc.set_vendor_id(current->vendor_id);
@@ -108,6 +109,7 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
         if (current->serial_number)
             desc.set_serial_number(utils::utf8_encode(current->serial_number));
 
+        // match against known devices
         for (size_t i = 0; i < config.known_devices_size(); i++) {
             const DeviceDescriptor *dd = &config.known_devices(i);
             const bool matches_vendor =
@@ -116,9 +118,16 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
                 (!(dd->has_product_id()) || dd->product_id() == desc.product_id());
             const bool matches_serial_number =
                 (!(dd->has_serial_number()) || dd->serial_number() == desc.serial_number());
-            const bool matches_debug = boost::algorithm::ends_with(dd->path(), ":01");
-
-            if (!matches_debug && matches_serial_number
+            bool already_present = false;
+            
+            for (size_t j = 0; j < result.size(); j++) {
+                if (result[j].path() == desc.path()) {
+                    already_present = true;
+                    break;
+                }
+            }
+            
+            if (!already_present && matches_serial_number
                 && matches_vendor && matches_product)
             {
                 result.push_back(desc);
@@ -140,7 +149,7 @@ DeviceCommunicator *BitcoinTrezorPlugin::communicator(const DeviceDescriptor &de
          it != _communicators.end();
          it++)
     {
-        if ((*it)->device().serial_number() == desc.serial_number())
+        if ((*it)->device().path() == desc.path())
             return *it;
     }
 

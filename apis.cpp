@@ -10,6 +10,7 @@ DeviceAPI::DeviceAPI(const DeviceDescriptor &device) :
     registerAttribute("id", device.serial_number(), true);
     registerAttribute("vendorId", utils::hex_encode(device.vendor_id()), true);
     registerAttribute("productId", utils::hex_encode(device.product_id()), true);
+    registerAttribute("path", device.path(), true);
 }
 
 PluginAPI::PluginAPI(const BitcoinTrezorPluginPtr &plugin,
