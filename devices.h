@@ -13,7 +13,6 @@
 
 #include "hidapi.h"
 #include "messages.h"
-#include "config.pb.h"
 
 // Buffer for reading from a HID device.
 class HIDBuffer
@@ -44,8 +43,8 @@ private:
     hid_device *_device; // owned
 
 public:
-    DeviceChannel(const DeviceDescriptor &desc, HIDBuffer *buffer)
-        : _buffer(buffer) { open(desc); } // opens on construction
+    DeviceChannel(const std::string &path, HIDBuffer *buffer)
+        : _buffer(buffer) { open(path); } // opens on construction
     virtual ~DeviceChannel() { close(); } // closes on destruction
 
 public:
@@ -54,6 +53,6 @@ public:
 
 private:
     void read_header(uint16_t *type, uint32_t *length, bool timeout);
-    void open(const DeviceDescriptor &desc);
+    void open(const std::string &path);
     void close();
 };

@@ -117,6 +117,18 @@ class DeviceDescriptor : public ::google::protobuf::Message {
   inline ::std::string* release_serial_number();
   inline void set_allocated_serial_number(::std::string* serial_number);
 
+  // optional bytes path = 4;
+  inline bool has_path() const;
+  inline void clear_path();
+  static const int kPathFieldNumber = 4;
+  inline const ::std::string& path() const;
+  inline void set_path(const ::std::string& value);
+  inline void set_path(const char* value);
+  inline void set_path(const void* value, size_t size);
+  inline ::std::string* mutable_path();
+  inline ::std::string* release_path();
+  inline void set_allocated_path(::std::string* path);
+
   // @@protoc_insertion_point(class_scope:DeviceDescriptor)
  private:
   inline void set_has_vendor_id();
@@ -125,15 +137,18 @@ class DeviceDescriptor : public ::google::protobuf::Message {
   inline void clear_has_product_id();
   inline void set_has_serial_number();
   inline void clear_has_serial_number();
+  inline void set_has_path();
+  inline void clear_has_path();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
   ::google::protobuf::uint32 vendor_id_;
   ::google::protobuf::uint32 product_id_;
   ::std::string* serial_number_;
+  ::std::string* path_;
 
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
 
   friend void  protobuf_AddDesc_config_2eproto();
   friend void protobuf_AssignDesc_config_2eproto();
@@ -401,6 +416,76 @@ inline void DeviceDescriptor::set_allocated_serial_number(::std::string* serial_
   } else {
     clear_has_serial_number();
     serial_number_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  }
+}
+
+// optional bytes path = 4;
+inline bool DeviceDescriptor::has_path() const {
+  return (_has_bits_[0] & 0x00000008u) != 0;
+}
+inline void DeviceDescriptor::set_has_path() {
+  _has_bits_[0] |= 0x00000008u;
+}
+inline void DeviceDescriptor::clear_has_path() {
+  _has_bits_[0] &= ~0x00000008u;
+}
+inline void DeviceDescriptor::clear_path() {
+  if (path_ != &::google::protobuf::internal::kEmptyString) {
+    path_->clear();
+  }
+  clear_has_path();
+}
+inline const ::std::string& DeviceDescriptor::path() const {
+  return *path_;
+}
+inline void DeviceDescriptor::set_path(const ::std::string& value) {
+  set_has_path();
+  if (path_ == &::google::protobuf::internal::kEmptyString) {
+    path_ = new ::std::string;
+  }
+  path_->assign(value);
+}
+inline void DeviceDescriptor::set_path(const char* value) {
+  set_has_path();
+  if (path_ == &::google::protobuf::internal::kEmptyString) {
+    path_ = new ::std::string;
+  }
+  path_->assign(value);
+}
+inline void DeviceDescriptor::set_path(const void* value, size_t size) {
+  set_has_path();
+  if (path_ == &::google::protobuf::internal::kEmptyString) {
+    path_ = new ::std::string;
+  }
+  path_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* DeviceDescriptor::mutable_path() {
+  set_has_path();
+  if (path_ == &::google::protobuf::internal::kEmptyString) {
+    path_ = new ::std::string;
+  }
+  return path_;
+}
+inline ::std::string* DeviceDescriptor::release_path() {
+  clear_has_path();
+  if (path_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = path_;
+    path_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+inline void DeviceDescriptor::set_allocated_path(::std::string* path) {
+  if (path_ != &::google::protobuf::internal::kEmptyString) {
+    delete path_;
+  }
+  if (path) {
+    set_has_path();
+    path_ = path;
+  } else {
+    clear_has_path();
+    path_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   }
 }
 

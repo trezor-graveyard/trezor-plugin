@@ -1,3 +1,4 @@
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/regex.hpp>
 
 #include "DOM/Window.h"
@@ -101,6 +102,7 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
 
     while (current) {
         DeviceDescriptor desc;
+        desc.set_path(current->path);
         desc.set_vendor_id(current->vendor_id);
         desc.set_product_id(current->product_id);
         if (current->serial_number)
@@ -108,9 +110,16 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
 
         for (size_t i = 0; i < config.known_devices_size(); i++) {
             const DeviceDescriptor *dd = &config.known_devices(i);
-            if ((!(dd->has_vendor_id()) || dd->vendor_id() == desc.vendor_id()) &&
-                (!(dd->has_product_id()) || dd->product_id() == desc.product_id()) &&
-                (!(dd->has_serial_number()) || dd->serial_number() == desc.serial_number()))
+            const bool matches_vendor =
+                (!(dd->has_vendor_id()) || dd->vendor_id() == desc.vendor_id());
+            const bool matches_product =
+                (!(dd->has_product_id()) || dd->product_id() == desc.product_id());
+            const bool matches_serial_number =
+                (!(dd->has_serial_number()) || dd->serial_number() == desc.serial_number());
+            const bool matches_debug = boost::algorithm::ends_with(dd->path(), ":01");
+
+            if (!matches_debug && matches_serial_number
+                && matches_vendor && matches_product)
             {
                 result.push_back(desc);
                 break;
@@ -243,7 +252,7 @@ void DeviceJobExecutor::operator()(const DeviceOpenJob &job)
         if (!_buffer.get())
             _buffer.reset(new HIDBuffer());
         if (!_channel.get())
-            _channel.reset(new DeviceChannel(_device, _buffer.get()));
+            _channel.reset(new DeviceChannel(_device.path(), _buffer.get()));
         job.callbacks->InvokeAsync("success", FB::variant_list_of());
     } catch (const boost::thread_interrupted &e) {
         throw;
@@ -260,7 +269,7 @@ void DeviceJobExecutor::operator()(const DeviceCallJob &job)
         if (!_buffer.get())
             _buffer.reset(new HIDBuffer());
         if (!_channel.get())
-            _channel.reset(new DeviceChannel(_device, _buffer.get()));
+            _channel.reset(new DeviceChannel(_device.path(), _buffer.get()));
         call(job.use_timeout, job.type_name, job.message_map, job.callbacks);
     } catch (const boost::thread_interrupted &e) {
         throw;

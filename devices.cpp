@@ -100,26 +100,20 @@ HIDBuffer::write(hid_device *dev, const uint8_t *bytes, size_t length)
 }
 
 void
-DeviceChannel::open(const DeviceDescriptor &desc)
+DeviceChannel::open(const std::string &path)
 {
     const unsigned char uart[] = {0x41, 0x01};
     const unsigned char txrx[] = {0x43, 0x03};
 
-    std::wstring serial_number;
-    if (desc.has_serial_number())
-        serial_number = utils::utf8_decode(desc.serial_number());
-
     FBLOG_INFO("open()", "Opening device");
-    _device = hid_open(desc.vendor_id(),
-                       desc.product_id(),
-                       serial_number.empty() ? 0 : serial_number.c_str());
+    _device = hid_open_path(path.c_str());
 
     if (!_device) {
         FBLOG_FATAL("open()", "Failed to open device");
         throw OpenError();
     }
 
-    FBLOG_INFO("open()", "Sending features");
+    FBLOG_INFO("open()", "Sending feature reports");
     hid_send_feature_report(_device, uart, 2); // enable UART
     hid_send_feature_report(_device, txrx, 2); // purge TX/RX FIFOs
 }

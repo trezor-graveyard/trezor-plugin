@@ -35,10 +35,11 @@ void protobuf_AssignDesc_config_2eproto() {
       "config.proto");
   GOOGLE_CHECK(file != NULL);
   DeviceDescriptor_descriptor_ = file->message_type(0);
-  static const int DeviceDescriptor_offsets_[3] = {
+  static const int DeviceDescriptor_offsets_[4] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DeviceDescriptor, vendor_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DeviceDescriptor, product_id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DeviceDescriptor, serial_number_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(DeviceDescriptor, path_),
   };
   DeviceDescriptor_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -106,13 +107,14 @@ void protobuf_AddDesc_config_2eproto() {
   ::google::protobuf::protobuf_AddDesc_google_2fprotobuf_2fdescriptor_2eproto();
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\014config.proto\032 google/protobuf/descript"
-    "or.proto\"P\n\020DeviceDescriptor\022\021\n\tvendor_i"
+    "or.proto\"^\n\020DeviceDescriptor\022\021\n\tvendor_i"
     "d\030\001 \001(\r\022\022\n\nproduct_id\030\002 \001(\r\022\025\n\rserial_nu"
-    "mber\030\003 \001(\014\"\271\001\n\rConfiguration\022\026\n\016whitelis"
-    "t_urls\030\001 \003(\014\022\026\n\016blacklist_urls\030\002 \003(\014\0229\n\r"
-    "wire_protocol\030\003 \002(\0132\".google.protobuf.Fi"
-    "leDescriptorSet\022(\n\rknown_devices\030\004 \003(\0132\021"
-    ".DeviceDescriptor\022\023\n\013valid_until\030\005 \001(\005", 318);
+    "mber\030\003 \001(\014\022\014\n\004path\030\004 \001(\014\"\271\001\n\rConfigurati"
+    "on\022\026\n\016whitelist_urls\030\001 \003(\014\022\026\n\016blacklist_"
+    "urls\030\002 \003(\014\0229\n\rwire_protocol\030\003 \002(\0132\".goog"
+    "le.protobuf.FileDescriptorSet\022(\n\rknown_d"
+    "evices\030\004 \003(\0132\021.DeviceDescriptor\022\023\n\013valid"
+    "_until\030\005 \001(\005", 332);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "config.proto", &protobuf_RegisterTypes);
   DeviceDescriptor::default_instance_ = new DeviceDescriptor();
@@ -135,6 +137,7 @@ struct StaticDescriptorInitializer_config_2eproto {
 const int DeviceDescriptor::kVendorIdFieldNumber;
 const int DeviceDescriptor::kProductIdFieldNumber;
 const int DeviceDescriptor::kSerialNumberFieldNumber;
+const int DeviceDescriptor::kPathFieldNumber;
 #endif  // !_MSC_VER
 
 DeviceDescriptor::DeviceDescriptor()
@@ -156,6 +159,7 @@ void DeviceDescriptor::SharedCtor() {
   vendor_id_ = 0u;
   product_id_ = 0u;
   serial_number_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+  path_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -166,6 +170,9 @@ DeviceDescriptor::~DeviceDescriptor() {
 void DeviceDescriptor::SharedDtor() {
   if (serial_number_ != &::google::protobuf::internal::kEmptyString) {
     delete serial_number_;
+  }
+  if (path_ != &::google::protobuf::internal::kEmptyString) {
+    delete path_;
   }
   if (this != default_instance_) {
   }
@@ -199,6 +206,11 @@ void DeviceDescriptor::Clear() {
     if (has_serial_number()) {
       if (serial_number_ != &::google::protobuf::internal::kEmptyString) {
         serial_number_->clear();
+      }
+    }
+    if (has_path()) {
+      if (path_ != &::google::protobuf::internal::kEmptyString) {
+        path_->clear();
       }
     }
   }
@@ -253,6 +265,20 @@ bool DeviceDescriptor::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(34)) goto parse_path;
+        break;
+      }
+
+      // optional bytes path = 4;
+      case 4: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_path:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_path()));
+        } else {
+          goto handle_uninterpreted;
+        }
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -291,6 +317,12 @@ void DeviceDescriptor::SerializeWithCachedSizes(
       3, this->serial_number(), output);
   }
 
+  // optional bytes path = 4;
+  if (has_path()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+      4, this->path(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -314,6 +346,13 @@ void DeviceDescriptor::SerializeWithCachedSizes(
     target =
       ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
         3, this->serial_number(), target);
+  }
+
+  // optional bytes path = 4;
+  if (has_path()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        4, this->path(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -346,6 +385,13 @@ int DeviceDescriptor::ByteSize() const {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::BytesSize(
           this->serial_number());
+    }
+
+    // optional bytes path = 4;
+    if (has_path()) {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->path());
     }
 
   }
@@ -384,6 +430,9 @@ void DeviceDescriptor::MergeFrom(const DeviceDescriptor& from) {
     if (from.has_serial_number()) {
       set_serial_number(from.serial_number());
     }
+    if (from.has_path()) {
+      set_path(from.path());
+    }
   }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
@@ -410,6 +459,7 @@ void DeviceDescriptor::Swap(DeviceDescriptor* other) {
     std::swap(vendor_id_, other->vendor_id_);
     std::swap(product_id_, other->product_id_);
     std::swap(serial_number_, other->serial_number_);
+    std::swap(path_, other->path_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
