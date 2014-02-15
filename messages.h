@@ -4,7 +4,11 @@
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/descriptor.pb.h>
 
+#ifdef _MSC_VER // trezor-crypto gets compiled as C++ on MSVC
+extern "C++" {
+#else
 extern "C" {
+#endif
 #include "trezor-crypto/bip32.h"
 }
 
