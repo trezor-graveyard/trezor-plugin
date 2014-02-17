@@ -142,14 +142,10 @@ Instructions:
    it to use static runtime (`/MT`) at least for the `libprotobuf`
    project.
 2. Build protobuf.
-3. Generate the VS solution. Note it doesn't use system boost yet.
+3. Generate the VS solution.
 
         set PROTOBUF_PATH=C:/Code/protobuf-2.5.0/
-        prep2010.cmd projects build ^
-            "-DBoost_USE_STATIC_LIBS=on" ^
-            "-DBoost_USE_STATIC_RUNTIME=on" ^
-            "-DPROTOBUF_SRC_ROOT_FOLDER=%PROTOBUF_PATH%" ^
-            "-DPROTOBUF_INCLUDE_DIR=%PROTOBUF_PATH%/vsprojects/include"
+	prep.cmd
 
 4. Build the solution from the generated `build` directory.
 5. Register the compiled DLL:
