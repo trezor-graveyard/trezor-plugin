@@ -1,4 +1,4 @@
-#/**********************************************************\ 
+#/**********************************************************\
 # Auto-generated Windows project definition file for the
 # Bitcoin Trezor Plugin project
 #\**********************************************************/
@@ -43,11 +43,9 @@ FIND_LIBRARY(SETUPAPI_LIBRARY setupapi.lib)
 # source control!
 # -- uncomment lines below this to enable signing --
 firebreath_sign_plugin(${PROJECT_NAME}
-    "${CMAKE_CURRENT_SOURCE_DIR}/cert/cert.pfx"
-    ""
-    "")
-#    "${CMAKE_CURRENT_SOURCE_DIR}/sign/passphrase.txt"
-#    "http://timestamp.verisign.com/scripts/timestamp.dll")
+    "E:/satoshilabs-cs-cert.pfx"
+    "E:/satoshilabs-cs-passphrase.txt"
+    "http://timestamp.verisign.com/scripts/timestamp.dll")
 
 # add library dependencies here; leave ${PLUGIN_INTERNAL_DEPS} there unless you know what you're doing!
 target_link_libraries(${PROJECT_NAME}
@@ -74,11 +72,9 @@ add_wix_installer( ${PLUGIN_NAME}
 # -- uncomment lines below this to enable signing --
 firebreath_sign_file("${PLUGIN_NAME}_WiXInstall"
     "${FB_BIN_DIR}/${PLUGIN_NAME}/${CMAKE_CFG_INTDIR}/${PLUGIN_NAME}.msi"
-    "${CMAKE_CURRENT_SOURCE_DIR}/cert/cert.pfx"
-    ""
-    "")
-#    "${CMAKE_CURRENT_SOURCE_DIR}/sign/passphrase.txt"
-#    "http://timestamp.verisign.com/scripts/timestamp.dll")
+    "E:/satoshilabs-cs-cert.pfx"
+    "E:/satoshilabs-cs-passphrase.txt"
+    "http://timestamp.verisign.com/scripts/timestamp.dll")
 
 # This is an example of how to create a cab
 # -- uncomment lines below this to enable signing --
