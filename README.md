@@ -125,8 +125,8 @@ You will need to have Xcode installed.
 
 Requirements:
 
-- [Visual Studio 2010 Express](http://www.microsoft.com/express/Downloads/)
-- [Windows Driver Kit 7.1](http://www.microsoft.com/express/Downloads/)
+- [Visual Studio 2010 Express](http://www.visualstudio.com/en-us/downloads#d-2010-express)
+- [Windows Driver Kit 7.1](http://www.microsoft.com/en-us/download/details.aspx?id=11800)
   with the "Build Environments" option enabled, installed to the
   default location
 - [CMake 2.8.7 or later](http://www.cmake.org/cmake/resources/software.html)
@@ -135,23 +135,34 @@ Requirements:
 - [Git](http://msysgit.github.io/)
 - [Protobuf 2.5.0](https://code.google.com/p/protobuf/downloads/detail?name=protobuf-2.5.0.zip&can=2&q=)
 - [Python 2.7](http://python.org/download/)
+- [WiX 3.6](http://wix.codeplex.com/releases/view/93929)
 
 Instructions:
 
-1. Open protobuf solution from the `vsprojects` directory and switch
-   it to use static runtime (`/MT`) at least for the `libprotobuf`
-   project.
-2. Build protobuf.
-3. Generate the VS solution.
+1. Build Protobuf
 
-        set PROTOBUF_PATH=C:/Code/protobuf-2.5.0/
-	prep.cmd
+    1. In the `vsprojects` directory, run `extract_includes.bat`
+    2. Open the VS solution from the `vsprojects` directory
+    3. Switch to preferred configuration (Release/Debug)
+    3. Switch the `libprotobuf` project to static runtime `/MT` or `/MTd` (open
+       Properties through the right-click menu, then C++, Code Generation, item
+       Runtime Library)
+    4. Build `libprotobuf` project
 
-4. Build the solution from the generated `build` directory.
-5. Register the compiled DLL:
+2. Build plugin
 
-        cd build/bin/BitcoinTrezorPlugin/Debug
-        regsvr32.exe npBitcoinTrezorPlugin.dll
+    1. Generate the VS solution (change the Protobuf path to your installation):
+
+            set PROTOBUF_PATH=C:/Code/protobuf-2.5.0/
+            prep.cmd
+
+    2. Open the solution from the generated `build` directory
+    3. Switch to preferred configuration
+    4. Build the solution
+    5. Results of the build are at `build/bin/BitcoinTrezorPlugin/{Debug,Release,...}`
+    6. You can either run the installer or register the compiled DLL manually with:
+
+            regsvr32.exe npBitcoinTrezorPlugin.dll
 
 5. Testing
 ----------
