@@ -13,7 +13,7 @@
 		<Property Id="MSIRESTARTMANAGERCONTROL" Value="Disable" />
         <CustomAction Id="SetOpenURL"
                       Property="WixShellExecTarget"
-                      Value="https://my.bitcointrezor.com" />
+                      Value="https://mytrezor.com" />
         <CustomAction Id="OpenURL" BinaryKey="WixCA"
                       DllEntry="WixShellExec"
                       Impersonate="yes"
