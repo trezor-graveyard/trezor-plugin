@@ -67,7 +67,7 @@ set(FBMAC_USE_INVALIDATINGCOREANIMATION 0)
 # If you want to register per-machine on Windows, uncomment this line
 #set (FB_ATLREG_MACHINEWIDE 1)
 
-add_firebreath_library(log4cplus)
+# add_firebreath_library(log4cplus)
 add_firebreath_library(openssl)
 add_boost_library(regex)
 add_boost_library(system)
