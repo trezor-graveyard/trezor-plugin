@@ -1,77 +1,23 @@
-<!-- saved from url=(0013)about:internet -->
 <!DOCTYPE html>
 <html>
   <head>
     <title>Bitcoin Trezor Plugin Test Page</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   </head>
-  <body>
-    <button onclick="testPlugin()" style="padding: 3em">
-        Test plugin
-    </button>
-
-    <script src="trezor.js/trezor.js"></script>
+  <body onload="pageLoaded()">
+    <div id="container"></div>
     <script>
-     trezor.load(trezorLoaded, trezorFailure, 1000);
-
-     function trezorFailure(error, install) {
-         console.log('Trezor loading failed', error);
-         if (install)
-            install();
-     }
-
-     function trezorLoaded(trezor_) {
-         var version = trezor_.version(),
-         devices = trezor_.devices();
-
-         console.log('Version:', version);
-         console.log('Devices:', devices);
-
-         var device = devices[0];
-         console.log('Vendor ID:', device.vendorId);
-         console.log('Product ID:', device.productId);
-         console.log('Serial Number:', device.serialNumber);
-
-         var session = trezor_.open(device, {
-             error: handleError,
-             pin: handlePin
-         });
-
-         function handleFailure(error) {
-             console.log('Failure:', error);
-         }
-         function handleError(error) {
-             console.log('Error:', error);
-             session.close();
-             session.open();
-         }
-         function handlePin(callback) { callback(prompt('Enter PIN:')); }
-
-         function testPlugin() {
-             session.initialize(handleInit, handleFailure);
-
-             function handleInit(features) {
-                 session.getMasterPublicKey(handleKey, handleFailure);
-             }
-
-             function handleKey(key) {
-                 session.getEntropy(64, handleEntropy, handleFailure);
-             }
-
-             function handleEntropy(entropy) {
-                 var inputs = [],
-                 outputs = [];
-                 session.signTx(inputs, outputs, handleSignTx);
-             }
-
-             function handleSignTx(signatures, serializedTx) {
-                 console.log('Signatures:', signatures);
-                 console.log('Serialized tx:', serializedTx);
-             }
-         }
-
-         window.testPlugin = testPlugin;
-     }
+    function pageLoaded() {
+      var elem = document.getElementById('container');
+      elem.innerHTML =
+      '<object width="100" height="100" type="application/x-bitcointrezorplugin">'+
+      '<param name="onload" value="pluginLoaded" />'+
+      '</object>';
+      alert('injected');
+    }
+    function pluginLoaded() {
+      alert('loaded');
+    }
     </script>
   </body>
 </html>
