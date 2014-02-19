@@ -440,6 +440,7 @@ message_to_hdnode(const PB::Message &message, HDNode &node)
     std::string public_key = ref->GetString(message, field_or_throw(md, "public_key"));
 
     hdnode_from_xpub(0, // TODO: use proper version byte
+                     0, // private ckd not used
                      ref->GetUInt32(message, field_or_throw(md, "version")),
                      ref->GetUInt32(message, field_or_throw(md, "depth")),
                      ref->GetUInt32(message, field_or_throw(md, "fingerprint")),

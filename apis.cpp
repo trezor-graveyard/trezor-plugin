@@ -4,8 +4,8 @@
 #include "exceptions.h"
 #include "config.pb.h"
 
-DeviceAPI::DeviceAPI(const DeviceDescriptor &device) :
-    device(device)
+DeviceAPI::DeviceAPI(const DeviceDescriptor &device_) :
+    device(device_)
 {
     registerAttribute("id", device.serial_number(), true);
     registerAttribute("vendorId", utils::hex_encode(device.vendor_id()), true);
