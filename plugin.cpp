@@ -101,6 +101,10 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
     struct hid_device_info *current = devices;
 
     while (current) {
+        // skip debug interface
+        if (current->interface_number == 1)
+            continue;
+
         // convert to device desc
         DeviceDescriptor desc;
         desc.set_path(current->path);
@@ -118,18 +122,13 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
                 (!(dd->has_product_id()) || dd->product_id() == desc.product_id());
             const bool matches_serial_number =
                 (!(dd->has_serial_number()) || dd->serial_number() == desc.serial_number());
-            bool already_present = false;
-            
-            for (size_t j = 0; j < result.size(); j++) {
-                if (result[j].path() == desc.path()) {
-                    already_present = true;
-                    break;
-                }
-            }
-            
-            if (!already_present && matches_serial_number
-                && matches_vendor && matches_product)
+
+            if (matches_serial_number && matches_vendor && matches_product)
             {
+                // disallow duplicit serial numbers, debug interface should be skipped already
+                for (size_t j = 0; j < result.size(); j++)
+                    if (result[j].serial_number() == desc.serial_number())
+                        throw std::runtime_error("Duplicit devices detected");
                 result.push_back(desc);
                 break;
             }
