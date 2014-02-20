@@ -5,31 +5,29 @@ Bitcoin Trezor Plugin
 -------------------------
 
     git clone https://github.com/slush0/trezor-plugin.git
-    git clone git://github.com/firebreath/FireBreath.git firebreath-dev
+    git clone git://github.com/firebreath/FireBreath.git firebreath
 
-    cd firebreath-dev
+    cd firebreath
+    git checkout firebreath-1.7
     git submodule update --recursive --init
 
     mkdir -p projects
     ln -s ../../trezor-plugin projects/BitcoinTrezorPlugin
 
-    cd BitcoinTrezorPlugin
+    cd projects/BitcoinTrezorPlugin
     git submodule update --recursive --init
-    cp CMakeLists.trezor-crypto.txt trezor-crypto/CMakeLists.txt
 
 
-2. Building on Linux
---------------------
+2a. Building on Linux
+---------------------
 
-* download qcow2 image of Fedora 19 (i386 and/or x86_64)
+* download QCOW2 Fedora Cloud Image (from https://fedoraproject.org/en/get-fedora#clouds
 
-    http://fedoraproject.org/en/get-fedora-options#cloud
+  the file is called something like (mentioned as $IMAGE from now on):
 
-  it will be called something like:
-
-    Fedora-i386-19-20130627-sda.qcow2 or Fedora-x86_64-19-20130627-sda.qcow2
-
-    we'll use $IMAGE from now on
+    Fedora-i386-20-20131211.1-sda.qcow2
+    - or -
+    Fedora-x86_64-20-20131211.1-sda.qcow2
 
 * enable root login (guestfish is from guestfs-tools package)
 
@@ -41,28 +39,23 @@ Bitcoin Trezor Plugin
         - to -
       root::0:0:root:/root:/bin/bash
 
-* start QEMU virtual machine
-
-    qemu-system-i386 -hda $IMAGE -m 2048     # (for 32-bit)
-      - or -
-    qemu-system-x86_64 -hda $IMAGE -m 2048   # (for 64-bit)
-
-* or convert the image to use with VirtualBox and use VirtualBox instead of QEMU
+* convert the image to VirtualBox format using
 
     qemu-img convert -O vdi $IMAGE $IMAGE.vdi
+
+* create VM in VirtualBox and assign the disk image to VM (also assign at least 2 GB of RAM)
 
 * login as root (no password needed)
 
 * install essential build tools and libraries
 
-    yum install bzip2 cmake gcc-c++ git make wget
-    yum install libudev-devel zlib-devel
+    yum install bzip2 cmake gcc-c++ git make wget zlib-devel
 
 * download and install openssl from source
 
-    wget http://www.openssl.org/source/openssl-1.0.1e.tar.gz
-    tar xfz openssl-1.0.1e.tar.gz
-    cd openssl-1.0.1e
+    wget http://www.openssl.org/source/openssl-1.0.1f.tar.gz
+    tar xfz openssl-1.0.1f.tar.gz
+    cd openssl-1.0.1f
     ./config -fPIC no-shared --openssldir=/usr/local
     make
     make install
@@ -76,12 +69,12 @@ Bitcoin Trezor Plugin
     make
     make install
 
-* download and install libusbx from source
+* download and install libusb from source
 
-    wget http://downloads.sourceforge.net/project/libusbx/releases/1.0.17/source/libusbx-1.0.17.tar.bz2
-    tar xfj libusbx-1.0.17.tar.bz2
-    cd libusbx-1.0.17
-    ./configure --with-pic --disable-shared --enable-static
+    wget https://downloads.sourceforge.net/project/libusb/libusb-1.0/libusb-1.0.18/libusb-1.0.18.tar.bz2
+    tar xfj libusb-1.0.18.tar.bz2
+    cd libusb-1.0.18
+    ./configure --with-pic --disable-shared --enable-static --disable-udev
     make
     make install
 
@@ -89,7 +82,7 @@ Bitcoin Trezor Plugin
 
 * generate make files and build the project
 
-      cd firebreath-dev
+      cd firebreath
       ./prepmake.sh
 
       cd build
@@ -97,8 +90,8 @@ Bitcoin Trezor Plugin
 
 * binary is located in build/bin/BitcoinTrezorPlugin/npBitcoinTrezorPlugin.so
 
-3. Building on Mac OS X
------------------------
+2b. Building on Mac OS X
+------------------------
 
 You will need to have Xcode installed.
 
@@ -120,8 +113,8 @@ You will need to have Xcode installed.
     ln -s `pwd`/projects/BitcoinTrezorPlugin/Debug/Bitcoin\ Trezor\ Plugin.plugin \
         ~/Library/Internet\ Plug-Ins/
 
-4. Building on Windows
-----------------------
+2c. Building on Windows
+-----------------------
 
 Requirements:
 
@@ -133,13 +126,13 @@ Requirements:
   binary distribution, allow installer to append CMake binaries to
   PATH
 - [Git](http://msysgit.github.io/)
-- [Protobuf 2.5.0](https://code.google.com/p/protobuf/downloads/detail?name=protobuf-2.5.0.zip&can=2&q=)
+- [Protobuf 2.5.0](https://protobuf.googlecode.com/files/protobuf-2.5.0.zip)
 - [Python 2.7](http://python.org/download/)
 - [WiX 3.6](http://wix.codeplex.com/releases/view/93929)
 
 Instructions:
 
-1. Build Protobuf
+a) Build Protobuf
 
     1. In the `vsprojects` directory, run `extract_includes.bat`
     2. Open the VS solution from the `vsprojects` directory
@@ -149,7 +142,7 @@ Instructions:
        Runtime Library)
     4. Build `libprotobuf` project
 
-2. Build plugin
+b) Build plugin
 
     1. Generate the VS solution (change the Protobuf path to your installation):
 
@@ -164,7 +157,7 @@ Instructions:
 
             regsvr32.exe npBitcoinTrezorPlugin.dll
 
-5. Testing
+3. Testing
 ----------
 
 After you build the plugin according to instructions above, you can
