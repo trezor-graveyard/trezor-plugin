@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/lexical_cast.hpp>
+#include <stdint.h>
 
 #include "JSExceptions.h"
 
