@@ -439,10 +439,7 @@ message_to_hdnode(const PB::Message &message, HDNode &node)
     std::string chain_code = ref->GetString(message, field_or_throw(md, "chain_code"));
     std::string public_key = ref->GetString(message, field_or_throw(md, "public_key"));
 
-    hdnode_from_xpub(0, // TODO: use proper version byte
-                     0, // private ckd not used
-                     ref->GetUInt32(message, field_or_throw(md, "version")),
-                     ref->GetUInt32(message, field_or_throw(md, "depth")),
+    hdnode_from_xpub(ref->GetUInt32(message, field_or_throw(md, "depth")),
                      ref->GetUInt32(message, field_or_throw(md, "fingerprint")),
                      ref->GetUInt32(message, field_or_throw(md, "child_num")),
                      (uint8_t*) chain_code.data(),
@@ -461,7 +458,6 @@ message_from_hdnode(PB::Message &message, const HDNode &node)
     std::string public_key(reinterpret_cast<const char *>(node.public_key),
                            sizeof(node.public_key));
 
-    ref->SetUInt32(&message, field_or_throw(md, "version"), node.version);
     ref->SetUInt32(&message, field_or_throw(md, "depth"), node.depth);
     ref->SetUInt32(&message, field_or_throw(md, "fingerprint"), node.fingerprint);
     ref->SetUInt32(&message, field_or_throw(md, "child_num"), node.child_num);

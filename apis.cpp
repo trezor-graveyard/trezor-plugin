@@ -115,8 +115,8 @@ FB::VariantMap PluginAPI::derive_child_node(const FB::VariantMap &node_map,
         return message_to_map(*node_msg);
         
     } catch (const std::exception &e) {
-        FBLOG_ERROR("hdnode_descent()", "Exception caught");
-        FBLOG_ERROR("hdnode_descent()", e.what());
+        FBLOG_ERROR("hdnode_public_ckd()", "Exception caught");
+        FBLOG_ERROR("hdnode_public_ckd()", e.what());
         throw FB::script_error(e.what());
     }
 }
