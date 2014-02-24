@@ -44,6 +44,5 @@ target_link_libraries(${PROJECT_NAME}
     ${LIBUSB_1_LIBRARIES}
     ${RT_LIBRARY}
     ${ICONV_LIBRARIES}
-    -ludev
     -lz
     )
