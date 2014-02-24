@@ -8,9 +8,9 @@ Manual installation:
 
   2a) install plugin (32-bit Linux)
       * copy file npBitcoinTrezorPlugin.32bit.so to your browsers plugin directory
-        - the directory usually is /usr/lib/mozilla/plugins or /usr/lib/browser-plugins
+        - the directory usually is /usr/lib/mozilla/plugins
 
   2b) install plugin (64-bit Linux)
       * copy file npBitcoinTrezorPlugin.64bit.so to your browsers plugin directory
-        - the directory usually is /usr/lib/mozilla/plugins or /usr/lib/browser-plugins
+        - the directory usually is /usr/lib/mozilla/plugins
         - it can also be located in /usr/lib64 instead of /usr/lib
