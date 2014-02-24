@@ -1,2 +1,3 @@
 npBitcoinTrezorPlugin.??bit.so
-dist/browser-plugin-trezor-*.tar.bz2
+browser-plugin-trezor/.osc/
+browser-plugin-trezor/browser-plugin-trezor-*.tar.bz2
