@@ -5,6 +5,7 @@ Bitcoin Trezor Plugin
 -------------------------
 
     git clone https://github.com/slush0/trezor-plugin.git
+
     git clone git://github.com/firebreath/FireBreath.git -b firebreath-1.7 firebreath
 
     cd firebreath
@@ -20,35 +21,30 @@ Bitcoin Trezor Plugin
 2a. Building on Linux
 ---------------------
 
-* download QCOW2 Fedora Cloud Image (from https://fedoraproject.org/en/get-fedora#clouds
+* install Vagrant (for example from http://www.vagrantup.com/)
 
-  the file is called something like (mentioned as $IMAGE from now on):
+* install and init Debian Vagrant boxes from PuppetLabs:
 
-    Fedora-i386-20-20131211.1-sda.qcow2
+    vagrant box add debian32 http://puppet-vagrant-boxes.puppetlabs.com/debian-73-i386-virtualbox-nocm.box
+    vagrant init debian32
     - or -
-    Fedora-x86_64-20-20131211.1-sda.qcow2
+    vagrant box add debian64 http://puppet-vagrant-boxes.puppetlabs.com/debian-73-x64-virtualbox-nocm.box
+    vagrant init debian64
 
-* enable root login (guestfish is from guestfs-tools package)
+* log into it:
 
-    sudo guestfish -a $IMAGE -i vi /etc/passwd
+    vagrant up
+    vagrant ssh
 
-    change line
+* install required tools and libraries
 
-      root:x:0:0:root:/root:/bin/bash
-        - to -
-      root::0:0:root:/root:/bin/bash
+    sudo apt-get install cmake git zlib1g-dev
 
-* convert the image to VirtualBox format using
+* remove librt.a so it won't get picked during the build
 
-    qemu-img convert -O vdi $IMAGE $IMAGE.vdi
-
-* create VM in VirtualBox and assign the disk image to VM (also assign at least 2 GB of RAM)
-
-* login as root (no password needed)
-
-* install essential build tools and libraries
-
-    yum install bzip2 cmake gcc-c++ git make wget zlib-devel
+    sudo rm /usr/lib/i386-linux-gnu/librt.a
+    - or -
+    sudo rm /usr/lib/x86_64-linux-gnu/librt.a
 
 * download and install openssl from source
 
@@ -57,7 +53,7 @@ Bitcoin Trezor Plugin
     cd openssl-1.0.1f
     ./config -fPIC no-shared --openssldir=/usr/local
     make
-    make install
+    sudo make install
 
 * download and install protobuf from source
 
@@ -66,7 +62,7 @@ Bitcoin Trezor Plugin
     cd protobuf-2.5.0
     ./configure --with-pic --disable-shared --enable-static
     make
-    make install
+    sudo make install
 
 * download and install libusb from source
 
@@ -75,7 +71,7 @@ Bitcoin Trezor Plugin
     cd libusb-1.0.18
     ./configure --with-pic --disable-shared --enable-static --disable-udev
     make
-    make install
+    sudo make install
 
 * setup firebreath and trezor-plugin projects as described in chapter 1
 
