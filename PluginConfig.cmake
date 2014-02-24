@@ -39,7 +39,7 @@ set(MOZILLA_PLUGINID "bitcointrezor.com/BitcoinTrezorPlugin")
 # strings
 set(FBSTRING_CompanyName "bitcointrezor.com")
 set(FBSTRING_PluginDescription "Plugin for embedding Bitcoin Trezor into websites")
-set(FBSTRING_PLUGIN_VERSION "1.0.0")
+set(FBSTRING_PLUGIN_VERSION "1.0.1")
 set(FBSTRING_LegalCopyright "Copyright 2013 bitcointrezor.com")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "Bitcoin Trezor Plugin")
