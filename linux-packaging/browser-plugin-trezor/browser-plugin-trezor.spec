@@ -1,12 +1,12 @@
 Name:           browser-plugin-trezor
-Version:        1.0.0
+Version:        1.0.1
 Release:        0
 License:        Proprietary
 Summary:        Bitcoin TREZOR Plugin
 Url:            http://bitcointrezor.com/
 Group:          Productivity/Security
 Source:         %{name}-%{version}.tar.bz2
-BuildRequires:  udev
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %description
 Browser plugin for Bitcoin TREZOR

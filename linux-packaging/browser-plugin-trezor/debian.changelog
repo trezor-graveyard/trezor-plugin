@@ -1,8 +1,12 @@
+browser-plugin-trezor (1.0.1-1) stable; urgency=low
+  - updated to version 1.0.1
+
+ -- Pavol Rusnak <stick@satoshilabs.com>  Mon, 24 Feb 2014 00:00:00 +0000
+
 browser-plugin-trezor (1.0.0-1) stable; urgency=low
   - updated to version 1.0.0
 
  -- Pavol Rusnak <stick@satoshilabs.com>  Mon, 24 Feb 2014 00:00:00 +0000
-
 
 browser-plugin-trezor (0.1-1) stable; urgency=low
   - created package (version 0.1)
