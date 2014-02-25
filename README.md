@@ -6,7 +6,7 @@ Bitcoin Trezor Plugin
 
     git clone https://github.com/slush0/trezor-plugin.git
 
-    git clone git://github.com/firebreath/FireBreath.git -b firebreath-1.7 firebreath
+    git clone git://github.com/trezor/firebreath.git
 
     cd firebreath
     git submodule update --recursive --init
