@@ -7,7 +7,7 @@
 
 #define FBSTRING_CompanyName "bitcointrezor.com"
 #define FBSTRING_PLUGIN_VERSION "1.0.0.0"
-#define FBSTRING_LegalCopyright "Copyright 2013 bitcointrezor.com"
+#define FBSTRING_LegalCopyright "Copyright (c) 2014 bitcointrezor.com"
 #define FBSTRING_PluginFileName "npBitcoinTrezorPlugin.dll"
 #define FBSTRING_ProductName "Bitcoin Trezor Plugin"
 #define FBSTRING_PluginName "Bitcoin Trezor Plugin_x86_64"

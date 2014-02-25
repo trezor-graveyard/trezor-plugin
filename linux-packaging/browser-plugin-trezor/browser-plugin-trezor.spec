@@ -1,5 +1,5 @@
 Name:           browser-plugin-trezor
-Version:        1.0.1
+Version:        1.0.2
 Release:        0
 License:        Proprietary
 Summary:        Bitcoin TREZOR Plugin
