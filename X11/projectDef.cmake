@@ -1,4 +1,4 @@
-#/**********************************************************\ 
+#/**********************************************************\
 # Auto-generated X11 project definition file for the
 # Bitcoin Trezor Plugin project
 #\**********************************************************/
@@ -16,6 +16,7 @@ find_library(ICONV_LIBRARIES iconv)
 include_directories(${LIBUSB_1_INCLUDE_DIRS})
 include_directories(${RT_INCLUDE_DIRS})
 include_directories(${ICONV_INCLUDE_DIRS})
+include_directories(${GTK_INCLUDE_DIRS}
 
 # remember that the current source dir is the project root; this file is in X11/
 file (GLOB PLATFORM RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
