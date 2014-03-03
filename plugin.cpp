@@ -101,8 +101,8 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
     struct hid_device_info *current;
 
     for (current = devices; current; current = current->next) {
-        // skip debug interface
-        if (current->interface_number == 1)
+        // skip interfaces known to be foreign
+        if (current->interface_number > 0)
             continue;
 
         // convert to device desc
