@@ -1,6 +1,6 @@
 Format: 1.0
 Source: browser-plugin-trezor
-Version: 1.0.2
+Version: 1.0.3
 Binary: browser-plugin-trezor
 Maintainer: Pavol Rusnak <stick@satoshilabs.com>
 Architecture: any
