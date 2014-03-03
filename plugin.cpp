@@ -98,9 +98,9 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
 {
     std::vector<DeviceDescriptor> result;
     struct hid_device_info *devices = hid_enumerate(0x0, 0x0);
-    struct hid_device_info *current = devices;
+    struct hid_device_info *current;
 
-    while (current) {
+    for (current = devices; current; current = current->next) {
         // skip debug interface
         if (current->interface_number == 1)
             continue;
@@ -133,8 +133,6 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
                 break;
             }
         }
-
-        current = current->next;
     }
 
     hid_free_enumeration(devices);
@@ -299,13 +297,13 @@ void DeviceJobExecutor::call(bool use_timeout,
     std::auto_ptr<PB::Message> outmsg;
     std::auto_ptr<PB::Message> inmsg = create_message(type_name);
     message_from_map(*inmsg, message_map);
-    
+
     _channel->write(*inmsg);
     outmsg = _channel->read(use_timeout);
 
     callbacks->InvokeAsync("success", FB::variant_list_of
                            (message_name(*outmsg))
                            (message_to_map(*outmsg)));
-    
+
     FBLOG_INFO("exec_call()", "Call finished");
 }
