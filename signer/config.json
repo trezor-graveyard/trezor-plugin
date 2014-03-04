@@ -2,7 +2,8 @@
 	"whitelist_urls": [
 		".*",
 		"file://.*",
-		"https?://mytrezor.com\\/.*"
+		"https?://.*\\.mytrezor\\.com\\/.*",
+		"https?://mytrezor\\.com\\/.*"
 	],
 	"blacklist_urls": [
 	],
@@ -10,5 +11,5 @@
 		["0x534c", "0x0001", "Trezor"],
 		["0x10c4", "0xea80", "Trezor Shield"] 
 	],
-	"valid_days": 7
+	"valid_days": 15
 }
