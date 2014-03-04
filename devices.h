@@ -10,9 +10,12 @@
 #endif
 
 #include <boost/noncopyable.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include "hidapi.h"
 #include "messages.h"
+
+extern boost::mutex hidapi_mutex;
 
 // Buffer for reading from a HID device.
 class HIDBuffer

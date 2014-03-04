@@ -17,6 +17,8 @@
 #include <netinet/in.h>
 #endif
 
+boost::mutex hidapi_mutex;
+
 void
 HIDBuffer::read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout)
 {
@@ -31,8 +33,10 @@ HIDBuffer::read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout)
     // buffer up enough chunks
     while (_buffer_length < length) {
         uint8_t chunk[1 + 63]; // extra byte for report number
+        hidapi_mutex.lock();
         const int res = hid_read_timeout(dev, chunk, sizeof(chunk), 10);
-        
+        hidapi_mutex.unlock();
+
         if (res > 0) {
             int chlen = std::min(res, int(chunk[0])+1);
             FBLOG_INFO("read()", "Buffering n bytes");
@@ -88,7 +92,9 @@ HIDBuffer::write(hid_device *dev, const uint8_t *bytes, size_t length)
         memcpy(&chunk[1], &bytes[i], ncopy);
 
         FBLOG_DEBUG("write_bytes()", "Writing chunk");
+        hidapi_mutex.lock();
         const int res = hid_write(dev, chunk, sizeof(chunk));
+        hidapi_mutex.unlock();
         
         if (res < sizeof(chunk)) {
             const wchar_t *err = hid_error(dev);
@@ -106,7 +112,9 @@ DeviceChannel::open(const std::string &path)
     const unsigned char txrx[] = {0x43, 0x03};
 
     FBLOG_INFO("open()", "Opening device");
+    hidapi_mutex.lock();
     _device = hid_open_path(path.c_str());
+    hidapi_mutex.unlock();
 
     if (!_device) {
         FBLOG_FATAL("open()", "Failed to open device");
@@ -114,15 +122,19 @@ DeviceChannel::open(const std::string &path)
     }
 
     FBLOG_INFO("open()", "Sending feature reports");
+    hidapi_mutex.lock();
     hid_send_feature_report(_device, uart, 2); // enable UART
     hid_send_feature_report(_device, txrx, 2); // purge TX/RX FIFOs
+    hidapi_mutex.unlock();
 }
 
 void
 DeviceChannel::close()
 {
     FBLOG_INFO("close()", "Closing device");
+    hidapi_mutex.lock();
     hid_close(_device);
+    hidapi_mutex.unlock();
 }
 
 std::auto_ptr<PB::Message>
