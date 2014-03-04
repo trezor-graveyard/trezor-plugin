@@ -105,6 +105,10 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
         if (current->interface_number > 0)
             continue;
 
+        // skip "phantom" devices
+        if (current->product_string == 0)
+            continue;
+
         // convert to device desc
         DeviceDescriptor desc;
         desc.set_path(current->path);
