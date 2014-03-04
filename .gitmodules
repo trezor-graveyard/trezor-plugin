@@ -1,9 +1,3 @@
-[submodule "trezor.js"]
-	path = trezor.js
-	url = git@github.com:trezor/trezor.js.git
-[submodule "trezor-common"]
-	path = trezor-common
-	url = https://github.com/trezor/trezor-common.git
 [submodule "trezor-crypto"]
 	path = trezor-crypto
 	url = https://github.com/trezor/trezor-crypto.git
