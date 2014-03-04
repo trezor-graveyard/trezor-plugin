@@ -99,71 +99,46 @@ create_message(const std::string &name)
 // Firebreath API functions
 //
 
-static bool
-is_field_binary(const PB::FieldDescriptor &fd)
-{
-    const PB::DescriptorPool *dp = pb_descriptor_pool();
-
-    const PB::FieldDescriptor *efd = dp->FindExtensionByName("binary");
-    if (!efd)
-        throw std::runtime_error("Extention 'binary' not found");
-
-    const PB::FieldOptions *opt = &fd.options();
-    const PB::Reflection *ref = opt->GetReflection();
-    const PB::UnknownFieldSet *ufs = &ref->GetUnknownFields(*opt);
-    
-    // TODO: We are looking through the unknown fields of parsed FieldOptions
-    // and trying to find a field matching the extension by number. Instead,
-    // we should fix the message loading to properly recognize this extension.
-    for (size_t i = 0; i < ufs->field_count(); i++) {
-        const PB::UnknownField *uf = &ufs->field(i);
-        if (uf->number() == efd->number() &&
-            uf->type() == PB::UnknownField::TYPE_VARINT) // bools are parsed as varints
-        {
-            return uf->varint();
-        }
-    }
-
-    return false;
-}
-
 static FB::variant
 serialize_single_field(const PB::Message &message,
                        const PB::Reflection &ref,
                        const PB::FieldDescriptor &fd)
 {
-    switch (fd.cpp_type()) {
+    switch (fd.type()) {
 
-    case PB::FieldDescriptor::CPPTYPE_DOUBLE:
+    case PB::FieldDescriptor::TYPE_DOUBLE:
         return ref.GetDouble(message, &fd);
 
-    case PB::FieldDescriptor::CPPTYPE_FLOAT:
+    case PB::FieldDescriptor::TYPE_FLOAT:
         return ref.GetFloat(message, &fd);
 
-    case PB::FieldDescriptor::CPPTYPE_INT64:
+    case PB::FieldDescriptor::TYPE_INT64:
         return ref.GetInt64(message, &fd);
 
-    case PB::FieldDescriptor::CPPTYPE_UINT64:
+    case PB::FieldDescriptor::TYPE_UINT64:
         return ref.GetUInt64(message, &fd);
 
-    case PB::FieldDescriptor::CPPTYPE_INT32:
+    case PB::FieldDescriptor::TYPE_INT32:
         return ref.GetInt32(message, &fd);
 
-    case PB::FieldDescriptor::CPPTYPE_UINT32:
+    case PB::FieldDescriptor::TYPE_UINT32:
         return ref.GetUInt32(message, &fd);
 
-    case PB::FieldDescriptor::CPPTYPE_BOOL:
+    case PB::FieldDescriptor::TYPE_BOOL:
         return ref.GetBool(message, &fd);
 
-    case PB::FieldDescriptor::CPPTYPE_STRING: {
-        std::string str = ref.GetString(message, &fd);
-        return is_field_binary(fd) ? utils::hex_encode(str) : str;
+    case PB::FieldDescriptor::TYPE_STRING: {
+        return ref.GetString(message, &fd);
     }
 
-    case PB::FieldDescriptor::CPPTYPE_ENUM:
+    case PB::FieldDescriptor::TYPE_BYTES: {
+        return utils::hex_encode(ref.GetString(message, &fd));
+    }
+
+    case PB::FieldDescriptor::TYPE_ENUM:
         return ref.GetEnum(message, &fd)->name();
 
-    case PB::FieldDescriptor::CPPTYPE_MESSAGE:
+    case PB::FieldDescriptor::TYPE_MESSAGE:
         return message_to_map(ref.GetMessage(message, &fd));
 
     default:
@@ -180,46 +155,51 @@ serialize_repeated_field(const PB::Message &message,
 
     int size = ref.FieldSize(message, &fd);
 
-    switch (fd.cpp_type()) {
+    switch (fd.type()) {
 
-    case PB::FieldDescriptor::CPPTYPE_DOUBLE:
+    case PB::FieldDescriptor::TYPE_DOUBLE:
         for (int i = 0; i < size; i++)
             result.push_back(ref.GetRepeatedDouble(message, &fd, i));
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_FLOAT:
+    case PB::FieldDescriptor::TYPE_FLOAT:
         for (int i = 0; i < size; i++)
             result.push_back(ref.GetRepeatedFloat(message, &fd, i));
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_INT32:
+    case PB::FieldDescriptor::TYPE_INT32:
         for (int i = 0; i < size; i++)
             result.push_back(ref.GetRepeatedInt32(message, &fd, i));
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_UINT32:
+    case PB::FieldDescriptor::TYPE_UINT32:
         for (int i = 0; i < size; i++)
             result.push_back(ref.GetRepeatedUInt32(message, &fd, i));
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_BOOL:
+    case PB::FieldDescriptor::TYPE_BOOL:
         for (int i = 0; i < size; i++)
             result.push_back(ref.GetRepeatedBool(message, &fd, i));
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_STRING:
+    case PB::FieldDescriptor::TYPE_STRING:
         for (int i = 0; i < size; i++) {
-            std::string str = ref.GetString(message, &fd);
-            result.push_back(is_field_binary(fd) ? utils::hex_encode(str) : str);
+            result.push_back(ref.GetString(message, &fd));
         }
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_ENUM:
+    case PB::FieldDescriptor::TYPE_BYTES:
+        for (int i = 0; i < size; i++) {
+            result.push_back(utils::hex_encode(ref.GetString(message, &fd)));
+        }
+        break;
+
+    case PB::FieldDescriptor::TYPE_ENUM:
         for (int i = 0; i < size; i++)
             result.push_back(ref.GetRepeatedEnum(message, &fd, i)->name());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_MESSAGE:
+    case PB::FieldDescriptor::TYPE_MESSAGE:
         for (int i = 0; i < size; i++)
             result.push_back(message_to_map(ref.GetRepeatedMessage(message, &fd, i)));
         break;
@@ -237,43 +217,47 @@ parse_single_field(PB::Message &message,
                    const PB::FieldDescriptor &fd,
                    const FB::variant &val)
 {
-    switch (fd.cpp_type()) {
+    switch (fd.type()) {
 
-    case PB::FieldDescriptor::CPPTYPE_DOUBLE:
+    case PB::FieldDescriptor::TYPE_DOUBLE:
         ref.SetDouble(&message, &fd, val.convert_cast<double>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_FLOAT:
+    case PB::FieldDescriptor::TYPE_FLOAT:
         ref.SetFloat(&message, &fd, val.convert_cast<float>());
         break;
-            
-    case PB::FieldDescriptor::CPPTYPE_INT64:
+
+    case PB::FieldDescriptor::TYPE_INT64:
         ref.SetInt64(&message, &fd, val.convert_cast<int64_t>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_INT32:
+    case PB::FieldDescriptor::TYPE_INT32:
         ref.SetInt32(&message, &fd, val.convert_cast<int32_t>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_UINT64:
+    case PB::FieldDescriptor::TYPE_UINT64:
         ref.SetUInt64(&message, &fd, val.convert_cast<uint64_t>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_UINT32:
+    case PB::FieldDescriptor::TYPE_UINT32:
         ref.SetUInt32(&message, &fd, val.convert_cast<uint32_t>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_BOOL:
+    case PB::FieldDescriptor::TYPE_BOOL:
         ref.SetBool(&message, &fd, val.convert_cast<bool>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_STRING: {
-        const std::string str = val.convert_cast<std::string>();
-        ref.SetString(&message, &fd, is_field_binary(fd) ? utils::hex_decode(str) : str);
+    case PB::FieldDescriptor::TYPE_STRING: {
+        ref.SetString(&message, &fd, val.convert_cast<std::string>());
         break;
     }
 
-    case PB::FieldDescriptor::CPPTYPE_ENUM: {
+    case PB::FieldDescriptor::TYPE_BYTES: {
+        ref.SetString(&message, &fd, utils::hex_decode(val.convert_cast<std::string>()));
+        break;
+    }
+
+    case PB::FieldDescriptor::TYPE_ENUM: {
         const PB::EnumDescriptor *ed = fd.enum_type();
         const PB::EnumValueDescriptor *evd =
             ed->FindValueByName(val.convert_cast<std::string>());
@@ -282,7 +266,7 @@ parse_single_field(PB::Message &message,
         break;
     }
 
-    case PB::FieldDescriptor::CPPTYPE_MESSAGE: {
+    case PB::FieldDescriptor::TYPE_MESSAGE: {
         PB::Message *fm = ref.MutableMessage(&message, &fd);
         message_from_map(*fm, val.convert_cast<FB::VariantMap>());
         break;
@@ -299,51 +283,56 @@ parse_repeated_field(PB::Message &message,
                      const PB::FieldDescriptor &fd,
                      const FB::VariantList &val)
 {
-    switch (fd.cpp_type()) {
+    switch (fd.type()) {
 
-    case PB::FieldDescriptor::CPPTYPE_DOUBLE:
+    case PB::FieldDescriptor::TYPE_DOUBLE:
         for (int i = 0; i < val.size(); i++)
             ref.AddDouble(&message, &fd, val[i].convert_cast<double>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_FLOAT:
+    case PB::FieldDescriptor::TYPE_FLOAT:
         for (int i = 0; i < val.size(); i++)
             ref.AddFloat(&message, &fd, val[i].convert_cast<float>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_INT64:
+    case PB::FieldDescriptor::TYPE_INT64:
         for (int i = 0; i < val.size(); i++)
             ref.AddInt64(&message, &fd, val[i].convert_cast<int>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_INT32:
+    case PB::FieldDescriptor::TYPE_INT32:
         for (int i = 0; i < val.size(); i++)
             ref.AddInt32(&message, &fd, val[i].convert_cast<int>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_UINT64:
+    case PB::FieldDescriptor::TYPE_UINT64:
         for (int i = 0; i < val.size(); i++)
             ref.AddUInt64(&message, &fd, val[i].convert_cast<unsigned int>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_UINT32:
+    case PB::FieldDescriptor::TYPE_UINT32:
         for (int i = 0; i < val.size(); i++)
             ref.AddUInt32(&message, &fd, val[i].convert_cast<unsigned int>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_BOOL:
+    case PB::FieldDescriptor::TYPE_BOOL:
         for (int i = 0; i < val.size(); i++)
             ref.AddBool(&message, &fd, val[i].convert_cast<bool>());
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_STRING:
+    case PB::FieldDescriptor::TYPE_STRING:
         for (int i = 0; i < val.size(); i++) {
-            const std::string str = val[i].convert_cast<std::string>();
-            ref.AddString(&message, &fd, is_field_binary(fd) ? utils::hex_decode(str) : str);
+            ref.AddString(&message, &fd, val[i].convert_cast<std::string>());
         }
         break;
 
-    case PB::FieldDescriptor::CPPTYPE_ENUM: {
+    case PB::FieldDescriptor::TYPE_BYTES:
+        for (int i = 0; i < val.size(); i++) {
+            ref.AddString(&message, &fd, utils::hex_decode(val[i].convert_cast<std::string>()));
+        }
+        break;
+
+    case PB::FieldDescriptor::TYPE_ENUM: {
         const PB::EnumDescriptor *ed = fd.enum_type();
         for (int i = 0; i < val.size(); i++) {
             const PB::EnumValueDescriptor *evd =
@@ -354,7 +343,7 @@ parse_repeated_field(PB::Message &message,
         break;
     }
 
-    case PB::FieldDescriptor::CPPTYPE_MESSAGE:
+    case PB::FieldDescriptor::TYPE_MESSAGE:
         for (int i = 0; i < val.size(); i++) {
             PB::Message *fm = ref.AddMessage(&message, &fd, pb_message_factory());
             message_from_map(*fm, val[i].convert_cast<FB::VariantMap>());
