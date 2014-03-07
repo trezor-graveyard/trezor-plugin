@@ -56,7 +56,9 @@ HIDBuffer::read(hid_device *dev, uint8_t *bytes, size_t length, bool timeout)
         }
         
         else if (res < 0) { // read returns -1 on error
+            hidapi_mutex.lock();
             const wchar_t *err = hid_error(dev);
+            hidapi_mutex.unlock();
             FBLOG_FATAL("read()", "Read error");
             FBLOG_FATAL("read()", err);
             throw ReadError(err ? utils::utf8_encode(err) : "Unknown read error");
@@ -97,7 +99,9 @@ HIDBuffer::write(hid_device *dev, const uint8_t *bytes, size_t length)
         hidapi_mutex.unlock();
         
         if (res < sizeof(chunk)) {
+            hidapi_mutex.lock();
             const wchar_t *err = hid_error(dev);
+            hidapi_mutex.unlock();
             FBLOG_FATAL("write_bytes()", "Write error");
             FBLOG_FATAL("write_bytes()", err);
             throw WriteError(err ? utils::utf8_encode(err) : "Unknown read error");

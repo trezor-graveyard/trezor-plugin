@@ -99,7 +99,6 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
     std::vector<DeviceDescriptor> result;
     hidapi_mutex.lock();
     struct hid_device_info *devices = hid_enumerate(0x0, 0x0);
-    hidapi_mutex.unlock();
     struct hid_device_info *current;
 
     for (current = devices; current; current = current->next) {
@@ -141,7 +140,6 @@ std::vector<DeviceDescriptor> BitcoinTrezorPlugin::enumerate(const Configuration
         }
     }
 
-    hidapi_mutex.lock();
     hid_free_enumeration(devices);
     hidapi_mutex.unlock();
 
