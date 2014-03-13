@@ -15,7 +15,7 @@ add_custom_command(
     #Give an icon to your bundle
     #COMMAND ${CMD_SIPS} -i ${CMAKE_CURRENT_SOURCE_DIR}/Mac/icon.png
     #COMMAND ${CMD_DEREZ} -only icns ${CMAKE_CURRENT_SOURCE_DIR}/Mac/icon.png > ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tempicns.rsrc
-    #COMMAND ${CMD_REZ} -append ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tempicns.rsrc -o `printf "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/dmg_template/${FBSTRING_PluginName}.plugin/Icon\r"` 
+    #COMMAND ${CMD_REZ} -append ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/tempicns.rsrc -o `printf "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/dmg_template/${FBSTRING_PluginName}.plugin/Icon\r"`
 
     COMMAND ${CMD_SETFILE} -a C "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/dmg_template/${FBSTRING_PluginName}.plugin/"
     COMMAND ${CMD_LN} -s /Library/Internet\ Plug-Ins/ ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/dmg_template/Plugins
@@ -25,15 +25,15 @@ add_custom_command(
     COMMAND ${CMD_HDIUTIL} attach "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${FBSTRING_PluginName}-temp.dmg" -noautoopen -quiet
 
     #Wait for the installer to mount
-    COMMAND ${CMD_SLEEP} 2
+    COMMAND ${CMD_SLEEP} 5
     COMMAND ${CMD_OSASCRIPT} ${CMAKE_CURRENT_SOURCE_DIR}/Mac/dmgdesign.applescript "${FBSTRING_PluginName}.plugin" "${INSTALLER_NAME}"
-    COMMAND ${CMD_SLEEP} 2
+    COMMAND ${CMD_SLEEP} 5
     COMMAND ${CMD_HDIUTIL} attach "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${FBSTRING_PluginName}-temp.dmg" -noautoopen -quiet
 
     #Repeat the commands, as they are not always executed o_O
-    COMMAND ${CMD_SLEEP} 2
+    COMMAND ${CMD_SLEEP} 5
     COMMAND ${CMD_OSASCRIPT} ${CMAKE_CURRENT_SOURCE_DIR}/Mac/dmgdesign.applescript "${FBSTRING_PluginName}.plugin" "${INSTALLER_NAME}"
-    COMMAND ${CMD_SLEEP} 2
+    COMMAND ${CMD_SLEEP} 5
 
     COMMAND ${CMD_HDIUTIL} convert "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${FBSTRING_PluginName}-temp.dmg" -format UDZO -imagekey zlib-level=9 -o "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${FBSTRING_PluginName}.dmg"
 

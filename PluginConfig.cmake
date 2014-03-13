@@ -44,11 +44,11 @@ set(FBSTRING_LegalCopyright "Copyright (c) 2014 bitcointrezor.com")
 set(FBSTRING_PluginFileName "np${PLUGIN_NAME}.dll")
 set(FBSTRING_ProductName "Bitcoin Trezor Plugin")
 set(FBSTRING_FileExtents "")
-if ( FB_PLATFORM_ARCH_32 )
+#if ( FB_PLATFORM_ARCH_32 )
     set(FBSTRING_PluginName "Bitcoin Trezor Plugin")  # No 32bit postfix to maintain backward compatability.
-else ( FB_PLATFORM_ARCH_32 )
-    set(FBSTRING_PluginName "Bitcoin Trezor Plugin_${FB_PLATFORM_ARCH_NAME}")
-endif ( FB_PLATFORM_ARCH_32 )
+#else ( FB_PLATFORM_ARCH_32 )
+#    set(FBSTRING_PluginName "Bitcoin Trezor Plugin ${FB_PLATFORM_ARCH_NAME}")
+#endif ( FB_PLATFORM_ARCH_32 )
 set(FBSTRING_MIMEType "application/x-bitcointrezorplugin")
 
 # Uncomment this next line if you're not planning on your plugin doing
