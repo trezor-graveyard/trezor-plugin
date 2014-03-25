@@ -105,26 +105,26 @@ class DeviceDescriptor : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 product_id() const;
   inline void set_product_id(::google::protobuf::uint32 value);
 
-  // optional bytes serial_number = 3;
+  // optional string serial_number = 3;
   inline bool has_serial_number() const;
   inline void clear_serial_number();
   static const int kSerialNumberFieldNumber = 3;
   inline const ::std::string& serial_number() const;
   inline void set_serial_number(const ::std::string& value);
   inline void set_serial_number(const char* value);
-  inline void set_serial_number(const void* value, size_t size);
+  inline void set_serial_number(const char* value, size_t size);
   inline ::std::string* mutable_serial_number();
   inline ::std::string* release_serial_number();
   inline void set_allocated_serial_number(::std::string* serial_number);
 
-  // optional bytes path = 4;
+  // optional string path = 4;
   inline bool has_path() const;
   inline void clear_path();
   static const int kPathFieldNumber = 4;
   inline const ::std::string& path() const;
   inline void set_path(const ::std::string& value);
   inline void set_path(const char* value);
-  inline void set_path(const void* value, size_t size);
+  inline void set_path(const char* value, size_t size);
   inline ::std::string* mutable_path();
   inline ::std::string* release_path();
   inline void set_allocated_path(::std::string* path);
@@ -213,7 +213,7 @@ class Configuration : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // repeated bytes whitelist_urls = 1;
+  // repeated string whitelist_urls = 1;
   inline int whitelist_urls_size() const;
   inline void clear_whitelist_urls();
   static const int kWhitelistUrlsFieldNumber = 1;
@@ -221,15 +221,15 @@ class Configuration : public ::google::protobuf::Message {
   inline ::std::string* mutable_whitelist_urls(int index);
   inline void set_whitelist_urls(int index, const ::std::string& value);
   inline void set_whitelist_urls(int index, const char* value);
-  inline void set_whitelist_urls(int index, const void* value, size_t size);
+  inline void set_whitelist_urls(int index, const char* value, size_t size);
   inline ::std::string* add_whitelist_urls();
   inline void add_whitelist_urls(const ::std::string& value);
   inline void add_whitelist_urls(const char* value);
-  inline void add_whitelist_urls(const void* value, size_t size);
+  inline void add_whitelist_urls(const char* value, size_t size);
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& whitelist_urls() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_whitelist_urls();
 
-  // repeated bytes blacklist_urls = 2;
+  // repeated string blacklist_urls = 2;
   inline int blacklist_urls_size() const;
   inline void clear_blacklist_urls();
   static const int kBlacklistUrlsFieldNumber = 2;
@@ -237,11 +237,11 @@ class Configuration : public ::google::protobuf::Message {
   inline ::std::string* mutable_blacklist_urls(int index);
   inline void set_blacklist_urls(int index, const ::std::string& value);
   inline void set_blacklist_urls(int index, const char* value);
-  inline void set_blacklist_urls(int index, const void* value, size_t size);
+  inline void set_blacklist_urls(int index, const char* value, size_t size);
   inline ::std::string* add_blacklist_urls();
   inline void add_blacklist_urls(const ::std::string& value);
   inline void add_blacklist_urls(const char* value);
-  inline void add_blacklist_urls(const void* value, size_t size);
+  inline void add_blacklist_urls(const char* value, size_t size);
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& blacklist_urls() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_blacklist_urls();
 
@@ -266,12 +266,12 @@ class Configuration : public ::google::protobuf::Message {
   inline ::google::protobuf::RepeatedPtrField< ::DeviceDescriptor >*
       mutable_known_devices();
 
-  // optional int32 valid_until = 5;
+  // optional uint32 valid_until = 5;
   inline bool has_valid_until() const;
   inline void clear_valid_until();
   static const int kValidUntilFieldNumber = 5;
-  inline ::google::protobuf::int32 valid_until() const;
-  inline void set_valid_until(::google::protobuf::int32 value);
+  inline ::google::protobuf::uint32 valid_until() const;
+  inline void set_valid_until(::google::protobuf::uint32 value);
 
   // @@protoc_insertion_point(class_scope:Configuration)
  private:
@@ -286,7 +286,7 @@ class Configuration : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> blacklist_urls_;
   ::google::protobuf::FileDescriptorSet* wire_protocol_;
   ::google::protobuf::RepeatedPtrField< ::DeviceDescriptor > known_devices_;
-  ::google::protobuf::int32 valid_until_;
+  ::google::protobuf::uint32 valid_until_;
 
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(5 + 31) / 32];
@@ -349,7 +349,7 @@ inline void DeviceDescriptor::set_product_id(::google::protobuf::uint32 value) {
   product_id_ = value;
 }
 
-// optional bytes serial_number = 3;
+// optional string serial_number = 3;
 inline bool DeviceDescriptor::has_serial_number() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
@@ -382,7 +382,7 @@ inline void DeviceDescriptor::set_serial_number(const char* value) {
   }
   serial_number_->assign(value);
 }
-inline void DeviceDescriptor::set_serial_number(const void* value, size_t size) {
+inline void DeviceDescriptor::set_serial_number(const char* value, size_t size) {
   set_has_serial_number();
   if (serial_number_ == &::google::protobuf::internal::kEmptyString) {
     serial_number_ = new ::std::string;
@@ -419,7 +419,7 @@ inline void DeviceDescriptor::set_allocated_serial_number(::std::string* serial_
   }
 }
 
-// optional bytes path = 4;
+// optional string path = 4;
 inline bool DeviceDescriptor::has_path() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
@@ -452,7 +452,7 @@ inline void DeviceDescriptor::set_path(const char* value) {
   }
   path_->assign(value);
 }
-inline void DeviceDescriptor::set_path(const void* value, size_t size) {
+inline void DeviceDescriptor::set_path(const char* value, size_t size) {
   set_has_path();
   if (path_ == &::google::protobuf::internal::kEmptyString) {
     path_ = new ::std::string;
@@ -493,7 +493,7 @@ inline void DeviceDescriptor::set_allocated_path(::std::string* path) {
 
 // Configuration
 
-// repeated bytes whitelist_urls = 1;
+// repeated string whitelist_urls = 1;
 inline int Configuration::whitelist_urls_size() const {
   return whitelist_urls_.size();
 }
@@ -512,7 +512,7 @@ inline void Configuration::set_whitelist_urls(int index, const ::std::string& va
 inline void Configuration::set_whitelist_urls(int index, const char* value) {
   whitelist_urls_.Mutable(index)->assign(value);
 }
-inline void Configuration::set_whitelist_urls(int index, const void* value, size_t size) {
+inline void Configuration::set_whitelist_urls(int index, const char* value, size_t size) {
   whitelist_urls_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
 }
@@ -525,7 +525,7 @@ inline void Configuration::add_whitelist_urls(const ::std::string& value) {
 inline void Configuration::add_whitelist_urls(const char* value) {
   whitelist_urls_.Add()->assign(value);
 }
-inline void Configuration::add_whitelist_urls(const void* value, size_t size) {
+inline void Configuration::add_whitelist_urls(const char* value, size_t size) {
   whitelist_urls_.Add()->assign(reinterpret_cast<const char*>(value), size);
 }
 inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
@@ -537,7 +537,7 @@ Configuration::mutable_whitelist_urls() {
   return &whitelist_urls_;
 }
 
-// repeated bytes blacklist_urls = 2;
+// repeated string blacklist_urls = 2;
 inline int Configuration::blacklist_urls_size() const {
   return blacklist_urls_.size();
 }
@@ -556,7 +556,7 @@ inline void Configuration::set_blacklist_urls(int index, const ::std::string& va
 inline void Configuration::set_blacklist_urls(int index, const char* value) {
   blacklist_urls_.Mutable(index)->assign(value);
 }
-inline void Configuration::set_blacklist_urls(int index, const void* value, size_t size) {
+inline void Configuration::set_blacklist_urls(int index, const char* value, size_t size) {
   blacklist_urls_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
 }
@@ -569,7 +569,7 @@ inline void Configuration::add_blacklist_urls(const ::std::string& value) {
 inline void Configuration::add_blacklist_urls(const char* value) {
   blacklist_urls_.Add()->assign(value);
 }
-inline void Configuration::add_blacklist_urls(const void* value, size_t size) {
+inline void Configuration::add_blacklist_urls(const char* value, size_t size) {
   blacklist_urls_.Add()->assign(reinterpret_cast<const char*>(value), size);
 }
 inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
@@ -644,7 +644,7 @@ Configuration::mutable_known_devices() {
   return &known_devices_;
 }
 
-// optional int32 valid_until = 5;
+// optional uint32 valid_until = 5;
 inline bool Configuration::has_valid_until() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
@@ -655,13 +655,13 @@ inline void Configuration::clear_has_valid_until() {
   _has_bits_[0] &= ~0x00000010u;
 }
 inline void Configuration::clear_valid_until() {
-  valid_until_ = 0;
+  valid_until_ = 0u;
   clear_has_valid_until();
 }
-inline ::google::protobuf::int32 Configuration::valid_until() const {
+inline ::google::protobuf::uint32 Configuration::valid_until() const {
   return valid_until_;
 }
-inline void Configuration::set_valid_until(::google::protobuf::int32 value) {
+inline void Configuration::set_valid_until(::google::protobuf::uint32 value) {
   set_has_valid_until();
   valid_until_ = value;
 }

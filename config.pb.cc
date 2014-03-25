@@ -109,12 +109,12 @@ void protobuf_AddDesc_config_2eproto() {
     "\n\014config.proto\032 google/protobuf/descript"
     "or.proto\"^\n\020DeviceDescriptor\022\021\n\tvendor_i"
     "d\030\001 \001(\r\022\022\n\nproduct_id\030\002 \001(\r\022\025\n\rserial_nu"
-    "mber\030\003 \001(\014\022\014\n\004path\030\004 \001(\014\"\271\001\n\rConfigurati"
-    "on\022\026\n\016whitelist_urls\030\001 \003(\014\022\026\n\016blacklist_"
-    "urls\030\002 \003(\014\0229\n\rwire_protocol\030\003 \002(\0132\".goog"
+    "mber\030\003 \001(\t\022\014\n\004path\030\004 \001(\t\"\271\001\n\rConfigurati"
+    "on\022\026\n\016whitelist_urls\030\001 \003(\t\022\026\n\016blacklist_"
+    "urls\030\002 \003(\t\0229\n\rwire_protocol\030\003 \002(\0132\".goog"
     "le.protobuf.FileDescriptorSet\022(\n\rknown_d"
     "evices\030\004 \003(\0132\021.DeviceDescriptor\022\023\n\013valid"
-    "_until\030\005 \001(\005", 332);
+    "_until\030\005 \001(\r", 332);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "config.proto", &protobuf_RegisterTypes);
   DeviceDescriptor::default_instance_ = new DeviceDescriptor();
@@ -255,13 +255,16 @@ bool DeviceDescriptor::MergePartialFromCodedStream(
         break;
       }
 
-      // optional bytes serial_number = 3;
+      // optional string serial_number = 3;
       case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_serial_number:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_serial_number()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->serial_number().data(), this->serial_number().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
         } else {
           goto handle_uninterpreted;
         }
@@ -269,13 +272,16 @@ bool DeviceDescriptor::MergePartialFromCodedStream(
         break;
       }
 
-      // optional bytes path = 4;
+      // optional string path = 4;
       case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_path:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_path()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->path().data(), this->path().length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
         } else {
           goto handle_uninterpreted;
         }
@@ -311,15 +317,21 @@ void DeviceDescriptor::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(2, this->product_id(), output);
   }
 
-  // optional bytes serial_number = 3;
+  // optional string serial_number = 3;
   if (has_serial_number()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->serial_number().data(), this->serial_number().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
       3, this->serial_number(), output);
   }
 
-  // optional bytes path = 4;
+  // optional string path = 4;
   if (has_path()) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->path().data(), this->path().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
       4, this->path(), output);
   }
 
@@ -341,17 +353,23 @@ void DeviceDescriptor::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(2, this->product_id(), target);
   }
 
-  // optional bytes serial_number = 3;
+  // optional string serial_number = 3;
   if (has_serial_number()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->serial_number().data(), this->serial_number().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
-      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
         3, this->serial_number(), target);
   }
 
-  // optional bytes path = 4;
+  // optional string path = 4;
   if (has_path()) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->path().data(), this->path().length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
-      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+      ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
         4, this->path(), target);
   }
 
@@ -380,17 +398,17 @@ int DeviceDescriptor::ByteSize() const {
           this->product_id());
     }
 
-    // optional bytes serial_number = 3;
+    // optional string serial_number = 3;
     if (has_serial_number()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::BytesSize(
+        ::google::protobuf::internal::WireFormatLite::StringSize(
           this->serial_number());
     }
 
-    // optional bytes path = 4;
+    // optional string path = 4;
     if (has_path()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::BytesSize(
+        ::google::protobuf::internal::WireFormatLite::StringSize(
           this->path());
     }
 
@@ -503,7 +521,7 @@ Configuration::Configuration(const Configuration& from)
 void Configuration::SharedCtor() {
   _cached_size_ = 0;
   wire_protocol_ = NULL;
-  valid_until_ = 0;
+  valid_until_ = 0u;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -543,7 +561,7 @@ void Configuration::Clear() {
     if (has_wire_protocol()) {
       if (wire_protocol_ != NULL) wire_protocol_->::google::protobuf::FileDescriptorSet::Clear();
     }
-    valid_until_ = 0;
+    valid_until_ = 0u;
   }
   whitelist_urls_.Clear();
   blacklist_urls_.Clear();
@@ -558,13 +576,17 @@ bool Configuration::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // repeated bytes whitelist_urls = 1;
+      // repeated string whitelist_urls = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_whitelist_urls:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->add_whitelist_urls()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->whitelist_urls(this->whitelist_urls_size() - 1).data(),
+            this->whitelist_urls(this->whitelist_urls_size() - 1).length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
         } else {
           goto handle_uninterpreted;
         }
@@ -573,13 +595,17 @@ bool Configuration::MergePartialFromCodedStream(
         break;
       }
 
-      // repeated bytes blacklist_urls = 2;
+      // repeated string blacklist_urls = 2;
       case 2: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_blacklist_urls:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->add_blacklist_urls()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->blacklist_urls(this->blacklist_urls_size() - 1).data(),
+            this->blacklist_urls(this->blacklist_urls_size() - 1).length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
         } else {
           goto handle_uninterpreted;
         }
@@ -617,13 +643,13 @@ bool Configuration::MergePartialFromCodedStream(
         break;
       }
 
-      // optional int32 valid_until = 5;
+      // optional uint32 valid_until = 5;
       case 5: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_valid_until:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                   ::google::protobuf::uint32, ::google::protobuf::internal::WireFormatLite::TYPE_UINT32>(
                  input, &valid_until_)));
           set_has_valid_until();
         } else {
@@ -651,15 +677,21 @@ bool Configuration::MergePartialFromCodedStream(
 
 void Configuration::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // repeated bytes whitelist_urls = 1;
+  // repeated string whitelist_urls = 1;
   for (int i = 0; i < this->whitelist_urls_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+  ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+    this->whitelist_urls(i).data(), this->whitelist_urls(i).length(),
+    ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
       1, this->whitelist_urls(i), output);
   }
 
-  // repeated bytes blacklist_urls = 2;
+  // repeated string blacklist_urls = 2;
   for (int i = 0; i < this->blacklist_urls_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteBytes(
+  ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+    this->blacklist_urls(i).data(), this->blacklist_urls(i).length(),
+    ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
       2, this->blacklist_urls(i), output);
   }
 
@@ -675,9 +707,9 @@ void Configuration::SerializeWithCachedSizes(
       4, this->known_devices(i), output);
   }
 
-  // optional int32 valid_until = 5;
+  // optional uint32 valid_until = 5;
   if (has_valid_until()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(5, this->valid_until(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteUInt32(5, this->valid_until(), output);
   }
 
   if (!unknown_fields().empty()) {
@@ -688,16 +720,22 @@ void Configuration::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* Configuration::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // repeated bytes whitelist_urls = 1;
+  // repeated string whitelist_urls = 1;
   for (int i = 0; i < this->whitelist_urls_size(); i++) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->whitelist_urls(i).data(), this->whitelist_urls(i).length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteBytesToArray(1, this->whitelist_urls(i), target);
+      WriteStringToArray(1, this->whitelist_urls(i), target);
   }
 
-  // repeated bytes blacklist_urls = 2;
+  // repeated string blacklist_urls = 2;
   for (int i = 0; i < this->blacklist_urls_size(); i++) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->blacklist_urls(i).data(), this->blacklist_urls(i).length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteBytesToArray(2, this->blacklist_urls(i), target);
+      WriteStringToArray(2, this->blacklist_urls(i), target);
   }
 
   // required .google.protobuf.FileDescriptorSet wire_protocol = 3;
@@ -714,9 +752,9 @@ void Configuration::SerializeWithCachedSizes(
         4, this->known_devices(i), target);
   }
 
-  // optional int32 valid_until = 5;
+  // optional uint32 valid_until = 5;
   if (has_valid_until()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(5, this->valid_until(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(5, this->valid_until(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -737,25 +775,25 @@ int Configuration::ByteSize() const {
           this->wire_protocol());
     }
 
-    // optional int32 valid_until = 5;
+    // optional uint32 valid_until = 5;
     if (has_valid_until()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
+        ::google::protobuf::internal::WireFormatLite::UInt32Size(
           this->valid_until());
     }
 
   }
-  // repeated bytes whitelist_urls = 1;
+  // repeated string whitelist_urls = 1;
   total_size += 1 * this->whitelist_urls_size();
   for (int i = 0; i < this->whitelist_urls_size(); i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::BytesSize(
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
       this->whitelist_urls(i));
   }
 
-  // repeated bytes blacklist_urls = 2;
+  // repeated string blacklist_urls = 2;
   total_size += 1 * this->blacklist_urls_size();
   for (int i = 0; i < this->blacklist_urls_size(); i++) {
-    total_size += ::google::protobuf::internal::WireFormatLite::BytesSize(
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
       this->blacklist_urls(i));
   }
 
