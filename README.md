@@ -4,7 +4,7 @@ Bitcoin Trezor Plugin
 1. Project initialization
 -------------------------
 
-    git clone https://github.com/slush0/trezor-plugin.git
+    git clone https://github.com/trezor/trezor-plugin.git
 
     git clone git://github.com/trezor/firebreath.git
 
